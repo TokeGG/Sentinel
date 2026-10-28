@@ -1,0 +1,181 @@
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { validateManifest, ManifestError, type ModuleManifest } from "./module.ts";
+
+function base(overrides: Partial<ModuleManifest> = {}): ModuleManifest {
+  return {
+    id: "hub.test",
+    name: "Test",
+    description: "A test module",
+    panel: "custom",
+    skills: [],
+    ...overrides,
+  };
+}
+
+describe("validateManifest", () => {
+  it("accepts a well-formed manifest", () => {
+    assert.doesNotThrow(() => validateManifest(base(), []));
+  });
+
+  it("rejects a non-reverse-DNS id", () => {
+    assert.throws(() => validateManifest(base({ id: "notes" }), []), ManifestError);
+  });
+
+  it("rejects a duplicate id", () => {
+    const existing = [base()];
+    assert.throws(() => validateManifest(base(), existing), ManifestError);
+  });
+
+  it("rejects an unknown panel kind", () => {
+    assert.throws(
+      () => validateManifest(base({ panel: "map" as never }), []),
+      ManifestError
+    );
+  });
+
+  it("rejects duplicate skill names", () => {
+    const run = async () => ({});
+    assert.throws(
+      () =>
+        validateManifest(
+          base({ skills: [{ name: "x", run }, { name: "x", run }] }),
+          []
+        ),
+      ManifestError
+    );
+  });
+
+  it("requires load() for a list/table panel", () => {
+    assert.throws(
+      () => validateManifest(base({ panel: "list" }), []),
+      ManifestError
+    );
+  });
+
+  it("allows a list panel with load()", () => {
+    assert.doesNotThrow(() =>
+      validateManifest(base({ panel: "list", load: async () => [] }), [])
+    );
+  });
+
+  it("rejects an action referencing an unknown skill", () => {
+    assert.throws(
+      () => validateManifest(base({ actions: [{ label: "Go", skill: "nope" }] }), []),
+      ManifestError
+    );
+  });
+
+  it("rejects a quickAdd referencing an unknown skill", () => {
+    assert.throws(
+      () =>
+        validateManifest(
+          base({ quickAdd: { skill: "nope", argName: "x", placeholder: "…" } }),
+          []
+        ),
+      ManifestError
+    );
+  });
+
+  it("rejects a rowAction referencing an unknown skill", () => {
+    assert.throws(
+      () =>
+        validateManifest(
+          base({
+            rowAction: { label: "Open", skill: "nope", argName: "x", fromField: "link" },
+          }),
+          []
+        ),
+      ManifestError
+    );
+  });
+
+  it("rejects a credentialField with no key", () => {
+    assert.throws(
+      () => validateManifest(base({ credentialFields: [{ key: "", label: "Token" }] }), []),
+      ManifestError
+    );
+  });
+
+  it("rejects duplicate credentialField keys", () => {
+    assert.throws(
+      () =>
+        validateManifest(
+          base({
+            credentialFields: [
+              { key: "token", label: "A" },
+              { key: "token", label: "B" },
+            ],
+          }),
+          []
+        ),
+      ManifestError
+    );
+  });
+
+  it("rejects a schedule referencing an unknown skill", () => {
+    assert.throws(
+      () =>
+        validateManifest(base({ schedule: { skill: "nope", intervalMinutes: 5 } }), []),
+      ManifestError
+    );
+  });
+
+  it("rejects a schedule with intervalMinutes below 1", () => {
+    const run = async () => ({});
+    assert.throws(
+      () =>
+        validateManifest(
+          base({ skills: [{ name: "go", run }], schedule: { skill: "go", intervalMinutes: 0 } }),
+          []
+        ),
+      ManifestError
+    );
+  });
+
+  it("accepts a valid schedule referencing a real skill", () => {
+    const run = async () => ({});
+    assert.doesNotThrow(() =>
+      validateManifest(
+        base({ skills: [{ name: "go", run }], schedule: { skill: "go", intervalMinutes: 30 } }),
+        []
+      )
+    );
+  });
+
+  it("rejects a form referencing an unknown skill", () => {
+    assert.throws(
+      () =>
+        validateManifest(
+          base({ forms: [{ skill: "nope", label: "Compose", fields: [{ key: "x", label: "X" }] }] }),
+          []
+        ),
+      ManifestError
+    );
+  });
+
+  it("rejects a form with no fields", () => {
+    const run = async () => ({});
+    assert.throws(
+      () =>
+        validateManifest(
+          base({ skills: [{ name: "go", run }], forms: [{ skill: "go", label: "Compose", fields: [] }] }),
+          []
+        ),
+      ManifestError
+    );
+  });
+
+  it("accepts a valid form referencing a real skill", () => {
+    const run = async () => ({});
+    assert.doesNotThrow(() =>
+      validateManifest(
+        base({
+          skills: [{ name: "go", run }],
+          forms: [{ skill: "go", label: "Compose", fields: [{ key: "x", label: "X" }] }],
+        }),
+        []
+      )
+    );
+  });
+});
