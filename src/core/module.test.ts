@@ -193,6 +193,14 @@ describe("validateManifest", () => {
         /https/
       );
     });
+    it("rejects web url without host or with credentials", () => {
+      for (const url of ["https://", "https://user:pw@example.com"]) {
+        assert.throws(
+          () => validateManifest(base({ panel: "web", web: { ...web, url } }), []),
+          /https/
+        );
+      }
+    });
     it("rejects profile with path characters", () => {
       for (const profile of ["../x", "a b", "a/b"]) {
         assert.throws(

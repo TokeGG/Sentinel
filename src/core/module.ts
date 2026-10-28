@@ -2,10 +2,11 @@
 // built-in or later installed from GitHub — declares one of these. The shell
 // never hardcodes module-specific UI beyond what `panel` tells it to render.
 
+import { skillRefs, webError } from "./manifestChecks.ts";
+
 export type PanelKind = "list" | "table" | "chat" | "custom" | "web";
 
 const PANEL_KINDS: PanelKind[] = ["list", "table", "chat", "custom", "web"];
-const PROFILE_PATTERN = /^[a-z0-9][a-z0-9-]{0,31}$/; // web profile dir name: no path chars
 const ID_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/; // reverse-DNS, e.g. "hub.notes"
 
 export interface SkillDef {
@@ -58,32 +59,6 @@ export interface ModuleManifest {
 }
 
 export class ManifestError extends Error {}
-
-function skillRefs(m: ModuleManifest): { what: string; skill: string }[] {
-  return [
-    ...(m.actions ?? []).map((a) => ({ what: `action "${a.label}"`, skill: a.skill })),
-    ...(m.quickAdd ? [{ what: "quickAdd", skill: m.quickAdd.skill }] : []),
-    ...(m.forms ?? []).map((f) => ({ what: `form "${f.label}"`, skill: f.skill })),
-    ...(m.schedule ? [{ what: "schedule", skill: m.schedule.skill }] : []),
-    ...(m.rowAction ? [{ what: "rowAction", skill: m.rowAction.skill }] : []),
-  ];
-}
-
-function checkWeb(where: string, m: ModuleManifest) {
-  if (m.panel !== "web") {
-    if (m.web) throw new ManifestError(`${where}: web config is only valid on a "web" panel`);
-    return;
-  }
-  if (!m.web) throw new ManifestError(`${where}: panel "web" needs a web config {url, profile}`);
-  if (!m.web.url?.startsWith("https://")) {
-    throw new ManifestError(`${where}: web.url must be https, got ${JSON.stringify(m.web.url)}`);
-  }
-  if (!PROFILE_PATTERN.test(m.web.profile ?? "")) {
-    throw new ManifestError(
-      `${where}: web.profile must match ${PROFILE_PATTERN}, got ${JSON.stringify(m.web.profile)}`
-    );
-  }
-}
 
 // Rejects a bad manifest before it ever reaches the registry — this is the
 // "invalid manifest, duplicate ID, missing dependency ... rejected with
@@ -144,7 +119,8 @@ export function validateManifest(m: ModuleManifest, existing: ModuleManifest[]) 
   if (m.schedule && m.schedule.intervalMinutes < 1) {
     throw new ManifestError(`${where}: schedule.intervalMinutes must be >= 1`);
   }
-  checkWeb(where, m);
+  const webErr = webError(m);
+  if (webErr) throw new ManifestError(`${where}: ${webErr}`);
   const credKeys = new Set<string>();
   for (const f of m.credentialFields ?? []) {
     if (!f.key?.trim()) {
