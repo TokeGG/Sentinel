@@ -12,6 +12,7 @@ This spec covers sub-project 1 only; the others get their own spec → plan → 
 | Discord (2) | Embedded official web client, persistent login profile |
 | Chat (3) | Chatterino-style; Twitch, Kick, d.gg, iCanHazChat, user-added connectors; sending enabled; emotes: native + 7TV + BTTV + FFZ |
 | Bot (4) | Headless browser agent with skills; local model (RTX 3090, 24GB), no API key; research, automation, testing own apps, chat-driven; approval required for risky steps (submit, post, buy, login) |
+| Bot brain (4) | Shared learning kernel extracted from `TokeGG/mmoarena` (bounded nudges, evidence from recorded runs, variant bandit, owner notes, reports, explicit commit) used by both projects. The browser bot adds its own parameter set (waits, retries, selector strategy, approval thresholds) and a lesson memory written after failures and fed with user material. mmoarena's 34 arena numbers are not shared; the machinery is. |
 | Performance | Model loads on demand, unloads after; auto game mode (manual override); hidden panels suspend |
 | Code | Deduplicate, no filler, no file over ~150 lines, no code without a caller |
 
@@ -56,4 +57,4 @@ Discord/YouTube/chat/bot features themselves; any hosted-AI call; changing the p
 ## Decisions deferred to later sub-projects
 - 2: exact IFrame player controls; which Discord notifications surface on the star map.
 - 3: connector protocols for d.gg and iCanHazChat; sending/login flow per site.
-- 4: browser engine (CDP driver), local model runtime and size, skill sources and format.
+- 4: kernel packaging (package vs local service) and the change to mmoarena; lesson-memory format; browser engine (CDP driver), local model runtime and size, skill sources and format.
