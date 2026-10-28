@@ -7,6 +7,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
+    "check:size": "node scripts/check-file-size.mjs",
+    "test": "node --experimental-strip-types --test src/core/module.test.ts src/modules/news/rss.test.ts src/modules/youtube/pkce.test.ts src/modules/pentest/scope.test.ts src/shell/layout.test.ts src/shell/planets.test.ts src/core/scheduler.test.ts",
     "tauri": "tauri"
   },
   "dependencies": {

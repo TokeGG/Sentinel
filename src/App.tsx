@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
-import { Sidebar } from "./core/Sidebar";
-import { ModulePanel } from "./core/ModulePanel";
 import { registry } from "./core/module";
-import { initScheduler } from "./core/scheduler";
+import { initScheduler, setTimersOwner, syncModule, SCHEDULE_CHANGED } from "./core/scheduler";
+import { listen } from "@tauri-apps/api/event";
+import { StarMap } from "./shell/StarMap";
+import { GameHud } from "./shell/GameHud";
+import { PanelRoute, panelIdFromHash } from "./shell/PanelRoute";
+import { restore } from "./shell/panelApi";
+import { ChromeRoute, chromeIdFromHash } from "./shell/ChromeRoute";
 import "./modules/notes"; // self-registers into `registry` on import
 import "./modules/news";
 import "./modules/pccare";
@@ -21,28 +25,38 @@ import "./modules/clipboard";
 import "./modules/filesearch";
 import "./App.css";
 
-function App() {
-  const [activeId, setActiveId] = useState(registry[0]?.id ?? "");
-  const active = registry.find((m) => m.id === activeId);
-
+// Child panel webviews load this same bundle at #/panel/<id>; they render only
+// that module and never start the scheduler, restore layout, or listen.
+function MainShell() {
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    // Only resumes timers the user already switched on in a past session —
-    // see core/scheduler.ts. Runs once, not per module-switch.
+    // Only resumes timers the user already switched on — see core/scheduler.ts.
     initScheduler(registry);
+    // Panel webviews only persist schedule toggles; main owns the timers.
+    const un = listen<{ moduleId: string }>(SCHEDULE_CHANGED, ({ payload }) => {
+      const m = registry.find((x) => x.id === payload.moduleId);
+      if (m) syncModule(m).catch((e) => setError(`Schedule sync: ${String(e)}`));
+    });
+    restore().catch((e) => setError(`Restore layout: ${String(e)}`));
+    return () => {
+      un.then((f) => f());
+    };
   }, []);
-
   return (
-    <div className="app-shell">
-      <Sidebar modules={registry} activeId={activeId} onSelect={setActiveId} />
-      <main className="workspace">
-        {active ? (
-          <ModulePanel module={active} />
-        ) : (
-          <p>No modules registered.</p>
-        )}
-      </main>
+    <div className="starmap">
+      <StarMap modules={registry} onError={setError} />
+      <GameHud error={error} setError={setError} />
     </div>
   );
+}
+
+function App() {
+  const panelId = panelIdFromHash(window.location.hash);
+  const chromeId = chromeIdFromHash(window.location.hash);
+  // Child webviews (#/panel/, #/chrome/) never own scheduler timers.
+  setTimersOwner(panelId === null && chromeId === null);
+  if (chromeId !== null) return <ChromeRoute id={chromeId} />;
+  return panelId !== null ? <PanelRoute id={panelId} /> : <MainShell />;
 }
 
 export default App;

@@ -2,9 +2,11 @@
 // built-in or later installed from GitHub — declares one of these. The shell
 // never hardcodes module-specific UI beyond what `panel` tells it to render.
 
-export type PanelKind = "list" | "table" | "chat" | "custom";
+import { skillRefs, webError } from "./manifestChecks.ts";
 
-const PANEL_KINDS: PanelKind[] = ["list", "table", "chat", "custom"];
+export type PanelKind = "list" | "table" | "chat" | "custom" | "web";
+
+const PANEL_KINDS: PanelKind[] = ["list", "table", "chat", "custom", "web"];
 const ID_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/; // reverse-DNS, e.g. "hub.notes"
 
 export interface SkillDef {
@@ -51,6 +53,9 @@ export interface ModuleManifest {
   // on (persisted in `schedule_settings`), never just because this field
   // exists. Keeps "no background task without explicit enable" true.
   schedule?: { skill: string; intervalMinutes: number };
+  // For panel === "web": an https site shown in an isolated webview, with its
+  // own persistent profile (cookies/storage) named by `profile`.
+  web?: { url: string; profile: string };
 }
 
 export class ManifestError extends Error {}
@@ -101,39 +106,21 @@ export function validateManifest(m: ModuleManifest, existing: ModuleManifest[]) 
       `${where}: panel "${m.panel}" needs a load() to render anything`
     );
   }
-  for (const a of m.actions ?? []) {
-    if (!seen.has(a.skill)) {
-      throw new ManifestError(
-        `${where}: action "${a.label}" references unknown skill "${a.skill}"`
-      );
-    }
-  }
-  if (m.quickAdd && !seen.has(m.quickAdd.skill)) {
-    throw new ManifestError(
-      `${where}: quickAdd references unknown skill "${m.quickAdd.skill}"`
-    );
-  }
   for (const f of m.forms ?? []) {
-    if (!seen.has(f.skill)) {
-      throw new ManifestError(`${where}: form "${f.label}" references unknown skill "${f.skill}"`);
-    }
     if (f.fields.length === 0) {
       throw new ManifestError(`${where}: form "${f.label}" has no fields`);
     }
   }
-  if (m.schedule && !seen.has(m.schedule.skill)) {
-    throw new ManifestError(
-      `${where}: schedule references unknown skill "${m.schedule.skill}"`
-    );
+  for (const r of skillRefs(m)) {
+    if (!seen.has(r.skill)) {
+      throw new ManifestError(`${where}: ${r.what} references unknown skill "${r.skill}"`);
+    }
   }
   if (m.schedule && m.schedule.intervalMinutes < 1) {
     throw new ManifestError(`${where}: schedule.intervalMinutes must be >= 1`);
   }
-  if (m.rowAction && !seen.has(m.rowAction.skill)) {
-    throw new ManifestError(
-      `${where}: rowAction references unknown skill "${m.rowAction.skill}"`
-    );
-  }
+  const webErr = webError(m);
+  if (webErr) throw new ManifestError(`${where}: ${webErr}`);
   const credKeys = new Set<string>();
   for (const f of m.credentialFields ?? []) {
     if (!f.key?.trim()) {

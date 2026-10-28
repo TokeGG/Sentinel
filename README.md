@@ -13,9 +13,9 @@ plan: https://claude.ai/artifact/9XSLWd8XTtd7vpWvSfNUQ3
       dupe skill names, missing `load()`, dangling action/quickAdd refs)
 - [x] Generic panel renderer (`src/core/ModulePanel.tsx`) — zero
       module-specific UI code for any `list`/`table` module
-- [x] Sidebar + app shell wiring + shared `activity_log`
-- [ ] Job scheduler + cancellation — deferred until a module has a background
-      task (none do yet)
+- [x] Star-map app shell + panel manager + shared `activity_log`
+- [x] Opt-in job scheduler (`src/core/scheduler.ts`): per-module toggle persisted
+      in SQLite, nothing runs until switched on
 - [x] OS-keychain credential helper (`set_credential`/`get_credential`/
       `delete_credential` in Rust via the `keyring` crate — Windows Credential
       Manager / macOS Keychain / Linux Secret Service; `src/core/credentials.ts`
@@ -80,6 +80,16 @@ on real Windows as of this commit (Foundation + Track A smoke-tested).
       X is stubbed with a clear error: free API tier has no usable read
       endpoint. Adding a 5th platform later = write one connector file,
       list it in `connectors` — nothing else changes.
+
+**Core shell (sub-project 1) — not yet run in a real window:**
+- [x] Star-map home screen; modules open as floating panels (each a content
+      webview plus a thin chrome strip), layout persisted in SQLite
+- [x] `"web"` panel kind (`web: { url, profile }`) for embedded sites
+- [x] Game mode: manual button + auto detection (persisted `game_mode_auto`
+      toggle); pauses the scheduler and destroys/suspends panels
+- [x] Refactors: `lib.rs` split into `commands/` + numbered SQL migrations,
+      `ModulePanel` split, table-driven manifest checks, `npm run check:size`
+- [ ] Windows webview spike, GPU-load trigger, local-model unload: not done
 
 ## Still needed from you
 
@@ -159,7 +169,7 @@ running it — that's what the keychain helper is for, never in chat.
         activity log with its reason. A refusal is never silent.
 
 **The full module roadmap from the plan doc is now built: all 18 modules.**
-15/15 tests passing, clean typecheck, clean build.
+76 TS tests and 48 Rust tests passing, clean typecheck, clean build.
 
 ## Untested on a real OS yet
 
@@ -168,10 +178,9 @@ Everything from "Email" onward in the status list above — `imap`,
 command (`tcp_port_scan`, `backup_database`, `restore_database`,
 `write_text_file`, `preview_temp_cleanup`, `apply_temp_cleanup`,
 `search_files`) — is new since your last real `cargo build` and hasn't
-compiled anywhere yet. This sandbox can't link Tauri's native deps at all
-(no GTK), so all of it is reviewed-by-eye only. When you next run
-`npm run tauri dev`, expect a real (and probably long, 16 migrations + a lot
-of new crates) rebuild; send me any compiler error and I'll fix it fast.
+been compiled and run on Windows yet (it does compile and pass `cargo test
+--lib` on Linux). When you next run `npm run tauri dev`, expect a long
+rebuild (18 migrations plus many crates); send me any compiler error and I'll fix it fast.
 
 Given the size of this pass, a few things worth testing deliberately once
 it's running, beyond the obvious click-around:
@@ -185,33 +194,19 @@ it's running, beyond the obvious click-around:
 ## Run the tests
 
 ```bash
-node --experimental-strip-types --test src/core/module.test.ts src/modules/news/rss.test.ts src/modules/youtube/pkce.test.ts src/modules/pentest/scope.test.ts
+npm test                    # TS baseline: 76 tests
+node --test scripts/check-file-size.test.mjs   # 4 tests
+npm run check:size          # no file over 150 lines (legacy allow-list)
+cd src-tauri && cargo test --lib   # 48 Rust tests
 ```
 
-35/35 passing as of this commit (20 added this pass: 15 manifest-validation
-cases for `actions`/`quickAdd`/`rowAction`/`credentialFields`/`schedule`/
-`forms`, plus 9 for Pentest Lab's scope gate — the engagement-vs-own-device
-allow/deny logic, extracted to `src/modules/pentest/scope.ts` as a pure
-function specifically so it's unit-testable without a running app).
+The Rust tests cover the file-search walker (`commands/files.rs`), panel
+state/geometry/ids/persistence (`panels/`), migration ordering, and
+game-mode decisions (`gamemode/decide.rs`). Pentest scope gating is tested in
+`src/modules/pentest/scope.ts`'s pure function, and manifest validation in
+`src/core/module.test.ts`.
 
-Rust side also has tests now (`src-tauri/src/lib.rs`, `mod search_tests`) for
-the Local File Search walker: case-insensitive matching, descending into
-subfolders, the depth-12 cap, and the 500-result cap. **Can't run in this
-sandbox** (same GTK-linking wall as always — Linux-only, doesn't affect your
-Windows build), so it's unverified until you run `cargo test --lib` on your
-machine. Run it from `src-tauri/`:
-```bash
-cargo test --lib
-```
-
-**One real bug this caught:** `imap = "3"` in `Cargo.toml` doesn't exist as a
-stable release (only alpha versions do) — `cargo test` failed dependency
-resolution on it before I could even reach the GTK wall. Fixed to `imap =
-"2"`, the actual latest stable, and confirmed full dependency resolution now
-succeeds for every crate in the project (it got all the way to the
-Linux-only GTK link step, which is as far as this sandbox can go). This
-would have been your first build error on Windows too, so this is a real,
-useful catch, not sandbox noise.
+Note: the `imap` pin was once wrong (`"3"` has no stable release) and is fixed to `"2"`.
 
 ## Running the app
 
@@ -230,9 +225,11 @@ npm run tauri dev
    kind, and `skills`. Add `load` for a list/table panel, `actions` for
    zero-arg buttons (e.g. "Fetch now"), `quickAdd` for a one-field add form
    (e.g. "add a feed URL") — see News and Notes for both patterns.
-3. Add a SQLite migration for its own table(s) in `src-tauri/src/lib.rs` if
-   it needs storage. Add a `#[tauri::command]` there too if it needs native
-   OS access (see `get_pc_metrics`), and register it in `invoke_handler!`.
+3. Add a numbered SQL migration `src-tauri/migrations/NN_<module>.sql` if it
+   needs storage, and list it in `src-tauri/src/migrations.rs` (versions
+   strictly ascending). Add a `#[tauri::command]` under
+   `src-tauri/src/commands/` if it needs native OS access (see
+   `get_pc_metrics`), and register it in `generate_handler!` in `lib.rs`.
 4. `registerModule(yourManifest)` at the bottom of the file, and `import` it
    once from `src/App.tsx`.
 5. Write a test for anything with real logic (parsing, validation) — see
