@@ -5,7 +5,8 @@ import { listen } from "@tauri-apps/api/event";
 import { StarMap } from "./shell/StarMap";
 import { GameHud } from "./shell/GameHud";
 import { PanelRoute, panelIdFromHash } from "./shell/PanelRoute";
-import { restore } from "./shell/panelApi";
+import { restore, LAYOUT_COMMIT, LAYOUT_DELETE, type SavedPanel } from "./shell/panelApi";
+import { saveLayout, deleteLayout } from "./shell/layoutStore";
 import { ChromeRoute, chromeIdFromHash } from "./shell/ChromeRoute";
 import "./modules/notes"; // self-registers into `registry` on import
 import "./modules/news";
@@ -37,9 +38,19 @@ function MainShell() {
       const m = registry.find((x) => x.id === payload.moduleId);
       if (m) syncModule(m).catch((e) => setError(`Schedule sync: ${String(e)}`));
     });
-    restore().catch((e) => setError(`Restore layout: ${String(e)}`));
+    // Chrome webviews report layout changes here; only main touches SQLite.
+    const fail = (what: string) => (e: unknown) => setError(`${what}: ${String(e)}`);
+    const unCommit = listen<SavedPanel>(LAYOUT_COMMIT, ({ payload: p }) => {
+      saveLayout(p.id, p.rect, p.z, p.state).catch(fail("Save layout"));
+    });
+    const unDelete = listen<{ id: string }>(LAYOUT_DELETE, ({ payload }) => {
+      deleteLayout(payload.id).catch(fail("Forget panel"));
+    });
+    restore().catch(fail("Restore layout"));
     return () => {
       un.then((f) => f());
+      unCommit.then((f) => f());
+      unDelete.then((f) => f());
     };
   }, []);
   return (

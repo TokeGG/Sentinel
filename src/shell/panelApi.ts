@@ -2,6 +2,7 @@
 // only source of truth for rects and z; every rect is clamped before it
 // reaches Rust (Rust does not clamp open_panel). Persistence: `commit()`.
 import { invoke } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
 import { registry, type ModuleManifest } from "../core/module";
 import { cascade, clampToScreen, type Rect } from "./layout";
 import { deleteLayout, loadLayout, saveLayout } from "./layoutStore";
@@ -11,6 +12,12 @@ export type SavedPanel = { id: string; rect: Rect; state: string; z: number };
 export const MIN = { w: 240, h: 160 }; // matches persist.rs MIN_W/MIN_H
 const DEFAULT_SIZE = { w: 560, h: 420 };
 let opened = 0; // cascade slot only; main window's own counter
+
+// Chrome webviews never open the database (a second plugin-sql load there
+// swaps the shared pool); they ask the main window to persist instead.
+export const LAYOUT_COMMIT = "layout-commit";
+export const LAYOUT_DELETE = "layout-delete";
+const inChrome = () => window.location.hash.startsWith("#/chrome/");
 
 export const screenRect = (): Rect => ({ x: 0, y: 0, w: window.innerWidth, h: window.innerHeight });
 const clamp = (r: Rect) => clampToScreen(r, screenRect(), MIN);
@@ -27,7 +34,8 @@ export async function openPanel(m: ModuleManifest, rect?: Rect): Promise<void> {
 // Row first: called from a chrome webview, close_panel destroys the caller
 // before its reply arrives, so nothing after the invoke would run.
 export async function closePanel(id: string): Promise<void> {
-  await deleteLayout(id);
+  if (inChrome()) await emit(LAYOUT_DELETE, { id });
+  else await deleteLayout(id);
   await invoke("close_panel", { id });
 }
 
@@ -46,7 +54,8 @@ export const dragMove = (id: string, x: number, y: number) =>
 export const dragResize = (id: string, w: number, h: number) =>
   invoke<SavedPanel>("resize_panel", { id, w, h });
 
-export const commit = (p: SavedPanel) => saveLayout(p.id, p.rect, p.z, p.state);
+export const commit = (p: SavedPanel): Promise<void> =>
+  inChrome() ? emit(LAYOUT_COMMIT, p) : saveLayout(p.id, p.rect, p.z, p.state);
 
 // Startup: reopen panels saved as open. Unknown module ids are skipped (a
 // module may have been removed); one failing panel never stops the others.

@@ -1,6 +1,6 @@
 // 28px chrome strip, a child webview stacked above every panel's content
 // (Task 9b). Stateless: every rect comes from Rust (get/focus_panel).
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { registry } from "../core/module";
 import { dragRect, resizeRect, type Rect } from "./layout";
@@ -36,6 +36,11 @@ export function ChromeRoute({ id }: { id: string }) {
   const m = registry.find((x) => x.id === id);
   const drag = useRef<Drag | null>(null);
   const press = useRef(0); // bumps on every down/up so a late focus reply is dropped
+  const [err, setErr] = useState<string | null>(null);
+  const fail = (what: string) => (e: unknown) => {
+    console.error(what, e);
+    setErr(`${what}: ${String(e)}`);
+  };
 
   // A raise (focus_panel on a non-top panel) re-creates this webview before
   // the reply arrives, so the fresh chrome persists the authoritative z here.
@@ -49,12 +54,13 @@ export function ChromeRoute({ id }: { id: string }) {
     d.raf = 0;
     const r = (d.kind === "move" ? dragRect : resizeRect)(d.start, d.dx, d.dy, d.screen, MIN);
     const p = d.kind === "move" ? dragMove(id, r.x, r.y) : dragResize(id, r.w, r.h);
-    p.catch((e) => console.error("chrome drag", e));
+    p.catch(fail("drag"));
   };
 
   const down = (kind: Kind) => async (e: React.PointerEvent<HTMLElement>) => {
     if (e.button !== 0 || (kind === "move" && (e.target as HTMLElement).closest("button"))) return;
     e.stopPropagation(); // the grip sits inside the bar
+    setErr(null);
     e.currentTarget.setPointerCapture(e.pointerId);
     const { screenX: sx, screenY: sy } = e;
     drag.current = null;
@@ -64,7 +70,7 @@ export function ChromeRoute({ id }: { id: string }) {
       if (my !== press.current) return; // released before focus replied
       drag.current = { kind, sx, sy, start: p.rect, screen, dx: 0, dy: 0, raf: 0 };
     } catch (err) {
-      console.error("chrome focus", err);
+      fail("focus")(err);
     }
   };
   const move = (e: React.PointerEvent) => {
@@ -84,7 +90,7 @@ export function ChromeRoute({ id }: { id: string }) {
     try {
       await commit(await getPanel(id));
     } catch (err) {
-      console.error("chrome commit", err);
+      fail("save")(err);
     }
   };
   const handlers = (kind: Kind) => ({
@@ -96,9 +102,9 @@ export function ChromeRoute({ id }: { id: string }) {
 
   return (
     <div className="panel-chrome" {...handlers("move")}>
-      <span className="panel-chrome-title">{m ? m.name : id ? id : "Module not found"}</span>
+      <span className="panel-chrome-title" style={err ? { color: "#ff7b7b" } : undefined} title={err ?? undefined}>{err ?? (m ? m.name : id ? id : "Module not found")}</span>
       <button className="panel-chrome-close" title="Close" aria-label="Close panel"
-        onClick={() => closePanel(id).catch((e) => console.error("close", e))}>×</button>
+        onClick={() => closePanel(id).catch(fail("close"))}>×</button>
       <span className="panel-chrome-grip" title="Resize" {...handlers("resize")} />
     </div>
   );
