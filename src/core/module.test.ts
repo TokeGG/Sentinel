@@ -178,4 +178,35 @@ describe("validateManifest", () => {
       )
     );
   });
+
+  describe("web panel", () => {
+    const web = { url: "https://discord.com/app", profile: "discord" };
+    it("rejects web panel without web config", () => {
+      assert.throws(() => validateManifest(base({ panel: "web" }), []), /web/);
+    });
+    it("rejects web config on non-web panel", () => {
+      assert.throws(() => validateManifest(base({ web }), []), /web/);
+    });
+    it("rejects web url that is not https", () => {
+      assert.throws(
+        () => validateManifest(base({ panel: "web", web: { ...web, url: "http://x.com" } }), []),
+        /https/
+      );
+    });
+    it("rejects profile with path characters", () => {
+      for (const profile of ["../x", "a b", "a/b"]) {
+        assert.throws(
+          () => validateManifest(base({ panel: "web", web: { ...web, profile } }), []),
+          ManifestError
+        );
+      }
+    });
+    it("accepts a valid web manifest", () => {
+      for (const profile of ["discord", "yt-main"]) {
+        assert.doesNotThrow(() =>
+          validateManifest(base({ panel: "web", web: { ...web, profile } }), [])
+        );
+      }
+    });
+  });
 });

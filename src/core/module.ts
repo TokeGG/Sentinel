@@ -2,9 +2,10 @@
 // built-in or later installed from GitHub — declares one of these. The shell
 // never hardcodes module-specific UI beyond what `panel` tells it to render.
 
-export type PanelKind = "list" | "table" | "chat" | "custom";
+export type PanelKind = "list" | "table" | "chat" | "custom" | "web";
 
-const PANEL_KINDS: PanelKind[] = ["list", "table", "chat", "custom"];
+const PANEL_KINDS: PanelKind[] = ["list", "table", "chat", "custom", "web"];
+const PROFILE_PATTERN = /^[a-z0-9][a-z0-9-]{0,31}$/; // web profile dir name: no path chars
 const ID_PATTERN = /^[a-z][a-z0-9]*(\.[a-z][a-z0-9]*)+$/; // reverse-DNS, e.g. "hub.notes"
 
 export interface SkillDef {
@@ -51,9 +52,38 @@ export interface ModuleManifest {
   // on (persisted in `schedule_settings`), never just because this field
   // exists. Keeps "no background task without explicit enable" true.
   schedule?: { skill: string; intervalMinutes: number };
+  // For panel === "web": an https site shown in an isolated webview, with its
+  // own persistent profile (cookies/storage) named by `profile`.
+  web?: { url: string; profile: string };
 }
 
 export class ManifestError extends Error {}
+
+function skillRefs(m: ModuleManifest): { what: string; skill: string }[] {
+  return [
+    ...(m.actions ?? []).map((a) => ({ what: `action "${a.label}"`, skill: a.skill })),
+    ...(m.quickAdd ? [{ what: "quickAdd", skill: m.quickAdd.skill }] : []),
+    ...(m.forms ?? []).map((f) => ({ what: `form "${f.label}"`, skill: f.skill })),
+    ...(m.schedule ? [{ what: "schedule", skill: m.schedule.skill }] : []),
+    ...(m.rowAction ? [{ what: "rowAction", skill: m.rowAction.skill }] : []),
+  ];
+}
+
+function checkWeb(where: string, m: ModuleManifest) {
+  if (m.panel !== "web") {
+    if (m.web) throw new ManifestError(`${where}: web config is only valid on a "web" panel`);
+    return;
+  }
+  if (!m.web) throw new ManifestError(`${where}: panel "web" needs a web config {url, profile}`);
+  if (!m.web.url?.startsWith("https://")) {
+    throw new ManifestError(`${where}: web.url must be https, got ${JSON.stringify(m.web.url)}`);
+  }
+  if (!PROFILE_PATTERN.test(m.web.profile ?? "")) {
+    throw new ManifestError(
+      `${where}: web.profile must match ${PROFILE_PATTERN}, got ${JSON.stringify(m.web.profile)}`
+    );
+  }
+}
 
 // Rejects a bad manifest before it ever reaches the registry — this is the
 // "invalid manifest, duplicate ID, missing dependency ... rejected with
@@ -101,39 +131,20 @@ export function validateManifest(m: ModuleManifest, existing: ModuleManifest[]) 
       `${where}: panel "${m.panel}" needs a load() to render anything`
     );
   }
-  for (const a of m.actions ?? []) {
-    if (!seen.has(a.skill)) {
-      throw new ManifestError(
-        `${where}: action "${a.label}" references unknown skill "${a.skill}"`
-      );
-    }
-  }
-  if (m.quickAdd && !seen.has(m.quickAdd.skill)) {
-    throw new ManifestError(
-      `${where}: quickAdd references unknown skill "${m.quickAdd.skill}"`
-    );
-  }
   for (const f of m.forms ?? []) {
-    if (!seen.has(f.skill)) {
-      throw new ManifestError(`${where}: form "${f.label}" references unknown skill "${f.skill}"`);
-    }
     if (f.fields.length === 0) {
       throw new ManifestError(`${where}: form "${f.label}" has no fields`);
     }
   }
-  if (m.schedule && !seen.has(m.schedule.skill)) {
-    throw new ManifestError(
-      `${where}: schedule references unknown skill "${m.schedule.skill}"`
-    );
+  for (const r of skillRefs(m)) {
+    if (!seen.has(r.skill)) {
+      throw new ManifestError(`${where}: ${r.what} references unknown skill "${r.skill}"`);
+    }
   }
   if (m.schedule && m.schedule.intervalMinutes < 1) {
     throw new ManifestError(`${where}: schedule.intervalMinutes must be >= 1`);
   }
-  if (m.rowAction && !seen.has(m.rowAction.skill)) {
-    throw new ManifestError(
-      `${where}: rowAction references unknown skill "${m.rowAction.skill}"`
-    );
-  }
+  checkWeb(where, m);
   const credKeys = new Set<string>();
   for (const f of m.credentialFields ?? []) {
     if (!f.key?.trim()) {
