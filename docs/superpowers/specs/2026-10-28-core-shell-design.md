@@ -57,4 +57,4 @@ Discord/YouTube/chat/bot features themselves; any hosted-AI call; changing the p
 ## Decisions deferred to later sub-projects
 - 2: exact IFrame player controls; which Discord notifications surface on the star map.
 - 3: connector protocols for d.gg and iCanHazChat; sending/login flow per site.
-- 4: kernel packaging (package vs local service) and the change to mmoarena; lesson-memory format; browser engine (CDP driver), local model runtime and size, skill sources and format.
+- 4: bundled skill packs sourced from GitHub and shipped inside the app per module (e.g. pentest skills behind the engagement scope gate; deal-search and news-search skills); which repos, how pinned and reviewed; kernel packaging (package vs local service) and the change to mmoarena; lesson-memory format; browser engine (CDP driver), local model runtime and size, skill sources and format.
