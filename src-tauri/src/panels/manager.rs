@@ -1,0 +1,145 @@
+//! Panel webview manager (Task 7). Decision "B": every panel is a native child
+//! webview of window "main"; any panel may overlap any other.
+//!
+//! Raise-to-front: there is no reliable cross-platform z-order API for child
+//! webviews, and the overlap spike could not be run (headless Linux). So
+//! `focus_panel` re-creates the child webview (close + add_child at the same
+//! rect); the newest child is on top. Web panels keep their session because
+//! `data_directory` is derived from the profile name, never the label.
+//! Fallback ("A": web panels always on top): only `focus_panel` changes — it
+//! would just call `set_focus` and never re-create.
+//!
+//! Chrome (Task 9b): every panel is TWO child webviews — content
+//! (`label()`) and a 28px chrome strip (`chrome_label()`, route
+//! `#/chrome/<id>`) created after it so it stacks on top. Every path below
+//! (create/destroy/move/resize/raise/show/hide) acts on both; `Spec.rect` is
+//! the OUTER rect and `geometry()` derives both webview rects from it.
+//!
+//! Locking: the `Mutex<Panels>`/`Specs` locks are taken in short blocks and
+//! released before any webview call.
+//! Persistence: commands return `SavedPanel` data; the frontend writes
+//! `panel_layout` (see persist.rs header).
+pub use super::ids::{label, parse_web_url, validate};
+pub(crate) use super::webview::{create, destroy, set_visible};
+use super::webview::place;
+pub use super::restore::*;
+use super::persist::{self, Rect, SavedPanel};
+use super::state::{OpenOutcome, Panels};
+use std::collections::HashMap;
+use std::sync::Mutex;
+use tauri::{AppHandle, Manager};
+
+#[derive(Clone)]
+pub struct Spec {
+    pub(super) url: Option<String>,
+    pub(super) profile: Option<String>,
+    pub(super) rect: Rect,
+}
+#[derive(Default)]
+pub struct Specs(Mutex<HashMap<String, Spec>>);
+
+pub(crate) fn e(err: impl std::fmt::Display) -> String {
+    err.to_string()
+}
+pub(crate) fn spec(specs: &Specs, id: &str) -> Result<Spec, String> {
+    specs.0.lock().map_err(e)?.get(id).cloned().ok_or_else(|| format!("unknown panel {id}"))
+}
+fn saved(id: &str, rect: Rect, panels: &Mutex<Panels>) -> Result<SavedPanel, String> {
+    let p = panels.lock().map_err(e)?;
+    let st = p.state(id).ok_or_else(|| format!("unknown panel {id}"))?;
+    let z = p.z_order().iter().position(|x| x == id).unwrap_or(0) as i64;
+    Ok(SavedPanel { id: id.into(), rect, state: persist::state_name(st).into(), z })
+}
+
+/// Drop state for `id` after a failed (re)create so it never reads Open without a webview.
+pub(crate) fn rollback(app: &AppHandle, id: &str) {
+    if let Ok(mut p) = app.state::<Mutex<Panels>>().lock() {
+        p.close(id);
+    }
+    if let Ok(mut m) = app.state::<Specs>().0.lock() {
+        m.remove(id);
+    }
+}
+
+#[tauri::command]
+pub async fn open_panel(app: AppHandle, id: String, url: Option<String>, profile: Option<String>, rect: Rect) -> Result<(), String> {
+    validate(&id, profile.as_deref())?;
+    if let Some(u) = &url {
+        parse_web_url(u)?;
+    }
+    let s = Spec { url, profile, rect };
+    app.state::<Specs>().0.lock().map_err(e)?.insert(id.clone(), s.clone());
+    let outcome = app.state::<Mutex<Panels>>().lock().map_err(e)?.open(&id);
+    if outcome == OpenOutcome::Focused && app.get_webview(&label(&id)).is_some() {
+        return raise(&app, &id, &s);
+    }
+    create(&app, &id, &s).inspect_err(|_| rollback(&app, &id))
+}
+
+#[tauri::command]
+pub async fn close_panel(app: AppHandle, id: String) -> Result<(), String> {
+    rollback(&app, &id);
+    destroy(&app, &id)
+}
+
+fn update_rect(specs: &Specs, id: &str, f: impl FnOnce(&mut Rect)) -> Result<Rect, String> {
+    let mut m = specs.0.lock().map_err(e)?;
+    let s = m.get_mut(id).ok_or_else(|| format!("unknown panel {id}"))?;
+    f(&mut s.rect);
+    Ok(s.rect)
+}
+
+#[tauri::command]
+pub async fn move_panel(app: AppHandle, id: String, x: f64, y: f64) -> Result<SavedPanel, String> {
+    let rect = update_rect(&app.state::<Specs>(), &id, |r| (r.x, r.y) = (x, y))?;
+    place(&app, &id, rect)?;
+    saved(&id, rect, &app.state::<Mutex<Panels>>())
+}
+
+#[tauri::command]
+pub async fn resize_panel(app: AppHandle, id: String, w: f64, h: f64) -> Result<SavedPanel, String> {
+    let rect = update_rect(&app.state::<Specs>(), &id, |r| (r.w, r.h) = (w, h))?;
+    place(&app, &id, rect)?;
+    saved(&id, rect, &app.state::<Mutex<Panels>>())
+}
+
+/// The only function to change for fallback "A" (see header).
+/// Re-creates content then chrome so the chrome stays above the content.
+fn raise(app: &AppHandle, id: &str, s: &Spec) -> Result<(), String> {
+    if let Err(err) = destroy(app, id) {
+        rollback(app, id); // never leave Open with a half-closed pair
+        return Err(err);
+    }
+    if let Err(err) = create(app, id, s) {
+        rollback(app, id);
+        return Err(err);
+    }
+    if let Some(w) = app.get_webview(&label(id)) {
+        w.set_focus().map_err(e)?;
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn focus_panel(app: AppHandle, id: String) -> Result<SavedPanel, String> {
+    let s = spec(&app.state::<Specs>(), &id)?;
+    let was_top = {
+        let st = app.state::<Mutex<Panels>>();
+        let mut p = st.lock().map_err(e)?;
+        let top = p.is_top(&id);
+        p.open(&id);
+        top
+    };
+    // Already topmost: no re-create (it would kill the chrome mid-drag).
+    if !(was_top && app.get_webview(&label(&id)).is_some()) {
+        raise(&app, &id, &s)?;
+    }
+    saved(&id, s.rect, &app.state::<Mutex<Panels>>())
+}
+
+/// Current outer rect + state + z; no side effects.
+#[tauri::command]
+pub async fn get_panel(app: AppHandle, id: String) -> Result<SavedPanel, String> {
+    let s = spec(&app.state::<Specs>(), &id)?;
+    saved(&id, s.rect, &app.state::<Mutex<Panels>>())
+}

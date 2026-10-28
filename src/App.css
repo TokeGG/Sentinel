@@ -22,60 +22,79 @@ body {
   margin: 0;
 }
 
-.app-shell {
-  display: flex;
-  height: 100vh;
+.panel-route {
+  padding: 1.5rem 2rem;
+  min-height: 100vh;
 }
 
-.sidebar {
-  width: 200px;
-  flex-shrink: 0;
-  background: #1c1c1c;
-  color: #eee;
-  padding: 1rem 0.5rem;
+.starmap {
+  --space-bg: #05070f;
+  --space-text: #d8def0;
+  --space-dim: #7c86a6;
+  --space-accent: #396cd8;
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, #0d1430 0%, var(--space-bg) 70%);
+  color: var(--space-text);
+  overflow: hidden;
 }
 
-.sidebar-brand {
-  font-weight: 700;
-  font-size: 1.1rem;
-  padding: 0.5rem 0.75rem 1rem;
-  letter-spacing: 0.02em;
+.starmap canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
 }
 
-.sidebar ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.starmap canvas.hovering {
+  cursor: pointer;
+}
+
+.starmap-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--space-dim);
+}
+
+.hud {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  align-items: flex-end;
+  gap: 0.4rem;
+  font-size: 0.85rem;
 }
 
-.sidebar button {
-  width: 100%;
-  text-align: left;
-  background: transparent;
-  border: none;
-  color: #ccc;
-  padding: 0.5rem 0.75rem;
+.hud-row {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  background: rgba(13, 20, 48, 0.8);
+  border: 1px solid #23305e;
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+}
+
+.hud button {
   border-radius: 6px;
+  border: 1px solid #2c3b70;
+  background: #121a3a;
+  color: var(--space-text);
+  padding: 0.25rem 0.6rem;
   cursor: pointer;
-  font-size: 0.95rem;
 }
 
-.sidebar button:hover {
-  background: #2a2a2a;
+.hud button.on {
+  background: var(--space-accent);
 }
 
-.sidebar button.active {
-  background: #396cd8;
-  color: #fff;
-}
-
-.workspace {
-  flex: 1;
-  padding: 1.5rem 2rem;
-  overflow-y: auto;
+.hud-error {
+  color: #ffb4b4;
+  border-color: #6a2a2a;
 }
 
 .module-desc {
@@ -252,4 +271,44 @@ body {
     color: #eee;
     border-color: #444;
   }
+}
+
+/* Panel chrome strip (Task 9b): its own 28px child webview. */
+.panel-chrome {
+  --space-bg: #05070f;
+  --space-text: #d8def0;
+  --space-dim: #7c86a6;
+  --space-accent: #396cd8;
+  position: fixed;
+  inset: 0;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 0 10px;
+  background: #0d1430;
+  color: var(--space-text);
+  border-bottom: 1px solid var(--space-accent);
+  font-size: 13px;
+  line-height: 28px;
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+  overflow: hidden;
+}
+.panel-chrome-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.panel-chrome-close {
+  all: unset;
+  width: 28px;
+  height: 28px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--space-dim);
+}
+.panel-chrome-close:hover { color: #fff; background: #c0392b; }
+.panel-chrome-grip {
+  width: 16px;
+  height: 28px;
+  cursor: nwse-resize;
+  background: linear-gradient(135deg, transparent 50%, var(--space-dim) 50%, transparent 70%);
 }

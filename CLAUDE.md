@@ -36,31 +36,47 @@ manifest alone.
 ```
 src/
   core/
-    module.ts        — the ModuleManifest contract + validateManifest()
-    ModulePanel.tsx   — the ONE generic panel every module renders through
-    Sidebar.tsx       — left nav, built from the module registry
+    module.ts         — ModuleManifest contract + validateManifest()
+                        (manifestChecks.ts: table-driven skill-ref checks)
+    ModulePanel.tsx   — the ONE generic panel (pieces in core/panel/)
     db.ts             — shared SQLite handle + logActivity()
     credentials.ts    — OS keychain wrapper (TS side)
-    scheduler.ts       — opt-in per-module background refresh
+    scheduler.ts      — opt-in per-module background refresh
+  shell/              — star map (StarMap/Planet/planets.ts), PanelRoute,
+                        ChromeRoute (#/chrome/<id> strip), GameHud,
+                        layout.ts (pure clamp/tile/cascade), layoutStore.ts
+                        (panel_layout + app_settings via db.ts), panelApi.ts
   modules/<name>/
     index.ts          — the module's ModuleManifest + its skills
-    (other files)      — module-specific logic kept OUT of index.ts when it's
-                          independently testable (see pentest/scope.ts,
-                          news/rss.ts, youtube/pkce.ts)
+    (other files)     — independently testable logic kept OUT of index.ts
   App.tsx             — imports every module (registers it) + mounts the shell
 
-src-tauri/src/lib.rs  — ALL Rust commands + ALL SQLite migrations live in
-                        this one file. Each module's migration is a numbered
-                        `Migration { version: N, ... }` entry — version
-                        numbers MUST stay strictly ascending and match their
-                        position in the `migrations()` Vec, or the SQL
-                        plugin applies them out of order.
+src-tauri/
+  migrations/NN_<module>.sql — numbered SQL, versions 1..18 strictly ascending;
+                        loaded by src/migrations.rs (order must match version)
+  src/commands/       — Rust commands by area (backup, credentials, files,
+                        mail, network, oauth, pentest, repo, system)
+  src/panels/         — panel manager: every panel = a content webview + a
+                        ~28px chrome webview (move/resize/close/focus),
+                        moved/raised together; manager, restore, webview, geometry,
+                        ids, state, persist
+  src/gamemode/       — mod.rs (enter/exit, commands, poll, emits `game-mode`),
+                        decide.rs (pure), fullscreen.rs (cfg(windows) + stub)
+  src/lib.rs          — wiring + invoke_handler list only
 ```
+
+**Shell.** The main window is a star map (planets = modules from the
+registry). A planet opens a floating panel through the panel manager (Rust).
+Layout is persisted from the TS side in SQLite `panel_layout` / `app_settings`
+(Rust returns `SavedPanel`, the frontend writes; call `clampToScreen` before
+move/resize). **Game mode** (manual button or auto detection) pauses the
+scheduler and destroys/suspends panels; auto detection is gated by the
+persisted `game_mode_auto` toggle (default on).
 
 ## The module contract (read `src/core/module.ts` for the real types)
 
 A module is a `ModuleManifest`: `id` (reverse-DNS, e.g. `"hub.notes"`),
-`panel` (almost always `"list"`), `skills` (named async functions), and
+`panel` (`"list"`, or `"web"` with `web: { url, profile }` for an embedded site with a persistent profile), `skills` (named async functions), and
 `load()` (returns rows). Everything else is optional generic UI the panel
 already knows how to render — **adding a new one of these is the
 right move before writing bespoke UI**:
@@ -107,14 +123,21 @@ reference a skill name that doesn't exist, so a typo fails loud, not silent.
 npm install
 npm run tauri dev          # full app, needs Tauri prerequisites installed
 npx tsc --noEmit            # typecheck only, fast
+npm run check:size          # file-size guard
 npm run build                # typecheck + production frontend build
-node --experimental-strip-types --test src/core/module.test.ts src/modules/news/rss.test.ts src/modules/youtube/pkce.test.ts src/modules/pentest/scope.test.ts
-cd src-tauri && cargo test --lib   # Rust-side tests (file search walker)
+npm test                    # TS baseline (node --test)
+node --test scripts/check-file-size.test.mjs
+cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-35 TS tests + 5 Rust tests as of this commit. Run the relevant ones after
-any change to `src/core/module.ts`, any `*/rss.ts`, `*/pkce.ts`, or
-`pentest/scope.ts`.
+76 TS tests + 4 size-guard tests + 48 Rust tests as of this commit. Run the
+relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
+`*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, or `src-tauri/src/panels`.
+
+**File-size rule:** no .ts/.tsx/.rs file over ~150 lines (`*.test.ts` and Rust
+code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
+`scripts/check-file-size.mjs` has an ALLOW list of files awaiting their own
+split (finance, pentest, social connectors, youtube). Never add to it; shrink it.
 
 ## What's known-incomplete (check before assuming a gap is a bug)
 
@@ -129,3 +152,13 @@ any change to `src/core/module.ts`, any `*/rss.ts`, `*/pkce.ts`, or
   doesn't exist as a stable release, fixed to `"2"`).
 - A full security review of the credential/OAuth/IMAP code hasn't happened
   yet — flagged as a known TODO, not a claim that it's been checked.
+- Webview overlap spike not run on Windows
+  (`docs/superpowers/spikes/2026-10-28-webview-spike.md`); raising a panel is
+  close + re-create (reloads the page; web profiles keep sessions).
+- Game mode: GPU-load trigger not implemented (no portable source); Windows
+  fullscreen detection and all webview code are compile-checked only, never
+  run in a real window. No local-model unload yet (bot not built).
+- Sub-projects 2-4 (Discord/YouTube webviews, multi-site chat, browser bot
+  with shared learning kernel and bundled skill packs) are deferred in
+  `docs/superpowers/specs/2026-10-28-core-shell-design.md` (each gets its own
+  spec before work starts).
