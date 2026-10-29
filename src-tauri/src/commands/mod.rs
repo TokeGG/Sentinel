@@ -9,6 +9,10 @@ pub mod mail_ops;
 pub mod mail_send;
 pub mod files;
 pub mod pentest;
+pub mod pentest_addr;
+pub mod pentest_gate;
+pub mod pentest_rule;
+pub mod pentest_time;
 pub mod backup;
 pub mod credentials;
 

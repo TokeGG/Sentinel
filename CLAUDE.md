@@ -118,7 +118,7 @@ right move before writing bespoke UI**:
 | `actions` | zero-arg buttons | "Refresh quotes" |
 | `rowAction` | one button per row | "Clone…" on a GitHub repo row |
 | `credentialFields` | password inputs → OS keychain | GitHub PAT |
-| `forms` | multi-field forms | Email compose, Pentest add-engagement |
+| `forms` | multi-field forms | Email compose |
 | `schedule` | an opt-in "Auto-refresh" checkbox | News, Weather |
 | `customize` | sections/options the user can show, hide, reorder, tune (customize drawer, saved views) | Notes, Finance |
 | `ui` | lazy `() => import("./Panel")`; required for `panel: "custom"` | all custom panels |
@@ -130,8 +130,7 @@ reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
 **Custom panels** exist for notes, news, deals, pccare, weather, homenet,
-github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email. pentest
-still uses the generic panel (redesigns planned). To add one:
+github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email, pentest. To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
 3. Wrap each user-hideable part in `<Section id="...">` inside `<Sections>`.
@@ -191,7 +190,7 @@ relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 **File-size rule:** no .ts/.tsx/.rs file over ~150 lines (`*.test.ts` and Rust
 code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
 `scripts/check-file-size.mjs` has an ALLOW list of files awaiting their own
-split (finance, pentest). Never add to it; shrink it.
+split (finance). Never add to it; shrink it.
 
 **Updates:** Settings > Updates (`shell/updater.ts`) checks GitHub releases
 only on a button press (no background call). Releases are tag-driven (`v*`):
@@ -221,7 +220,14 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Rust `restore_database` copies only the files present in the backup, leaves
   stale `-wal`/`-shm` next to the restored db, copies over an open DB, and does
   no validation; needs its own fix.
-- pentest is not yet redesigned (generic panel).
+- Pentest (`modules/pentest`): custom terminal-style panel. `scope.ts` (+ scopeAddr/Rules/Window/Decl)
+  is still the one gate: includes = host/IP, CIDR (min /8, /32 v6), `*.wildcard` (not the apex);
+  exclusions always win; status must be active and inside the UTC window. `runner.ts`/`api.ts`
+  `runTool(engagementId, toolId, target)` is the only way to run; only the built-in `port-scan`
+  is registered (no external programs, no other tools: that needs an explicit decision). Rust
+  `tcp_port_scan` re-checks with a mirror (`commands/pentest_gate.rs`, `pentest_rule.rs`);
+  both sides are tested against `gateVectors.json`, so change the gate in both. Tables: migration 25.
+  Never run in a real window or against a real network yet.
 - Email (`modules/email`): custom panel, multi-account IMAP/SMTP, passwords only in keychain (`pw:<accountId>`), cache in SQLite (`mail_*`, migration 24), HTML sanitized by `sanitize.ts` into a `sandbox=""` iframe. No OAuth (Gmail/iCloud need app passwords). No attachment download, drafts saving or threading. The Rust mail code (mail*.rs, `mail-parser` crate) compiles and its pure parts are unit-tested, but has never run against a live mail server.
 - Discord panel is built (modules/discord) but media permissions, the screen-share
   picker/Go Live and the unread moon are unverified on Windows; checklist in
