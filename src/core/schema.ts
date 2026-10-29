@@ -6,7 +6,7 @@
 // load. The statements must stay identical to the migration files (schema.test.ts
 // enforces it). Migrations 17+ use CREATE TABLE IF NOT EXISTS so a plugin run
 // after this bootstrap does not fail on "already exists".
-import { PENTEST_STATEMENTS } from "./schemaPentest.ts";
+import { LATER_STATEMENTS } from "./schemaSocial.ts";
 export const SCHEMA_STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS panel_layout (
     module_id TEXT PRIMARY KEY,
@@ -112,7 +112,7 @@ export const SCHEMA_STATEMENTS: string[] = [
     json TEXT NOT NULL,
     PRIMARY KEY (account_id, folder, uid)
 )`,
-  ...PENTEST_STATEMENTS, // migration 25
+  ...LATER_STATEMENTS, // migrations 25 (pentest), 26 (social)
 ];
 
 export async function ensureSchema(exec: (sql: string) => Promise<unknown>): Promise<void> {

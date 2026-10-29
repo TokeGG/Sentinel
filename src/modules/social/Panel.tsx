@@ -7,8 +7,10 @@ import { useOption } from "../../ui/useOption";
 import { useModule } from "../../ui/useModule";
 import { Accounts, type Status } from "./Accounts";
 import { Composer } from "./Composer";
-import { PostCard } from "./PostCard";
-import { dividerIndex, filterPosts, mergePosts, platformColor, rowToPost } from "./panelLogic";
+import { PostCard, type CardActions } from "./PostCard";
+import { cardActions, postKey } from "./actionLogic";
+import { useActions } from "./useActions";
+import { dividerIndex, filterPosts, mergePosts, platformColor, rowToPost, type FeedPost } from "./panelLogic";
 import { getLastVisit, markVisited } from "./store";
 import "./social.css";
 
@@ -19,6 +21,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const density = useOption("density", "comfortable");
   const showMedia = useOption("showMedia", true);
   const showCounts = useOption("showCounts", true);
+  const showActions = useOption("showActions", true);
   const [status, setStatus] = useState<Status[]>([]);
   const [lastVisit, setLastVisit] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
@@ -33,12 +36,21 @@ export default function Panel({ module }: { module: ModuleManifest }) {
     findSkill(module, "connection_status").run().then((s) => setStatus(s as Status[])).catch(() => {});
   }, [module, busy]);
 
-  const posts = useMemo(() => mergePosts(rows.map(rowToPost)), [rows]);
+  const base = useMemo(() => mergePosts(rows.map(rowToPost)), [rows]);
+  const acts = useActions(module, base);
+  const posts = acts.view;
   const shown = useMemo(() => filterPosts(posts, picked, query), [posts, picked, query]);
   const divider = dividerIndex(shown, lastVisit);
+  const statusById = Object.fromEntries(status.map((s) => [s.id, s]));
   const labels = Object.fromEntries(status.map((s) => [s.id, s.label]));
   const platforms = [...new Set([...status.filter((s) => s.connected).map((s) => s.id), ...posts.map((p) => p.platform)])];
   const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+
+  const cardProps = (p: FeedPost): CardActions | undefined => {
+    const can = cardActions(statusById[p.platform], showActions);
+    if (!(can.like || can.share || can.reply)) return undefined;
+    return { can, busy: acts.busy.includes(postKey(p)), onAct: (k) => void acts.act(p, k), onReply: (t) => acts.reply(p, t) };
+  };
 
   const post = async (text: string, targets: string[]) => {
     if ((await run("post_status", { text, targets })) === undefined) return false;
@@ -54,7 +66,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <span className="ui-count">{shown.length}</span>
         <button type="button" className="ui-btn" disabled={busy} onClick={() => void run("fetch_all_feeds")}>{busy ? "Working…" : "Refresh"}</button>
       </h2>
-      {error && <ErrorLine message={error} />}
+      {(error || acts.error) && <ErrorLine message={(error || acts.error)!} />}
       <Sections>
         <Section id="composer"><Composer status={status} busy={busy} onPost={post} /></Section>
         <Section id="filters">
@@ -74,7 +86,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
               {shown.slice(0, limit).map((p, i) => (
                 <div key={`${p.platform}:${p.postId}`}>
                   {i === divider && <div className="soc-divider"><span>New since your last visit</span></div>}
-                  <PostCard post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} />
+                  <PostCard post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} actions={cardProps(p)} />
                 </div>
               ))}
               {shown.length > limit && <button type="button" className="ui-btn" onClick={() => setLimit(limit + PAGE)}>Show more</button>}

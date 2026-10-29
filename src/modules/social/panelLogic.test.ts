@@ -9,7 +9,7 @@ import { customizeError } from "../../core/customizeChecks.ts";
 
 const P = (platform: string, postId: string, postedAt: string | null, text = "hi"): FeedPost => ({
   platform, postId, name: "Ann", handle: "ann@x", avatar: null, text, link: null, media: [],
-  likes: null, reposts: null, replies: null, postedAt,
+  likes: null, reposts: null, replies: null, postedAt, meta: {},
 });
 const a = P("mastodon", "1", "2026-01-03T00:00:00Z");
 const b = P("bluesky", "1", "2026-01-02T00:00:00Z", "Hello World");

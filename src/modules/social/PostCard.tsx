@@ -1,10 +1,24 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { useState } from "react";
 import { safeLink } from "../../ui/safeLink";
+import { ReplyBox } from "./ReplyBox";
+import type { ActionKind } from "./actionLogic";
 import { linkify, platformColor, postAge, type FeedPost } from "./panelLogic";
 
 const open = (u: string) => void openUrl(u);
 
-export function PostCard({ post: p, label, showMedia, showCounts }: { post: FeedPost; label: string; showMedia: boolean; showCounts: boolean }) {
+export type CardActions = {
+  can: { like: boolean; share: boolean; reply: boolean };
+  busy: boolean;
+  onAct: (kind: ActionKind) => void;
+  onReply: (text: string) => Promise<boolean>;
+};
+
+export function PostCard({ post: p, label, showMedia, showCounts, actions }: {
+  post: FeedPost; label: string; showMedia: boolean; showCounts: boolean; actions?: CardActions;
+}) {
+  const [replying, setReplying] = useState(false);
+  const can = actions?.can;
   const link = safeLink(p.link);
   const counts = [["↩", p.replies], ["⟲", p.reposts], ["♥", p.likes]].filter(([, n]) => n !== null);
   return (
@@ -39,8 +53,18 @@ export function PostCard({ post: p, label, showMedia, showCounts }: { post: Feed
         )}
         <footer className="soc-foot">
           {showCounts && counts.map(([g, n]) => <span key={g} className="ui-meta">{g} {n}</span>)}
+          {can?.like && (
+            <button type="button" className={`ui-link soc-act${p.meta.liked ? " on" : ""}`} aria-pressed={!!p.meta.liked} disabled={actions!.busy}
+              onClick={() => actions!.onAct(p.meta.liked ? "unlike" : "like")}>{p.meta.liked ? "Liked" : "Like"}</button>
+          )}
+          {can?.share && (
+            <button type="button" className={`ui-link soc-act${p.meta.shared ? " on" : ""}`} aria-pressed={!!p.meta.shared} disabled={actions!.busy}
+              onClick={() => actions!.onAct(p.meta.shared ? "unshare" : "share")}>{p.meta.shared ? "Boosted" : p.platform === "bluesky" ? "Repost" : "Boost"}</button>
+          )}
+          {can?.reply && <button type="button" className="ui-link soc-act" onClick={() => setReplying(!replying)}>Reply</button>}
           {link && <button type="button" className="ui-link soc-open" onClick={() => open(link)}>Open ↗</button>}
         </footer>
+        {replying && actions && <ReplyBox platform={p.platform} onSend={actions.onReply} onCancel={() => setReplying(false)} />}
       </div>
     </article>
   );

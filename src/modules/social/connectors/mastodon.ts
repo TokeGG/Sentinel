@@ -3,16 +3,27 @@ import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { setCredential } from "../../../core/credentials";
 import { MODULE_ID, cred } from "./common";
+import { mastoPatch, mastoReplyBody, mastoUrl, type MastoAction } from "./actions";
 import { parseMastodon } from "./parse";
-import type { SocialConnector } from "./types";
+import type { PostRef, SocialConnector } from "./types";
 
 // Real one-click OAuth: instances let any app self-register, so "Connect"
 // registers this install, opens the browser to approve, catches the redirect
 // (generic oauth_listen_once). Only upfront input is the instance. Scopes:
-// read + write:statuses (posting); accounts connected before posting existed
-// must click Connect again.
+// read + write:statuses (posting, boosts, replies) + write:favourites (likes);
+// accounts connected with fewer scopes must click Connect again.
 const PORT = 53683;
-const SCOPE = "read write:statuses";
+const SCOPE = "read write:statuses write:favourites";
+
+const REAUTH = 'refused — click "Connect Mastodon" again to grant likes, boosts and replies';
+
+async function act(p: PostRef, a: MastoAction) {
+  const token = await cred("mastodon", "access_token");
+  const res = await fetch(mastoUrl(await cred("mastodon", "instance_url"), p, a), { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+  if (res.status === 403) throw new Error(`Mastodon ${REAUTH}`);
+  if (!res.ok) throw new Error(`Mastodon ${a} failed: ${res.status}`);
+  return mastoPatch(a);
+}
 
 export const mastodon: SocialConnector = {
   id: "mastodon",
@@ -80,5 +91,20 @@ export const mastodon: SocialConnector = {
     });
     if (res.status === 403) throw new Error('Mastodon post refused — click "Connect Mastodon" again to grant posting');
     if (!res.ok) throw new Error(`Mastodon post failed: ${res.status}`);
+  },
+  like: (p) => act(p, "favourite"),
+  unlike: (p) => act(p, "unfavourite"),
+  share: (p) => act(p, "reblog"),
+  unshare: (p) => act(p, "unreblog"),
+  async reply(p, text) {
+    const base = await cred("mastodon", "instance_url");
+    const token = await cred("mastodon", "access_token");
+    const res = await fetch(`${base}/api/v1/statuses`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(mastoReplyBody(p, text)),
+    });
+    if (res.status === 403) throw new Error(`Mastodon ${REAUTH}`);
+    if (!res.ok) throw new Error(`Mastodon reply failed: ${res.status}`);
   },
 };

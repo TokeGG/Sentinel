@@ -3,6 +3,7 @@ import { logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest, type ActionDef, type SkillDef } from "../../core/module";
 import { connectors } from "./connectors";
 import { socialOptions, socialSections } from "./panelLogic";
+import { runAction } from "./actions";
 import { loadFeed, newPostCount, savePosts } from "./store";
 
 async function fetchAllFeeds() {
@@ -29,6 +30,7 @@ async function connectionStatus() {
       id: c.id,
       label: c.label,
       canPost: !!c.post,
+      can: { like: !!c.like, share: !!c.share, reply: !!c.reply },
       connected: c.connectedKey ? !!(await getCredential("hub.social", `${c.id}_${c.connectedKey}`).catch(() => null)) : false,
     }))
   );
@@ -72,7 +74,7 @@ export const socialModule: ModuleManifest = {
   ring: "daily",
   icon: "social",
   description:
-    "One chronological feed across Bluesky, Mastodon and Reddit; post to Bluesky and Mastodon. X is not built (its API is paywalled).",
+    "One chronological feed across Bluesky, Mastodon and Reddit; post to Bluesky and Mastodon; like, boost and reply where the platform allows. X is not built (its API is paywalled).",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: { sections: socialSections, options: socialOptions },
@@ -81,6 +83,7 @@ export const socialModule: ModuleManifest = {
     { name: "fetch_all_feeds", run: fetchAllFeeds },
     { name: "connection_status", run: connectionStatus },
     { name: "post_status", run: postStatus },
+    { name: "post_action", run: (a) => runAction(a) },
     ...connectSkills,
   ],
   load: loadFeed,

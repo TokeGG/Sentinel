@@ -3,13 +3,27 @@ import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { setCredential } from "../../../core/credentials";
 import { MODULE_ID, UA, cred } from "./common";
+import { redditCommentBody, redditCommentError, redditVoteBody } from "./actions";
 import { parseReddit } from "./parse";
-import type { SocialConnector } from "./types";
+import type { PostRef, SocialConnector } from "./types";
 
 // One-click OAuth, but Reddit has no dynamic app registration: create one
 // "installed app" at reddit.com/prefs/apps (redirect URI below), paste its
-// Client ID, then every sign-in is just "Connect". Read-only (no submit scope).
+// Client ID, then every sign-in is just "Connect". Scopes: read identity (feed) + vote + submit (upvote, comment); older sign-ins must Connect again.
 const PORT = 53684;
+
+// POST to oauth.reddit.com/api/<name> (form-encoded); returns the JSON body.
+async function api(name: "vote" | "comment", body: string): Promise<unknown> {
+  const token = await cred("reddit", "access_token");
+  const res = await fetch(`https://oauth.reddit.com/api/${name}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "User-Agent": UA, "Content-Type": "application/x-www-form-urlencoded" },
+    body,
+  });
+  if (res.status === 401 || res.status === 403) throw new Error('Reddit refused — click "Connect Reddit" again to grant voting and commenting');
+  if (!res.ok) throw new Error(`Reddit ${name} failed: ${res.status}`);
+  return res.json().catch(() => ({}));
+}
 
 export const reddit: SocialConnector = {
   id: "reddit",
@@ -29,7 +43,7 @@ export const reddit: SocialConnector = {
     authUrl.searchParams.set("state", crypto.randomUUID());
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("duration", "permanent");
-    authUrl.searchParams.set("scope", "read identity");
+    authUrl.searchParams.set("scope", "read identity vote submit");
 
     const codePromise = invoke<string>("oauth_listen_once", { port: PORT, timeoutSecs: 120 });
     await openUrl(authUrl.toString());
@@ -60,5 +74,17 @@ export const reddit: SocialConnector = {
     if (res.status === 401) throw new Error('Reddit token expired — click "Connect Reddit" again');
     if (!res.ok) throw new Error(`Reddit feed fetch failed: ${res.status}`);
     return parseReddit(await res.json());
+  },
+  async like(p: PostRef) {
+    await api("vote", redditVoteBody(p, 1));
+    return { liked: true };
+  },
+  async unlike(p: PostRef) {
+    await api("vote", redditVoteBody(p, 0));
+    return { liked: false };
+  },
+  async reply(p: PostRef, text: string) {
+    const err = redditCommentError(await api("comment", redditCommentBody(p, text)));
+    if (err) throw new Error(`Reddit: ${err}`);
   },
 };
