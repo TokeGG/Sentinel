@@ -3,6 +3,8 @@ import { safeLink } from "../../ui/safeLink";
 import { Avatar, byLine, type Card, type CardActions } from "./Cards";
 import { Player } from "./Player";
 import { thumbUrl, watchUrl } from "./panelLogic";
+import { RATES } from "./extras";
+import type { YtX } from "./useYtExtras";
 
 interface Props {
   playing: Card;
@@ -14,16 +16,20 @@ interface Props {
   onRate(r: "like" | "dislike"): void;
   onChat(): void;
   onClose(): void;
+  onMini(): void;
+  x: YtX;
 }
 
 // Big player on the left, "Up next" on the right (stacks under it when narrow).
-export function WatchView({ playing, next, queue, rating, busy, act, onRate, onChat, onClose }: Props) {
+export function WatchView({ playing, next, queue, rating, busy, act, onRate, onChat, onClose, onMini, x }: Props) {
+  const rate = (playing.channelId && x.speed.get(playing.channelId)) || 1;
   const link = safeLink(watchUrl(playing.videoId));
   const queued = queue.has(playing.videoId);
   return (
     <div className="yt-watch">
       <div className="yt-watch-main">
-        <Player videoId={playing.videoId} title={playing.title} />
+        <Player videoId={playing.videoId} title={playing.title} rate={rate} start={x.resumeAt(playing.videoId)}
+          onProgress={(t, d) => x.saveProgress({ videoId: playing.videoId, channelId: playing.channelId, title: playing.title, seconds: t, duration: d })} />
         <h3 className="yt-watch-title">{playing.title}</h3>
         <div className="yt-watch-row">
           <Avatar name={playing.channel || "?"} />
@@ -34,6 +40,11 @@ export function WatchView({ playing, next, queue, rating, busy, act, onRate, onC
             <button type="button" className="ui-btn" disabled={busy} onClick={() => act.later(playing, !queued)}>{queued ? "✓ Saved" : "Watch later"}</button>
             <button type="button" className="ui-btn" disabled={busy} title="Add this video's live chat to the Chat panel" onClick={onChat}>Chat</button>
             {link && <button type="button" className="ui-btn" onClick={() => void openUrl(link)}>Open on YouTube</button>}
+            {playing.channelId && <select className="ui-btn" value={rate} title="Speed (remembered for this channel)" aria-label="Playback speed" onChange={(e) => x.setSpeed(playing.channelId!, Number(e.target.value))}>
+              {RATES.map((r) => <option key={r} value={r}>{r}×</option>)}</select>}
+            {x.playlists.length > 0 && <select className="ui-btn" value="" aria-label="Add to playlist" onChange={(e) => e.target.value && x.addToPlaylist(Number(e.target.value), playing)}>
+              <option value="">+ Playlist</option>{x.playlists.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>}
+            <button type="button" className="ui-btn" title="Keep playing in a small player while you browse" onClick={onMini}>Mini player</button>
             <button type="button" className="ui-btn" onClick={onClose}>Close</button>
           </div>
         </div>

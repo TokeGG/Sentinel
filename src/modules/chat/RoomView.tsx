@@ -8,6 +8,10 @@ import { ConnPanel } from "./ConnPanel";
 import type { Room, RoomState } from "./types";
 import { useEmoteSets } from "./useEmoteSets";
 import { useRoom } from "./useRoom";
+import { classify, playerEmbed, userKey } from "./chatExtras";
+import { usePrefs } from "./prefsContext";
+import { UserCard } from "./UserCard";
+import { useRoomLog } from "./useRoomLog";
 
 type Props = {
   room: Room; cap: number; stamp: boolean; epoch: number; visible: boolean; fallback: boolean;
@@ -34,6 +38,12 @@ function SocketRoom({ room, cap, stamp, epoch, visible, onActivity, onFallback, 
   const set = useEmoteSets(live.channelId);
   const list = useRef<HTMLDivElement>(null);
   const [stuck, setStuck] = useState(true);
+  const [who, setWho] = useState<string | null>(null);
+  const prefs = usePrefs();
+  const nick = live.link?.nick;
+  const rows = live.messages.map((m) => ({ m, c: classify(m, prefs.filters) })).filter((x) => x.c !== "hide");
+  useRoomLog(room.label, live.messages, (m) => isMention(m.text, nick) || classify(m, prefs.filters) === "highlight", prefs.logs, prefs.logCap);
+  const player = prefs.players ? playerEmbed(room.site, room.target, location.hostname) : null;
 
   // Follow new messages unless the user scrolled up (pause-on-scroll-up).
   useLayoutEffect(() => {
@@ -43,6 +53,7 @@ function SocketRoom({ room, cap, stamp, epoch, visible, onActivity, onFallback, 
 
   return (
     <>
+      {player && <iframe className="chat-player" src={player} title={`${room.label} stream`} allow="autoplay; fullscreen" allowFullScreen />}
       <ConnPanel status={live.status} detail={live.detail} log={live.log} canEmbed={!!connectorOf(room.site).embedFallback} onRetry={() => setRetry((n) => n + 1)} onEmbed={() => onFallback(true)} />
       <div
         className="chat-list"
@@ -52,14 +63,15 @@ function SocketRoom({ room, cap, stamp, epoch, visible, onActivity, onFallback, 
           setStuck(isAtBottom(t.scrollTop, t.clientHeight, t.scrollHeight));
         }}
       >
-        {live.messages.map((m) => (
-          <MessageRow key={m.id} m={m} set={set} stamp={stamp} mention={!m.self && isMention(m.text, live.link?.nick)} />
+        {rows.map(({ m, c }) => (
+          <MessageRow key={m.id} m={m} set={set} stamp={stamp} mention={!m.self && (c === "highlight" || isMention(m.text, nick))} pref={prefs.users.get(userKey(room.site, m.user))} onUser={setWho} />
         ))}
       </div>
       {!stuck && (
         <button type="button" className="ui-btn chat-jump" onClick={() => setStuck(true)}>Paused — jump to latest</button>
       )}
-      <Composer live={live} />
+      {who && <UserCard site={room.site} user={who} onClose={() => setWho(null)} />}
+      <Composer live={live} set={set} />
     </>
   );
 }

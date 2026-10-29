@@ -2,6 +2,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { cred } from "./common";
 import { bskyCreatedUri, bskyDelete, bskyLike, bskyReply, bskyRepost } from "./actions";
 import { parseBluesky } from "./parse";
+import { parseBskyNotifications } from "./inboxParse";
 import type { SocialConnector } from "./types";
 
 // AT Protocol has no public-client OAuth a desktop app can use without
@@ -47,6 +48,12 @@ export const bluesky: SocialConnector = {
     });
     if (!res.ok) throw new Error(`Bluesky feed fetch failed: ${res.status}`);
     return parseBluesky(await res.json());
+  },
+  async fetchInbox() {
+    const { accessJwt } = await session();
+    const res = await fetch("https://bsky.social/xrpc/app.bsky.notification.listNotifications?limit=50", { headers: { Authorization: `Bearer ${accessJwt}` } });
+    if (!res.ok) throw new Error(`Bluesky notifications failed: ${res.status}`);
+    return parseBskyNotifications(await res.json());
   },
   async post(text) {
     const { did } = await session();

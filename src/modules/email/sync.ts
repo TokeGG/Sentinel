@@ -8,11 +8,13 @@ import { folderOfRole, folderRole, sortFolders } from "./folders";
 import { savesSentCopy } from "./presets";
 import { staleUids } from "./panelLogic";
 import type { Account, Body, Folder, Msg } from "./types";
+import { saveMeta } from "./extrasStore";
+import { applyRules } from "./extrasSync";
 
 export const PAGE = 50;
-interface RawHeader { uid: number; fromName: string; fromAddr: string; to: string; subject: string; dateTs: number; preview: string; seen: boolean; starred: boolean; answered: boolean; hasAttach: boolean }
+interface RawHeader { messageId: string; inReplyTo: string; refs: string; unsub: string; uid: number; fromName: string; fromAddr: string; to: string; subject: string; dateTs: number; preview: string; seen: boolean; starred: boolean; answered: boolean; hasAttach: boolean }
 
-async function acctById(id: string): Promise<Account> {
+export async function acctById(id: string): Promise<Account> {
   const a = (await listAccounts()).find((x) => x.id === id);
   if (!a) throw new Error("Account not found");
   return a;
@@ -26,12 +28,13 @@ export async function syncFolders(a: Account): Promise<Folder[]> {
 }
 
 /** Fetches one page (offset = how many newest to skip). Page 0 also prunes server-deleted messages. */
-export async function syncHeaders(a: Account, folder: string, offset = 0): Promise<{ total: number; count: number }> {
+export async function syncHeaders(a: Account, folder: string, offset = 0): Promise<{ total: number; count: number; msgs: Msg[] }> {
   const page = await invoke<{ total: number; headers: RawHeader[] }>("mail_fetch_headers", { acct: (await connFor(a)).imap, folder, offset, limit: PAGE });
-  const ms: Msg[] = page.headers.map((h) => ({ ...h, accountId: a.id, folder }));
+  const ms: Msg[] = page.headers.map(({ messageId: _i, inReplyTo: _r, refs: _f, unsub: _u, ...h }) => ({ ...h, accountId: a.id, folder }));
   if (offset === 0) await dropMessages(a.id, folder, staleUids(await cachedUids(a.id, folder), ms.map((m) => m.uid)));
   await upsertMessages(ms);
-  return { total: page.total, count: ms.length };
+  await saveMeta(page.headers.map((h) => ({ ...h, accountId: a.id, folder })));
+  return { total: page.total, count: ms.length, msgs: ms };
 }
 
 export async function refreshAccounts(args?: Record<string, unknown>) {
@@ -40,7 +43,9 @@ export async function refreshAccounts(args?: Record<string, unknown>) {
   for (const a of accounts) {
     const fs = await syncFolders(a);
     const want = typeof args?.folder === "string" ? args.folder : (folderOfRole(fs, "inbox") ?? "INBOX");
-    n += (await syncHeaders(a, want)).count;
+    const got = await syncHeaders(a, want);
+    n += got.count;
+    if (fs.find((f) => f.name === want)?.role === "inbox") await applyRules(a, got.msgs);
   }
   await logActivity("email", "refresh", `${accounts.length} account(s)`, `${n} header(s)`);
   return { ok: true, count: n };

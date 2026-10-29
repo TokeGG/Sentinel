@@ -3,11 +3,12 @@ import { hiddenOf, isHidden, type Sig, type Watched } from "./library.ts";
 import type { Channel } from "./panelLogic.ts";
 import type { Video } from "./recommend.ts";
 
-export type View = "home" | "subs" | "later" | "history" | "watch";
+export type View = "home" | "subs" | "later" | "playlists" | "history" | "watch";
 export const NAV: { view: Exclude<View, "watch">; label: string; icon: string }[] = [
   { view: "home", label: "Home", icon: "⌂" },
   { view: "subs", label: "Channels", icon: "▤" },
   { view: "later", label: "Watch later", icon: "⏲" },
+  { view: "playlists", label: "Playlists", icon: "≣" },
   { view: "history", label: "History", icon: "↺" },
 ];
 

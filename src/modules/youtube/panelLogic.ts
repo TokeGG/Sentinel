@@ -8,9 +8,12 @@ type Row = Record<string, unknown>;
 export const ytSections = [
   { id: "add", label: "Add channel by link" },
   { id: "chips", label: "Filter chips" },
+  { id: "continue", label: "Continue watching" },
   { id: "recommended", label: "Recommended" },
   { id: "latest", label: "Latest videos" },
   { id: "later", label: "Watch later" },
+  { id: "playlists", label: "Playlists" },
+  { id: "tray", label: "Watch-later tray" },
   { id: "channels", label: "Channels" },
   { id: "history", label: "Watch history & import" },
   { id: "status", label: "Refresh & auto-refresh" },

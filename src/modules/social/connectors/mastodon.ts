@@ -2,6 +2,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { connectMastodon, isConnected, mastoAuth } from "./accountToken";
 import { mastoPatch, mastoReplyBody, mastoUrl, type MastoAction } from "./actions";
 import { parseMastodon } from "./parse";
+import { parseMastoMentions } from "./inboxParse";
 import type { PostRef, SocialConnector } from "./types";
 
 // One-click OAuth via core/connect (dynamic client registration, PKCE, Settings > Accounts).
@@ -29,6 +30,12 @@ export const mastodon: SocialConnector = {
     const res = await fetch(`${base}/api/v1/timelines/home?limit=40`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`Mastodon fetch failed: ${res.status}`);
     return parseMastodon(await res.json());
+  },
+  async fetchInbox() {
+    const { base, token } = await mastoAuth();
+    const res = await fetch(`${base}/api/v1/notifications?types[]=mention&limit=40`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error(`Mastodon notifications failed: ${res.status}`);
+    return parseMastoMentions(await res.json());
   },
   async post(text) {
     const { base, token } = await mastoAuth();

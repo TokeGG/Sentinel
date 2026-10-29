@@ -122,3 +122,19 @@
 .mail-form input:focus { outline: none; border-color: var(--accent-line); }
 .mail-row > input:not(.mail-port) { flex: 1; }
 .mail-port { width: 80px; }
+
+/* Extras: virtual folders, threads, snooze, rules, attachments, autocomplete */
+.mail-virtual { border-bottom: 1px solid var(--line); padding-bottom: var(--gap); }
+.mail-thread { list-style: none; margin: 0 0 var(--gap); padding: 0; display: flex; flex-wrap: wrap; gap: 4px; }
+.mail-thread button { font-size: var(--fs-xs); padding: 2px 8px; border: 1px solid var(--line); border-radius: var(--radius-sm, 6px); background: transparent; color: var(--text); }
+.mail-thread button.active { border-color: var(--accent); background: var(--accent-soft); }
+.mail-snooze, .mail-ac { position: relative; }
+.mail-menu { position: absolute; z-index: 6; display: flex; flex-direction: column; gap: 2px; padding: 4px; margin: 2px 0 0; list-style: none; background: var(--overlay, var(--surface-2)); border: 1px solid var(--line); border-radius: var(--radius-sm, 6px); min-width: 180px; }
+.mail-menu button { text-align: left; width: 100%; background: transparent; border: 0; color: var(--text); padding: 3px 6px; cursor: pointer; }
+.mail-menu button:hover { background: var(--accent-soft); }
+.mail-ac input { width: 100%; }
+.mail-rules { padding: var(--gap); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: var(--gap); font-size: var(--fs-sm); }
+.mail-rules ul { margin: 0; padding-left: 16px; }
+.mail-preview { border: 1px solid var(--line); border-radius: var(--radius-sm, 6px); padding: var(--gap); margin-top: var(--gap); }
+.mail-preview img { max-width: 100%; }
+.mail-preview iframe { width: 100%; height: 420px; border: 0; background: #fff; }

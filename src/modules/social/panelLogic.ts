@@ -26,6 +26,7 @@ export const socialSections = [
   { id: "composer", label: "Composer" },
   { id: "filters", label: "Filters & search" },
   { id: "feed", label: "Feed" },
+  { id: "lists", label: "Lists & mutes", default: false },
   { id: "accounts", label: "Accounts" },
 ];
 

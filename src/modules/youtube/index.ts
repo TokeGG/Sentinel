@@ -3,6 +3,7 @@ import { ytSections } from "./panelLogic";
 import { addLater, clearHidden, clearHistory, clearSignal, importHistory, markWatched, removeLater, setSignal } from "./libraryStore";
 import { addChannel, loadRows, refreshFeeds, removeChannel } from "./store";
 import { importSubscriptions } from "./subsStore";
+import { uploadBadge } from "./extrasStore";
 
 // No Google account or API key: channels are added by URL and read from their
 // public Atom feeds; "watched" is recorded locally when you play a video here.
@@ -12,7 +13,7 @@ export const youtubeModule: ModuleManifest = {
   accent: "#ff6b6b",
   ring: "media",
   icon: "youtube",
-  description: "Channels you add by URL, their latest videos (public feeds), in-app playback, a watch-later queue and local recommendations (thumbs and not-interested feed them).",
+  description: "Channels you add by URL, their latest videos (public feeds), in-app playback, a watch-later queue, playlists, channel groups, continue watching and local recommendations (thumbs and not-interested feed them).",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: { sections: ytSections },
@@ -34,6 +35,7 @@ export const youtubeModule: ModuleManifest = {
   quickAdd: { skill: "add_channel", argName: "url", placeholder: "Channel or video URL, @handle, or UC… id" },
   actions: [{ label: "Refresh", skill: "refresh_feeds" }],
   schedule: { skill: "refresh_feeds", intervalMinutes: 60 },
+  badge: uploadBadge,
 };
 
 registerModule(youtubeModule);

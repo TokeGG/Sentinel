@@ -40,7 +40,7 @@ export async function cachedUids(accountId: string, folder: string): Promise<num
 }
 export async function dropMessages(accountId: string, folder: string, uids: number[]) {
   const d = await getDb();
-  for (const u of uids) for (const t of ["mail_messages", "mail_bodies"])
+  for (const u of uids) for (const t of ["mail_messages", "mail_bodies", "mail_meta", "mail_snooze"])
     await d.execute(`DELETE FROM ${t} WHERE account_id=$1 AND folder=$2 AND uid=$3`, [accountId, folder, u]);
 }
 export async function setCachedFlag(accountId: string, folder: string, uid: number, col: "seen" | "starred", on: boolean) {
@@ -56,6 +56,18 @@ export async function cachedBody(accountId: string, folder: string, uid: number)
   const d = await getDb();
   const r = await d.select<{ json: string }[]>("SELECT json FROM mail_bodies WHERE account_id=$1 AND folder=$2 AND uid=$3", [accountId, folder, uid]);
   try { return r[0] ? (JSON.parse(r[0].json) as Body) : null; } catch { return null; }
+}
+
+/** Cached INBOX messages of every account (unified inbox). */
+export async function cachedUnified(): Promise<Msg[]> {
+  const r = await (await getDb()).select<MRow[]>(`SELECT m.* FROM mail_messages m JOIN mail_folders f ON f.account_id=m.account_id AND f.name=m.folder
+    WHERE f.role='inbox' ORDER BY m.date_ts DESC LIMIT 2000`);
+  return r.map(toMsg);
+}
+/** Messages with a snooze row (any folder, any account). */
+export async function cachedSnoozed(): Promise<Msg[]> {
+  const r = await (await getDb()).select<MRow[]>(`SELECT m.* FROM mail_messages m JOIN mail_snooze s ON s.account_id=m.account_id AND s.folder=m.folder AND s.uid=m.uid ORDER BY s.until_ts`);
+  return r.map(toMsg);
 }
 
 /** Planet badge: unread messages in cached INBOXes (a count only). */

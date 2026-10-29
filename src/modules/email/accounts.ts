@@ -33,7 +33,7 @@ export async function addAccount(x: AccountDraft): Promise<string> {
 
 export async function removeAccount(id: string): Promise<void> {
   const d = await getDb();
-  for (const t of ["mail_bodies", "mail_messages", "mail_folders"]) await d.execute(`DELETE FROM ${t} WHERE account_id = $1`, [id]);
+  for (const t of ["mail_bodies", "mail_messages", "mail_folders", "mail_meta", "mail_snooze", "mail_drafts"]) await d.execute(`DELETE FROM ${t} WHERE account_id = $1`, [id]);
   await d.execute("DELETE FROM mail_accounts WHERE id = $1", [id]);
   await deleteCredential(MODULE_ID, pwKey(id)).catch(() => {});
 }

@@ -13,6 +13,8 @@ import { visibleRooms, toRooms } from "./panelLogic";
 import type { RoomState } from "./types";
 import { RoomTabs } from "./RoomTabs";
 import { RoomView } from "./RoomView";
+import { FiltersTool, LogsTool } from "./ChatTools";
+import { PrefsCtx, useChatPrefs } from "./prefsContext";
 import "./chat.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -21,6 +23,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const cols = useOption("columns", 2);
   const stamp = useOption("timestamps", false);
   const cap = useOption("cap", 500);
+  const prefs = useChatPrefs(useOption("logs", false), useOption("logCap", 5000), useOption("players", false));
   const rooms = useMemo(() => toRooms(rows), [rows]);
   const [active, setActive] = useState("");
   const [unread, setUnread] = useState<Record<string, number>>({});
@@ -47,6 +50,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   }, []);
 
   return (
+    <PrefsCtx.Provider value={prefs}>
     <div className="chat-root">
       <h2 className="ui-head chat-bar">
         <span className="ui-dot" />
@@ -77,6 +81,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             </div>
           )}
         </Section>
+        <Section id="filters"><Tile title="Ignore list, word filters, highlights"><FiltersTool /></Tile></Section>
+        <Section id="logs"><Tile title="Chat logs"><LogsTool /></Tile></Section>
         <Section id="login">
           <Tile title="Twitch login (to send)">
             <p className="chat-help">{twitch.auth!.help}</p>
@@ -86,5 +92,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         </Section>
       </Sections>
     </div>
+    </PrefsCtx.Provider>
   );
 }

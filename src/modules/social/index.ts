@@ -74,7 +74,7 @@ export const socialModule: ModuleManifest = {
   ring: "daily",
   icon: "social",
   description:
-    "Tabs: a chronological Feed across Bluesky, Mastodon and Reddit (post to Bluesky and Mastodon; like, boost and reply where allowed), plus the real X, Facebook and Instagram sites with their own persistent logins.",
+    "Tabs: a chronological Feed across Bluesky, Mastodon and Reddit (post to Bluesky and Mastodon; like, boost and reply where allowed), lists, mutes and an inbox of mentions/replies (Bluesky, Mastodon), plus the real X, Facebook and Instagram sites with their own persistent logins.",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: { sections: socialSections, options: socialOptions },

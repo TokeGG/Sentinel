@@ -16,6 +16,11 @@ pub struct MailHeader {
     starred: bool,
     answered: bool,
     has_attach: bool,
+    /// Threading + unsubscribe headers (raw-ish text; the TS side parses them).
+    message_id: String,
+    in_reply_to: String,
+    refs: String,
+    unsub: String,
 }
 
 #[derive(Serialize)]
@@ -59,7 +64,15 @@ pub fn parse_header(uid: u32, flags: (bool, bool, bool), hdr: &[u8], text: &[u8]
         starred: flags.1,
         answered: flags.2,
         has_attach,
+        message_id: m.as_ref().and_then(|m| m.message_id()).unwrap_or("").to_string(),
+        in_reply_to: m.as_ref().map(|m| ids(m.in_reply_to())).unwrap_or_default(),
+        refs: m.as_ref().map(|m| ids(m.references())).unwrap_or_default(),
+        unsub: m.as_ref().and_then(|m| m.header_raw("List-Unsubscribe")).unwrap_or("").trim().chars().take(2000).collect(),
     }
+}
+
+fn ids(v: &mail_parser::HeaderValue) -> String {
+    v.as_text_list().map(|l| l.join(" ")).unwrap_or_default()
 }
 
 /// Newest-first page: skips the `offset` newest messages, then takes `limit`.
@@ -109,6 +122,16 @@ mod tests {
         assert_eq!(h.date_ts, 1727776800);
         assert!(h.preview.starts_with("Hi there"));
         assert!(h.seen && !h.starred && !h.has_attach);
+    }
+
+    #[test]
+    fn reads_thread_and_unsubscribe_headers() {
+        let hdr = b"Subject: Re: x\r\nMessage-ID: <2@x>\r\nIn-Reply-To: <1@x>\r\nReferences: <0@x> <1@x>\r\nList-Unsubscribe: <https://u.example/x>, <mailto:u@x.com>\r\n\r\n";
+        let h = parse_header(2, (false, false, false), hdr, b"", 0);
+        assert_eq!(h.message_id, "2@x");
+        assert_eq!(h.in_reply_to, "1@x");
+        assert_eq!(h.refs, "0@x 1@x");
+        assert!(h.unsub.contains("https://u.example/x"));
     }
 
     #[test]

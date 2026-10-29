@@ -17,6 +17,8 @@ import { TasteBar } from "../../ui/TasteBar";
 import { useTasteView } from "../../ui/useTasteView";
 import { socialTaste } from "./taste";
 import { getLastVisit, markVisited } from "./store";
+import { useFeedFilters } from "./useFeedFilters";
+import { ListsTool } from "./ListsTool";
 import "./social.css";
 
 const PAGE = 100;
@@ -60,9 +62,10 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const base = useMemo(() => mergePosts(rows.map(rowToPost)), [rows]);
   const acts = useActions(module, base);
   const posts = acts.view;
-  const shown = useMemo(() => filterPosts(posts, picked, query), [posts, picked, query]);
+  const ff = useFeedFilters();
+  const shown = useMemo(() => filterPosts(ff.apply(ff.inbox ?? posts), picked, query), [ff, posts, picked, query]);
   const ranked = useMemo(() => taste.order(shown, socialTaste, forYou), [taste, shown, forYou]);
-  const divider = forYou && !taste.off ? -1 : dividerIndex(shown, lastVisit);
+  const divider = (forYou && !taste.off) || ff.inbox ? -1 : dividerIndex(shown, lastVisit);
   const statusById = Object.fromEntries(status.map((s) => [s.id, s]));
   const labels = Object.fromEntries(status.map((s) => [s.id, s.label]));
   const platforms = [...new Set([...status.filter((s) => s.connected).map((s) => s.id), ...posts.map((p) => p.platform)])];
@@ -90,7 +93,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <span className="ui-count">{shown.length}</span>
         <button type="button" className="ui-btn soc-refresh" disabled={busy} onClick={() => void run("fetch_all_feeds")}>{busy ? "Working…" : "Refresh"}</button>
       </h2>
-      {(error || acts.error) && <ErrorLine message={(error || acts.error)!} />}
+      {(error || acts.error || ff.inboxErr) && <ErrorLine message={(error || acts.error || ff.inboxErr)!} />}
       <Sections className="soc-col">
         <Section id="composer"><Composer status={status} busy={busy} onPost={post} /></Section>
         <Section id="filters">
@@ -101,6 +104,10 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                 <i className="soc-dot" style={{ background: platformColor(id) }} />{labels[id] ?? id}
               </Chip>
             ))}
+          </div>
+          <div className="ui-chips">
+            <Chip on={!!ff.inbox} onClick={() => (ff.inbox ? ff.closeInbox() : void ff.loadInbox())}>{ff.inboxBusy ? "Loading…" : "Inbox (mentions & replies)"}</Chip>
+            {ff.listNames.map((n) => <Chip key={n} on={ff.list === n} onClick={() => ff.setList(ff.list === n ? null : n)}>☰ {n}</Chip>)}
           </div>
           <TasteBar taste={taste} name="Social" forYou={forYou} onForYou={setForYou} />
           <input className="ui-file-text soc-search" type="search" value={query} placeholder="Search posts…" onChange={(e) => setQuery(e.target.value)} />
@@ -123,6 +130,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             />
           )}
         </Section>
+        <Section id="lists"><ListsTool f={ff} /></Section>
         <Section id="accounts"><Accounts module={module} status={status} busy={busy} run={run} /></Section>
       </Sections>
       </>}

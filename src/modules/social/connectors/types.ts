@@ -59,4 +59,6 @@ export interface SocialConnector {
   share?(p: PostRef): Promise<PostMeta>;
   unshare?(p: PostRef): Promise<PostMeta>;
   reply?(p: PostRef, text: string): Promise<void>;
+  /** Mentions/replies to you (unified inbox); absent = the API gives none we can read. */
+  fetchInbox?(): Promise<SocialPost[]>;
 }
