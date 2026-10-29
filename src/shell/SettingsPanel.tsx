@@ -5,6 +5,7 @@ import { ErrorLine } from "../ui/kit";
 import { errorText } from "../ui/moduleRun";
 import { AboutSection } from "./settings/AboutSection";
 import { AppearanceSection } from "./settings/AppearanceSection";
+import { DiagnosticsSection } from "./settings/DiagnosticsSection";
 import { DataSection } from "./settings/DataSection";
 import { GeneralSection } from "./settings/GeneralSection";
 import { JobsSection } from "./settings/JobsSection";
@@ -20,6 +21,7 @@ export function SettingsPanel() {
       <AppearanceSection onError={onError} />
       <JobsSection onError={onError} />
       <DataSection onError={onError} />
+      <DiagnosticsSection onError={onError} />
       <AboutSection onError={onError} />
     </div>
   );
