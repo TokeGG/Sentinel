@@ -46,6 +46,8 @@ src/
     schema.ts         — pure SCHEMA_STATEMENTS (bootstrap mirror of migrations 17+),
                         ensureSchema, describeDb, redactPaths
     credentials.ts    — OS keychain wrapper (TS side)
+    taste/            — local taste layer (pure model/features/order + store + useTaste, migration 35); UI in ui/TasteButtons|WhyBadge|TasteBar|TasteDrawer;
+                        per-module profile of decayed feature weights, `app_settings` `taste_off:<module>`; adopted by news, deals, social, congress, github, youtube
     scheduler.ts      — opt-in per-module background refresh
   ui/                 — panel UI foundation shared by custom panels: kit/ (Table,
                         Tabs, Gauge, ... components), tokens.css + generic.css +
@@ -97,8 +99,8 @@ src-tauri/
   src/lib.rs          — wiring + invoke_handler list only
 ```
 
-**Shell.** The main window is an orbiting solar system (canvas, `shell/orbit.ts`
-math): planets = modules from the registry, placed on rings by `ring`, drawn
+**Shell.** The main window is a 3D orbiting solar system (canvas 2D: `proj.ts` tilted-ring projection + perspective, `depth.ts` sort/pick, `labels.ts` label collision, `bodies.ts`/`bodyArt.ts`/`sunDraw.ts` cached sprites; planets not draggable, pan/zoom/pinch only; `shell/orbit.ts`
+math). The sun opens the Master Hub (`hub.master`, `MasterHub.tsx`: missed counts per module, mark-all-read, snooze, DND, history from `notif_log` migration 33; rules in `notifLogic.ts`, main-window feed `useNotifLog.ts`/`notifStore.ts`); Settings is the title-bar gear; quiet hours live in Settings > Notifications: planets = modules from the registry, placed on rings by `ring`, drawn
 with `accent` + `icon`. A planet opens a floating panel through the panel
 manager (Rust). Notification moons come from each module's `badge()` plus
 `planet-badge` events (`shell/badges.ts`): **counts only, never message text**.
@@ -106,7 +108,7 @@ Star and orbit motion obey one motion policy (`motionPolicy.ts`): both stop in
 game mode, when the window is hidden, or with reduced motion. Settings is a
 panel with id `hub.settings` (`SettingsPanel`, opened from the HUD), not a
 module. `app_settings` keys: `game_mode_auto`, `star_motion`, `orbit_motion`,
-`orbit_speed`, `notif_moons`, `ignore_reduced_motion`, `restore_panels`, `appearance_defaults`. Layout
+`orbit_speed`, `notif_moons`, `ignore_reduced_motion`, `notif_snooze`/`notif_dnd`/`notif_quiet`/`notif_read` (JSON), `restore_panels`, `appearance_defaults`. Layout
 is persisted from the TS side in SQLite `panel_layout` / `app_settings` (Rust
 returns `SavedPanel`, the frontend writes; call `clampToScreen` before
 move/resize). **Game mode** (manual button or auto detection) pauses the
@@ -247,11 +249,17 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
   `tcp_port_scan` re-checks with a mirror (`commands/pentest_gate.rs`, `pentest_rule.rs`);
   both sides are tested against `gateVectors.json`, so change the gate in both. Tables: migration 25.
   Never run in a real window or against a real network yet.
+  Lab extras (migration 34): registered tools `port-scan` (profiles quick/common/full, paced), `fingerprint`, `web-check`, `dns`,
+  each with a Rust command re-checking the gate (`tcp_port_scan`, `tcp_banner_grab`, `web_check`, `dns_lookup`); runs keep their options
+  (`pentest_run_args`) so `replay`/retest re-run them through the gate again. Tabs Terminal|Bot|Notebook|Checklist|Timeline; Bot tab = Lab mode
+  (`labBotLogic.ts`/`labBot.ts`: tools via runTool/MCP gate only, goto in-scope only, every action logged as `bot:*` run rows). Home Network
+  "Send to Lab" = `pentest/api addScopeEntry`. Offline CVE data, evidence hashes, scope drift are pure files with tests. All unverified on Windows/real targets.
 - Email (`modules/email`): custom panel, multi-account IMAP/SMTP, passwords only in keychain (`pw:<accountId>`), cache in SQLite (`mail_*`, migration 24), HTML sanitized by `sanitize.ts` into a `sandbox=""` iframe. No OAuth (Gmail/iCloud need app passwords). No attachment download, drafts saving or threading. The Rust mail code (mail*.rs, `mail-parser` crate) compiles and its pure parts are unit-tested, but has never run against a live mail server.
 - Social per-post actions (like / boost-repost / inline reply; optional `like`/`unlike`/`share`/`unshare`/`reply` on `SocialConnector`, absent = button hidden; request builders in `social/connectors/actions.ts`, optimistic UI in `useActions.ts`, ids/state in `social_post_meta`): Bluesky, Mastodon (scopes now incl. write:favourites) and Reddit (scopes now incl. vote submit; no repost). Older sign-ins must "Connect" again. X stays a stub. Never run against the live APIs.
 - Browser bot (`modules/bot`): only the pure kernel, agent loop, prompt/parser, notes retrieval and store exist (tested with fakes). No `BrowserDriver` (Rust), no manifest/UI, no URL-note fetching, nothing wires `store.ts` or `toolGate` yet; never run against a real Ollama.
 - GitHub "Cloned repos" section (`github/ClonedSection.tsx`, `clones.ts`, `clonedLogic.ts`; table `cloned_projects`, migration 29; old `cloned_repos` only read for the marker). Open folder = Explorer, VS Code via `code.cmd` on PATH; Delete files needs a path preview + confirm. Rust clone/open/delete are unit-tested for pure parts only; never run against real git/Explorer on Windows.
 - YouTube (`modules/youtube`): YouTube-style panel (sidebar, chips, card grid, Watch view with Up next). History is ONE row per video in `youtube_seen` (migration 30; old `youtube_watched` is only read once by the idempotent `BACKFILL_SQL`); `youtube_later` = Watch later, `youtube_signal` = like/dislike/not-interested that `recommend.ts` subtracts. Feeds carry no duration, so the card duration badge never shows yet. The Watch view "Chat" button adds the video's live chat (`chat` connector `youtube`, iframe of `live_chat?v=&embed_domain=`) via the chat `add_room` skill and a `chat-rooms-changed` event. Never run in a real window; YouTube may refuse the chat frame (use "Open as its own panel").
+- Taste layer (`core/taste`) and Deals' preloaded sources (`deals/defaults.ts`, seeded once into an empty `deal_sources`; `deal_source_meta` holds category/enabled) have never run against real feeds; the feed URLs are unverified (Reddit/Steam/DealNews/Humble may need other URLs or headers). Removing every deal source re-seeds the defaults. YouTube has no Tune drawer yet (shared score is one term in `recommend`).
 - Discord panel is built (modules/discord) but media permissions, the screen-share
   picker/Go Live and the unread moon are unverified on Windows; checklist in
   `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.

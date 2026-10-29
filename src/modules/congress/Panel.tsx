@@ -3,6 +3,9 @@ import type { ModuleManifest } from "../../core/module";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Chip, EmptyState, ErrorLine, Tabs } from "../../ui/kit";
+import { TasteBar } from "../../ui/TasteBar";
+import { useOption } from "../../ui/useOption";
+import { useTasteView } from "../../ui/useTasteView";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import { BillList } from "./BillList";
@@ -13,6 +16,7 @@ import { TABS, filterBills, filterMembers, filterVotes, shownTab, splitRows, typ
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
   const ids = useSections();
+  const { taste, forYou, setForYou } = useTasteView(module.id, useOption("taste", true));
   const { bills, votes, members } = splitRows(rows);
   const [chosen, setChosen] = useState<Tab>("bills");
   const [q, setQ] = useState("");
@@ -54,6 +58,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="search">
           <div className="cg-filters">
             <input className="ui-file-text" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search bills, votes, members…" aria-label="Search" />
+            <TasteBar taste={taste} name="Congress" forYou={forYou} onForYou={setForYou} />
             <Chip on={followed} onClick={() => setFollowed(!followed)}>Followed</Chip>
             {tab === "votes" && ["house", "senate"].map((c) => <Chip key={c} on={chamber === c} onClick={() => setChamber(chamber === c ? "" : c)}>{c}</Chip>)}
             {tab === "members" && ["D", "R", "I"].map((p) => <Chip key={p} on={party === p} onClick={() => setParty(party === p ? "" : p)}>{p}</Chip>)}
@@ -63,7 +68,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         {tab === "bills" && (
           <Section id="bills">
             {none ? <EmptyState title="Nothing synced yet" hint={ids.includes("sync") ? "Press Sync Congress." : "Re-enable “Sync & auto-refresh” in Customize to sync."} /> : (
-              <BillList bills={filterBills(bills, q, followed)} busy={busy} run={run} />
+              <BillList bills={filterBills(bills, q, followed)} busy={busy} run={run} taste={taste} forYou={forYou} />
             )}
           </Section>
         )}
@@ -74,7 +79,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         )}
         {tab === "members" && (
           <Section id="members">
-            {none ? <EmptyState title="Nothing synced yet" /> : <MemberList members={filterMembers(members, q, followed, party)} busy={busy} run={run} />}
+            {none ? <EmptyState title="Nothing synced yet" /> : <MemberList members={filterMembers(members, q, followed, party)} busy={busy} run={run} taste={taste} forYou={forYou} />}
           </Section>
         )}
       </Sections>

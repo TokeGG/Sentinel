@@ -1,6 +1,10 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
+import type { Taste } from "../../core/taste/useTaste";
+import { TasteButtons } from "../../ui/TasteButtons";
+import { WhyBadge } from "../../ui/WhyBadge";
 import { safeLink } from "../../ui/safeLink";
 import type { ModuleState } from "../../ui/useModule";
+import { memberTaste } from "./taste";
 import { seat, tallyText, type MemberRow, type VoteRow } from "./panelLogic";
 
 export function VoteList({ votes }: { votes: VoteRow[] }) {
@@ -32,10 +36,11 @@ export function VoteList({ votes }: { votes: VoteRow[] }) {
   );
 }
 
-export function MemberList({ members, busy, run }: { members: MemberRow[]; busy: boolean; run: ModuleState["run"] }) {
+export function MemberList({ members, busy, run, taste, forYou }: { members: MemberRow[]; busy: boolean; run: ModuleState["run"]; taste: Taste; forYou: boolean }) {
   return (
     <ul className="cg-members">
-      {members.slice(0, 300).map((m) => {
+      {taste.order(members, memberTaste, forYou).slice(0, 300).map((rk) => {
+        const m = rk.item;
         const link = safeLink(m.link);
         return (
           <li key={m.ref} className="cg-member">
@@ -46,6 +51,8 @@ export function MemberList({ members, busy, run }: { members: MemberRow[]; busy:
               <span>{m.name}</span>
             )}
             <span className="ui-meta">{seat(m)}</span>
+            {forYou && <WhyBadge ranked={rk} />}
+            <TasteButtons taste={taste} item={memberTaste(m)} />
             <button type="button" className="ui-btn ui-sm" disabled={busy} aria-pressed={m.followed} onClick={() => void run(m.followed ? "unfollow" : "follow", { kind: "member", ref: m.ref, label: m.name })}>
               {m.followed ? "★" : "☆"}
             </button>

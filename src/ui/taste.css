@@ -1,0 +1,17 @@
+/* Taste UI (tokens only). */
+.ts-btns { display: inline-flex; gap: var(--sp-1); align-items: center; }
+.ts-btns [aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent-line); }
+.ts-menu { position: relative; display: inline-block; }
+.ts-pop {
+  position: absolute; right: 0; top: 100%; z-index: 20; min-width: 160px;
+  display: flex; flex-direction: column; gap: var(--sp-1); padding: var(--sp-2);
+  background: var(--overlay); border: 1px solid var(--line); border-radius: var(--radius);
+  box-shadow: var(--elev-2); font-size: var(--fs-xs); text-align: left;
+}
+.ts-pop button { text-align: left; background: none; border: 0; color: inherit; cursor: pointer; padding: 2px 4px; }
+.ts-pop button:hover { background: var(--hover); }
+.ts-why { background: none; border: 0; color: var(--accent-text); cursor: pointer; font-size: var(--fs-xs); padding: 0; }
+.ts-up { color: var(--accent-text); }
+.ts-down { opacity: 0.75; }
+.ts-bar { display: flex; gap: var(--sp-2); align-items: center; }
+.ts-feat { display: flex; justify-content: space-between; align-items: center; gap: var(--sp-2); padding: 2px 0; }

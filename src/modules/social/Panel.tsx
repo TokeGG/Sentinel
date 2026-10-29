@@ -13,6 +13,9 @@ import { cardActions, postKey } from "./actionLogic";
 import { useActions } from "./useActions";
 import { dividerIndex, filterPosts, mergePosts, platformColor, rowToPost, type FeedPost } from "./panelLogic";
 import { FEED_TAB, SOCIAL_TABS, parseTab, siteOf } from "./embedSites";
+import { TasteBar } from "../../ui/TasteBar";
+import { useTasteView } from "../../ui/useTasteView";
+import { socialTaste } from "./taste";
 import { getLastVisit, markVisited } from "./store";
 import "./social.css";
 
@@ -39,6 +42,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const showMedia = useOption("showMedia", true);
   const showCounts = useOption("showCounts", true);
   const showActions = useOption("showActions", true);
+  const { taste, forYou, setForYou } = useTasteView(module.id, useOption("taste", true));
   const [status, setStatus] = useState<Status[]>([]);
   const [lastVisit, setLastVisit] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
@@ -57,7 +61,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const acts = useActions(module, base);
   const posts = acts.view;
   const shown = useMemo(() => filterPosts(posts, picked, query), [posts, picked, query]);
-  const divider = dividerIndex(shown, lastVisit);
+  const ranked = useMemo(() => taste.order(shown, socialTaste, forYou), [taste, shown, forYou]);
+  const divider = forYou && !taste.off ? -1 : dividerIndex(shown, lastVisit);
   const statusById = Object.fromEntries(status.map((s) => [s.id, s]));
   const labels = Object.fromEntries(status.map((s) => [s.id, s.label]));
   const platforms = [...new Set([...status.filter((s) => s.connected).map((s) => s.id), ...posts.map((p) => p.platform)])];
@@ -97,18 +102,19 @@ export default function Panel({ module }: { module: ModuleManifest }) {
               </Chip>
             ))}
           </div>
+          <TasteBar taste={taste} name="Social" forYou={forYou} onForYou={setForYou} />
           <input className="ui-file-text soc-search" type="search" value={query} placeholder="Search posts…" onChange={(e) => setQuery(e.target.value)} />
         </Section>
         <Section id="feed">
           {shown.length ? (
             <div className={`soc-feed ${density}`}>
-              {shown.slice(0, limit).map((p, i) => (
+              {ranked.slice(0, limit).map((rk, i) => { const p = rk.item; return (
                 <div key={`${p.platform}:${p.postId}`}>
                   {i === divider && <div className="soc-divider"><span>New since your last visit</span></div>}
-                  <PostCard post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} actions={cardProps(p)} />
+                  <PostCard post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} actions={cardProps(p)} taste={taste} ranked={forYou ? rk : undefined} />
                 </div>
-              ))}
-              {shown.length > limit && <button type="button" className="ui-btn soc-more" onClick={() => setLimit(limit + PAGE)}>Show more</button>}
+              ); })}
+              {ranked.length > limit && <button type="button" className="ui-btn soc-more" onClick={() => setLimit(limit + PAGE)}>Show more</button>}
             </div>
           ) : (
             <EmptyState

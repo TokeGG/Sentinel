@@ -1,13 +1,18 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
+import type { Taste } from "../../core/taste/useTaste";
+import { TasteButtons } from "../../ui/TasteButtons";
+import { WhyBadge } from "../../ui/WhyBadge";
 import { safeLink } from "../../ui/safeLink";
 import type { ModuleState } from "../../ui/useModule";
 import { timeline } from "./parse";
 import type { BillRow } from "./panelLogic";
+import { billTaste } from "./taste";
 
-export function BillList({ bills, busy, run }: { bills: BillRow[]; busy: boolean; run: ModuleState["run"] }) {
+export function BillList({ bills, busy, run, taste, forYou }: { bills: BillRow[]; busy: boolean; run: ModuleState["run"]; taste: Taste; forYou: boolean }) {
   return (
     <ul className="cg-list">
-      {bills.map((b) => {
+      {taste.order(bills, billTaste, forYou).map((rk) => {
+        const b = rk.item;
         const link = safeLink(b.link);
         return (
           <li key={b.ref} className={`cg-card${b.unseen ? " updated" : ""}`}>
@@ -18,7 +23,7 @@ export function BillList({ bills, busy, run }: { bills: BillRow[]; busy: boolean
               <span className="ui-meta">{b.statusDate ?? ""}</span>
             </div>
             {link ? (
-              <button type="button" className="cg-title ui-link" title={b.title} onClick={() => void openUrl(link)}>{b.title}</button>
+              <button type="button" className="cg-title ui-link" title={b.title} onClick={() => { void taste.record(billTaste(b), "open"); void openUrl(link); }}>{b.title}</button>
             ) : (
               <span className="cg-title">{b.title}</span>
             )}
@@ -35,6 +40,8 @@ export function BillList({ bills, busy, run }: { bills: BillRow[]; busy: boolean
             <div className="cg-foot">
               {b.sponsor && <span className="ui-meta">Sponsor: {b.sponsor}</span>}
               <span className="cg-acts">
+                {forYou && <WhyBadge ranked={rk} />}
+                <TasteButtons taste={taste} item={billTaste(b)} />
                 {b.unseen && <button type="button" className="ui-btn ui-sm" disabled={busy} onClick={() => void run("mark_seen", { ref: b.ref })}>Mark seen</button>}
                 <button
                   type="button"

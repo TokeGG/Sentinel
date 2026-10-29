@@ -7,6 +7,8 @@ import { Chip, EmptyState, ErrorLine, ago } from "../../ui/kit";
 import { utcDate } from "../../ui/kit/format";
 import { findSkill } from "../../ui/moduleRun";
 import { QuickAdd } from "../../ui/QuickAdd";
+import { score } from "../../core/taste/model";
+import { useTaste } from "../../core/taste/useTaste";
 import { Section, Sections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import { CardGrid, type Card, type CardActions } from "./Cards";
@@ -17,6 +19,7 @@ import { recommend, type Video } from "./recommend";
 import { Side } from "./Side";
 import { splitRows, watchUrl } from "./panelLogic";
 import { agoLabel, chipsFor, filterVideos, matchWatched, upNext, type View } from "./viewLogic";
+import { videoTaste } from "./taste";
 import { WatchView } from "./WatchView";
 import "./youtube.css";
 
@@ -29,13 +32,14 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const [query, setQuery] = useState("");
   const [playing, setPlaying] = useState<Card | null>(null);
   const [note, setNote] = useState<string | null>(null);
+  const taste = useTaste(module.id);
   const d = useMemo(() => splitRows(rows), [rows]);
   const seen = useMemo(() => new Set(d.watched.map((w) => w.videoId)), [d.watched]);
   const queue = useMemo(() => new Set(d.later.map((l) => l.videoId)), [d.later]);
   const names = useMemo(() => new Map(d.channels.map((c) => [c.channelId, c.title])), [d.channels]);
 
   const card = (v: Video): Card => ({ videoId: v.videoId, channelId: v.channelId, channel: v.channel, title: v.title, meta: age(v.publishedAt), dim: seen.has(v.videoId) });
-  const rec = useMemo(() => recommend(d.videos, d.watched, Date.now(), 8, d.signals), [d]);
+  const rec = useMemo(() => recommend(d.videos, d.watched, Date.now(), 8, d.signals, taste.off ? undefined : (v) => 1.5 * score(videoTaste(v), taste.profile)), [d, taste.profile, taste.off]);
   const latest = filterVideos(d.videos, { chip, query, seen, signals: d.signals }).slice(0, 60).map(card);
   const q = query.trim().toLowerCase();
   const byQuery = (c: Card) => !q || c.title.toLowerCase().includes(q) || c.channel.toLowerCase().includes(q);
@@ -46,9 +50,12 @@ export default function Panel({ module }: { module: ModuleManifest }) {
     meta: [age(w.watchedAt), w.count > 1 ? `watched ${w.count}×` : ""].filter(Boolean).join(" · "),
   }));
 
-  const sig = (kind: "video" | "channel", id: string, signal: string, c: Card) => void run("set_signal", { kind, id, signal, channelId: c.channelId, title: kind === "channel" ? c.channel : c.title });
+  const sig = (kind: "video" | "channel", id: string, signal: string, c: Card) => {
+    void taste.record(videoTaste(c), signal === "like" ? "like" : signal === "dislike" ? "dislike" : "dismiss");
+    void run("set_signal", { kind, id, signal, channelId: c.channelId, title: kind === "channel" ? c.channel : c.title });
+  };
   const act: CardActions = {
-    play: (c) => { setPlaying(c); setView("watch"); void run("mark_watched", { videoId: c.videoId, channelId: c.channelId, title: c.title }); },
+    play: (c) => { void taste.record(videoTaste(c), "open"); setPlaying(c); setView("watch"); void run("mark_watched", { videoId: c.videoId, channelId: c.channelId, title: c.title }); },
     later: (c, on) => void run(on ? "add_later" : "remove_later", { videoId: c.videoId, channelId: c.channelId, title: c.title }),
     notInterested: (c) => sig("video", c.videoId, "hide", c),
     hideChannel: (c) => c.channelId && sig("channel", c.channelId, "hide", c),

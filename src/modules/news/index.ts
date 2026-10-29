@@ -83,6 +83,7 @@ export const newsModule: ModuleManifest = {
   ui: () => import("./Panel"),
   customize: {
     sections: feedSections("headlines", "Headlines"),
+    options: [{ key: "taste", label: "For you ordering", type: "toggle", default: true }],
   },
   skills: [
     { name: "add_source", run: addSource },

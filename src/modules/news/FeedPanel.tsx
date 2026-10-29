@@ -6,7 +6,7 @@ import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { Chip, EmptyState, ErrorLine } from "../../ui/kit";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
-import { useModule, type ModuleRow } from "../../ui/useModule";
+import { useModule, type ModuleRow, type ModuleState } from "../../ui/useModule";
 import { FeedManage } from "./FeedManage";
 import { filterBySource, sourcesOf } from "./panelLogic";
 import "./news.css";
@@ -16,11 +16,13 @@ export function FeedPanel({
   listId,
   empty,
   list,
+  toolbar,
 }: {
   module: ModuleManifest;
   listId: string; // the section id of the item list ("headlines" / "deals")
   empty: string;
   list: (rows: ModuleRow[], busy: boolean) => ReactNode;
+  toolbar?: (s: { rows: ModuleRow[]; busy: boolean; run: ModuleState["run"] }) => ReactNode; // above the list, always shown
 }) {
   const { rows, busy, error, run } = useModule(module);
   const [source, setSource] = useState<string | null>(null);
@@ -47,6 +49,7 @@ export function FeedPanel({
           </div>
         </Section>
         <Section id={listId}>
+          {toolbar?.({ rows, busy, run })}
           {error && !rows.length && <ErrorLine message={error} />}
           {shown.length ? list(shown, busy) : <EmptyState title={empty} hint={hasAdd ? "Add a feed to get started." : "Add a feed to get started (re-enable “Add feed” in Customize)."} />}
         </Section>

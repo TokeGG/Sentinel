@@ -1,35 +1,14 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { addSource, listDealSources, loadDeals, setSource } from "./store";
 import { feedOps } from "../news/feedOps";
 import { feedSections } from "../news/panelLogic";
 import { parseFeed } from "../news/rss"; // deals sources are RSS/Atom too — same parser, no duplication
 
-interface DealItem extends Record<string, unknown> {
-  id: number;
-  source_id: number;
-  title: string;
-  link: string;
-  published_at: string | null;
-  label: string | null;
-}
-
-async function addSource(args?: Record<string, unknown>) {
-  const url = String(args?.url ?? "").trim();
-  if (!url) throw new Error("feed url is empty");
-  const d = await getDb();
-  await d.execute(
-    "INSERT OR IGNORE INTO deal_sources (url, label) VALUES ($1, $2)",
-    [url, args?.label ? String(args.label) : null]
-  );
-  return { ok: true };
-}
-
 async function fetchDeals() {
   const d = await getDb();
-  const sources = await d.select<{ id: number; url: string }[]>(
-    "SELECT id, url FROM deal_sources"
-  );
+  const sources = (await listDealSources()).filter((s) => s.enabled);
 
   let added = 0;
   let failed = 0;
@@ -60,35 +39,27 @@ async function fetchDeals() {
   return { added, failed };
 }
 
-async function loadItems(): Promise<Record<string, unknown>[]> {
-  const d = await getDb();
-  return await d.select<DealItem[]>(`
-    SELECT deal_offers.*, deal_sources.label, deal_sources.url AS source_url
-    FROM deal_offers
-    JOIN deal_sources ON deal_sources.id = deal_offers.source_id
-    ORDER BY COALESCE(published_at, fetched_at) DESC
-    LIMIT 200
-  `);
-}
-
 export const dealsModule: ModuleManifest = {
   id: "hub.deals",
   name: "Deals & Promos",
   accent: "#ea9603",
   ring: "daily",
   icon: "deals",
-  description: "RSS/Atom deal feeds you add — same fetch+dedupe pattern as News.",
+  description: "Preloaded RSS/Atom deal feeds (toggle or add your own), ordered For you by what you like and dislike. Fetches only when you press Check sources or opt in to auto-refresh.",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: {
     sections: feedSections("deals", "Deals"),
+    options: [{ key: "taste", label: "For you ordering", type: "toggle", default: true }],
   },
   skills: [
     { name: "check_source", run: addSource },
     { name: "fetch_deals", run: fetchDeals },
+    { name: "deal_sources", run: listDealSources },
+    { name: "set_source", run: setSource },
     ...feedOps("deals", "deal_sources", "deal_offers"),
   ],
-  load: loadItems,
+  load: loadDeals,
   quickAdd: { skill: "check_source", argName: "url", placeholder: "Add a deal feed URL…" },
   actions: [{ label: "Check sources", skill: "fetch_deals" }],
   schedule: { skill: "fetch_deals", intervalMinutes: 60 },

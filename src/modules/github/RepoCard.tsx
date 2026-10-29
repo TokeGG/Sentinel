@@ -1,10 +1,15 @@
 // One repo card: owner/name, stars, description, language + cloned chips, clone button.
 import { openUrl } from "@tauri-apps/plugin-opener";
+import type { Ranked } from "../../core/taste/model";
+import type { Taste } from "../../core/taste/useTaste";
+import { TasteButtons } from "../../ui/TasteButtons";
+import { WhyBadge } from "../../ui/WhyBadge";
 import { repoView } from "./panelLogic";
+import { repoTaste } from "./taste";
 
 type Row = Record<string, unknown>;
 
-export function RepoCard({ r, label, busy, onClone, onDismiss }: { r: Row; label: string; busy: boolean; onClone(): void; onDismiss(): void }) {
+export function RepoCard({ r, label, busy, onClone, onDismiss, taste, ranked }: { r: Row; label: string; busy: boolean; onClone(): void; onDismiss(): void; taste: Taste; ranked?: Pick<Ranked<unknown>, "why" | "explored"> }) {
   const v = repoView(r);
   const [owner, repo] = v.name.includes("/") ? v.name.split("/", 2) : ["", v.name];
   const name = (
@@ -18,7 +23,7 @@ export function RepoCard({ r, label, busy, onClone, onDismiss }: { r: Row; label
       <div className="gh-top">
         <span className="gh-mono" aria-hidden="true">{(owner || repo).slice(0, 1).toUpperCase()}</span>
         {v.link ? (
-          <button type="button" className="ui-link gh-name" title={v.name} onClick={() => void openUrl(v.link!)}>{name}</button>
+          <button type="button" className="ui-link gh-name" title={v.name} onClick={() => { void taste.record(repoTaste(r), "open"); void openUrl(v.link!); }}>{name}</button>
         ) : (
           <span className="gh-name" title={v.name}>{name}</span>
         )}
@@ -32,6 +37,8 @@ export function RepoCard({ r, label, busy, onClone, onDismiss }: { r: Row; label
             {v.language}
           </span>
         )}
+        {ranked && <WhyBadge ranked={ranked} />}
+        <TasteButtons taste={taste} item={repoTaste(r)} />
         {v.cloned && <span className="gh-chip ok">Cloned ✓</span>}
         <button type="button" className="ui-btn sm" disabled={busy} onClick={onClone}>
           {v.cloned ? "Clone again…" : label}

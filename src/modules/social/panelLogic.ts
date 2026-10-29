@@ -34,6 +34,7 @@ export const socialOptions: OptionDef[] = [
   { key: "showMedia", label: "Show media", type: "toggle", default: true },
   { key: "showCounts", label: "Show counts", type: "toggle", default: true },
   { key: "showActions", label: "Show actions (like, boost, reply)", type: "toggle", default: true },
+  { key: "taste", label: "For you ordering", type: "toggle", default: true },
 ];
 
 export const PLATFORM_COLORS: Record<string, string> = {

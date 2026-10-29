@@ -7,6 +7,10 @@ import { useModule } from "../../ui/useModule";
 import { ClonedSection } from "./ClonedSection";
 import { TokenField } from "./TokenField";
 import "./github.css";
+import { TasteBar } from "../../ui/TasteBar";
+import { useOption } from "../../ui/useOption";
+import { useTasteView } from "../../ui/useTasteView";
+import { repoTaste } from "./taste";
 import { RepoCard } from "./RepoCard";
 import { activeTab, rowsForTab, skillForTab, tabForSkill, type Tab } from "./panelLogic";
 
@@ -20,6 +24,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const ids = useSections();
   const [chosen, setChosen] = useState<Tab | null>(null);
   const tab = activeTab(chosen, rows);
+  const { taste, forYou, setForYou } = useTasteView(module.id, useOption("taste", true));
   const shown = rowsForTab(rows, tab);
   const ra = module.rowAction!;
   // Same as the generic buttons: a tab or button runs its fetch skill.
@@ -45,14 +50,15 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           <TokenField module={module} recheck={busy} />
         </Section>
         <Section id="tabs">
+          <TasteBar taste={taste} name="GitHub" forYou={forYou} onForYou={setForYou} />
           <Tabs tabs={TABS} active={tab} onChange={(id) => pick(id as Tab)} disabled={busy} />
         </Section>
         <Section id="repos">
           {shown.length ? (
             <ul className="gh-grid">
-              {shown.map((r) => (
-                <RepoCard key={String(r.id)} r={r} label={ra.label} busy={busy} onClone={() => void run(ra.skill, { [ra.argName]: r[ra.fromField] })} onDismiss={() => void run("dismiss_repo", { name: r.name })} />
-              ))}
+              {taste.order(shown, repoTaste, forYou).map((rk) => { const r = rk.item; return (
+                <RepoCard key={String(r.id)} r={r} taste={taste} ranked={forYou ? rk : undefined} label={ra.label} busy={busy} onClone={() => void run(ra.skill, { [ra.argName]: r[ra.fromField] })} onDismiss={() => void run("dismiss_repo", { name: r.name })} />
+              ); })}
             </ul>
           ) : (
             <EmptyState title={tab === "starred" ? "No starred repos loaded" : "No repositories yet"} hint={hint} />

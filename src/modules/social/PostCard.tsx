@@ -1,6 +1,11 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useState, type CSSProperties } from "react";
 import { safeLink } from "../../ui/safeLink";
+import type { Taste } from "../../core/taste/useTaste";
+import type { Ranked } from "../../core/taste/model";
+import { TasteButtons } from "../../ui/TasteButtons";
+import { WhyBadge } from "../../ui/WhyBadge";
+import { socialTaste } from "./taste";
 import { ReplyBox } from "./ReplyBox";
 import type { ActionKind } from "./actionLogic";
 import { linkify, nameHue, platformColor, postAge, type FeedPost } from "./panelLogic";
@@ -14,8 +19,8 @@ export type CardActions = {
   onReply: (text: string) => Promise<boolean>;
 };
 
-export function PostCard({ post: p, label, showMedia, showCounts, actions }: {
-  post: FeedPost; label: string; showMedia: boolean; showCounts: boolean; actions?: CardActions;
+export function PostCard({ post: p, label, showMedia, showCounts, actions, taste, ranked }: {
+  post: FeedPost; label: string; showMedia: boolean; showCounts: boolean; actions?: CardActions; taste?: Taste; ranked?: Pick<Ranked<unknown>, "why" | "explored">;
 }) {
   const [replying, setReplying] = useState(false);
   const can = actions?.can;
@@ -62,7 +67,9 @@ export function PostCard({ post: p, label, showMedia, showCounts, actions }: {
             <button type="button" className={`ui-link soc-act like${p.meta.liked ? " on" : ""}`} aria-pressed={!!p.meta.liked} disabled={actions!.busy}
               title={p.meta.liked ? "Unlike" : "Like"} onClick={() => actions!.onAct(p.meta.liked ? "unlike" : "like")}>{p.meta.liked ? "♥" : "♡"} {n(p.likes)}</button>
           ) : stat("♡", p.likes)}
-          {link && <button type="button" className="ui-link soc-open" onClick={() => open(link)}>Open ↗</button>}
+          {ranked && <WhyBadge ranked={ranked} />}
+          {taste && <TasteButtons taste={taste} item={socialTaste(p)} />}
+          {link && <button type="button" className="ui-link soc-open" onClick={() => { if (taste) void taste.record(socialTaste(p), "open"); open(link); }}>Open ↗</button>}
         </footer>
         {replying && actions && <ReplyBox platform={p.platform} onSend={actions.onReply} onCancel={() => setReplying(false)} />}
       </div>

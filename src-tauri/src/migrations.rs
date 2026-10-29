@@ -38,8 +38,8 @@ pub fn all() -> Vec<Migration> {
         Migration { version: 31, description: "congress bills, votes, members, follows", sql: include_str!("../migrations/31_congress.sql"), kind: MigrationKind::Up },
         Migration { version: 32, description: "calendar events and tasks", sql: include_str!("../migrations/32_calendar_items.sql"), kind: MigrationKind::Up },
         Migration { version: 33, description: "notification log", sql: include_str!("../migrations/33_notif_log.sql"), kind: MigrationKind::Up },
-        Migration { version: 34, description: "pentest lab: run args, checklist, evidence, notebook, remediation, cve", sql: include_str!("../migrations/34_pentest_lab.sql"), kind: MigrationKind::Up },
-        Migration { version: 35, description: "network device meta", sql: include_str!("../migrations/35_network_device_meta.sql"), kind: MigrationKind::Up },
+        Migration { version: 34, description: "pentest lab tables + network device meta", sql: include_str!("../migrations/34_pentest_lab.sql"), kind: MigrationKind::Up },
+        Migration { version: 35, description: "taste events and profiles, deal source meta", sql: include_str!("../migrations/35_taste.sql"), kind: MigrationKind::Up },
     ]
 }
 

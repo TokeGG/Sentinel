@@ -24,7 +24,7 @@ const sat = (x: number) => x / (x + 1); // one event ~0.5, never beyond 1
 const meanTok = (toks: string[], f: (t: string) => number) => (toks.length ? toks.reduce((x, t) => x + f(t), 0) / toks.length : 0);
 
 /** Rank UNWATCHED, not-hidden videos. A video counts once however many history rows it has. */
-export function recommend(videos: Video[], watched: Watched[], now = Date.now(), limit = 8, signals: Sig[] = []): Scored[] {
+export function recommend(videos: Video[], watched: Watched[], now = Date.now(), limit = 8, signals: Sig[] = [], bonus?: (v: Video) => number): Scored[] {
   const hist = mergeWatched(watched);
   const seen = new Set(hist.map((w) => w.videoId));
   const hidden = hiddenOf(signals);
@@ -46,7 +46,7 @@ export function recommend(videos: Video[], watched: Watched[], now = Date.now(),
       const a = maxA ? (pos.aff.get(v.channelId) ?? 0) / maxA : 0;
       const k = maxK ? meanTok(toks, (t) => (pos.kw.get(t) ?? 0) / maxK) : 0;
       const penalty = 2 * sat(neg.aff.get(v.channelId) ?? 0) + 1.5 * meanTok(toks, (t) => sat(neg.kw.get(t) ?? 0));
-      const score = 2 * a + 1.5 * k + 0.4 * decay(v.publishedAt, now, 7) - penalty;
+      const score = 2 * a + 1.5 * k + 0.4 * decay(v.publishedAt, now, 7) - penalty + (bonus?.(v) ?? 0);
       return { ...v, score, why: a >= k && a > 0 ? "a channel you watch" : k > 0 ? "similar to what you watched" : "new" };
     })
     .sort((x, y) => y.score - x.score)

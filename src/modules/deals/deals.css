@@ -14,3 +14,7 @@
 .dl-off { font-size: 0.72em; font-weight: 700; padding: 0 7px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); }
 @container (min-width: 640px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @container (max-width: 380px) { .dl-thumb { display: none; } }
+.dl-cats { display: flex; gap: var(--sp-1); flex-wrap: wrap; align-items: center; margin-bottom: var(--gap); }
+.dl-sources { margin-bottom: var(--gap); font-size: var(--fs-xs); }
+.dl-src { display: flex; justify-content: space-between; gap: var(--sp-2); align-items: center; padding: 2px 0; }
+.dl-acts { display: flex; gap: var(--sp-2); align-items: center; margin-left: auto; }

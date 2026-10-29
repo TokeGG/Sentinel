@@ -113,7 +113,7 @@ export const githubModule: ModuleManifest = {
     "Browse trending/starred repos. \"Install\" clones to a folder you pick — never auto-run.",
   panel: "custom",
   ui: () => import("./Panel"),
-  customize: { sections: githubSections },
+  customize: { sections: githubSections, options: [{ key: "taste", label: "For you ordering", type: "toggle", default: true }] },
   skills: [
     { name: "fetch_trending", run: fetchTrending },
     { name: "fetch_starred", run: fetchStarred },
