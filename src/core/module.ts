@@ -3,7 +3,7 @@
 // never hardcodes module-specific UI beyond what `panel` tells it to render.
 
 import type { ComponentType } from "react";
-import { skillRefs, uiError, webError } from "./manifestChecks.ts";
+import { skillRefs, uiError, webError, type WebConfig } from "./manifestChecks.ts";
 import { accentError, customizeError, iconError, ringError, type CustomizeDef, type Ring } from "./customizeChecks.ts";
 export type { CustomizeDef, OptionDef, Ring } from "./customizeChecks.ts";
 
@@ -57,7 +57,7 @@ export interface ModuleManifest {
   // exists. Keeps "no background task without explicit enable" true.
   schedule?: { skill: string; intervalMinutes: number };
   // panel === "web": an https site in an isolated webview; `profile` names its persistent storage.
-  web?: { url: string; profile: string };
+  web?: WebConfig;
   accent?: string; // #rrggbb default accent for this module's panel and planet
   ring?: Ring; // star-map orbit ring; default "system" (see ringOf)
   icon?: string; // glyph key in src/shell/icons.ts ICONS, drawn on the planet

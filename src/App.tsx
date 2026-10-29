@@ -28,6 +28,7 @@ import "./modules/backup";
 import "./modules/pentest";
 import "./modules/clipboard";
 import "./modules/filesearch";
+import "./modules/discord";
 import "./App.css";
 
 // Child panel webviews load this same bundle at #/panel/<id>; they render only

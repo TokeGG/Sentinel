@@ -5,7 +5,9 @@ use super::geometry::geometry;
 use super::ids::{chrome_label, label, parse_web_url};
 use super::manager::{e, Spec};
 use super::persist::Rect;
-use tauri::{AppHandle, LogicalPosition, LogicalSize, Manager, WebviewBuilder, WebviewUrl};
+use super::webguard::{allowed_host, permission_granted, unread_from_title};
+use tauri::webview::{NewWindowResponse, PermissionResponse};
+use tauri::{AppHandle, Emitter, LogicalPosition, LogicalSize, Manager, WebviewBuilder, WebviewUrl};
 
 fn add(app: &AppHandle, b: WebviewBuilder<tauri::Wry>, r: Rect) -> Result<(), String> {
     let win = app.get_window("main").ok_or("main window missing")?;
@@ -31,10 +33,38 @@ fn create_both(app: &AppHandle, id: &str, s: &Spec) -> Result<(), String> {
         // `p` already passed is_safe_profile in validate().
         b = b.data_directory(app.path().app_data_dir().map_err(e)?.join("profiles").join(p));
     }
+    if s.url.is_some() {
+        b = guard(b, app, id, &s.hosts);
+    }
     let (chrome, content) = geometry(s.rect);
     add(app, b, content)?;
     let cb = WebviewBuilder::new(chrome_label(id), WebviewUrl::App(format!("index.html#/chrome/{id}").into()));
     add(app, cb, chrome)
+}
+/// Web panel guards: https allow-list navigation (other links go to the
+/// system browser), media permissions for allowed pages only, and the unread
+/// count from the page title as a `planet-badge` event (count only).
+fn guard(b: WebviewBuilder<tauri::Wry>, app: &AppHandle, id: &str, hosts: &[String]) -> WebviewBuilder<tauri::Wry> {
+    let (h1, h2, a1, a2, id) = (hosts.to_vec(), hosts.to_vec(), app.clone(), app.clone(), id.to_string());
+    b.on_navigation(move |u| allowed_host(&h1, u) || external(&a1, u))
+        .on_new_window(move |u, _| {
+            external(&a2, &u);
+            NewWindowResponse::Deny
+        })
+        .on_permission_request(move |w, kind| match w.url() {
+            Ok(page) if permission_granted(kind, &h2, &page) => PermissionResponse::Allow,
+            _ => PermissionResponse::Deny,
+        })
+        .on_document_title_changed(move |w, title| {
+            let _ = w.app_handle().emit("planet-badge", serde_json::json!({ "id": id, "count": unread_from_title(&title) }));
+        })
+}
+/// Open an http(s) link in the system browser; always returns false (block in panel).
+fn external(app: &AppHandle, u: &tauri::Url) -> bool {
+    if matches!(u.scheme(), "http" | "https") {
+        let _ = tauri_plugin_opener::OpenerExt::opener(app).open_url(u.as_str(), None::<&str>);
+    }
+    false
 }
 /// Both webviews of a panel that currently exist: (webview, is_chrome).
 pub(crate) fn webviews(app: &AppHandle, id: &str) -> Vec<(tauri::Webview, bool)> {

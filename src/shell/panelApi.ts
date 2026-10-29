@@ -5,6 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { registry, type ModuleManifest } from "../core/module";
+import type { WebConfig } from "../core/manifestChecks";
 import { cascade, clampToScreen, clientRect, type Rect } from "./layout";
 import { deleteLayout, loadLayout, saveLayout } from "./layoutStore";
 import { getRestorePanels } from "./settingsStore";
@@ -39,14 +40,15 @@ export async function mainClientRect(): Promise<Rect> {
 
 /** Main window entry. Re-opening an open panel keeps its current rect. */
 export function openPanel(m: ModuleManifest, rect?: Rect): Promise<void> {
-  return openAt(m.id, DEFAULT_SIZE, m.panel === "web" ? m.web : undefined, rect);
+  const web = m.panel === "web" ? m.web : undefined;
+  return openAt(m.id, web?.size ?? DEFAULT_SIZE, web, rect, web?.min);
 }
 
-async function openAt(id: string, size: { w: number; h: number }, web?: { url: string; profile: string }, rect?: Rect) {
+async function openAt(id: string, size: { w: number; h: number }, web?: WebConfig, rect?: Rect, min = MIN) {
   const cur = rect ?? (await getPanel(id).then((p) => p.rect, () => undefined));
   const screen = await mainClientRect();
-  const r = clampToScreen(cur ?? cascade(opened++, screen, size), screen, MIN);
-  await invoke("open_panel", { id, url: web?.url, profile: web?.profile, rect: r });
+  const r = clampToScreen(cur ?? cascade(opened++, screen, size), screen, min);
+  await invoke("open_panel", { id, url: web?.url, profile: web?.profile, hosts: web?.hosts, rect: r });
   await commit(await getPanel(id));
 }
 
@@ -68,6 +70,13 @@ export async function focusPanel(id: string): Promise<SavedPanel> {
   const p = await invoke<SavedPanel>("focus_panel", { id });
   await commit(p);
   return p;
+}
+
+/** Web panels: fill the main window client area, or restore the previous rect. */
+export async function toggleFullWindow(id: string): Promise<boolean> {
+  const [p, full] = await invoke<[SavedPanel, boolean]>("toggle_full_window", { id, screen: await mainClientRect() });
+  await commit(p);
+  return full;
 }
 
 export const getPanel = (id: string) => invoke<SavedPanel>("get_panel", { id });

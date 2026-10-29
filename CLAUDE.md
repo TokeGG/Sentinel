@@ -81,7 +81,8 @@ src-tauri/
   src/panels/         — panel manager: every panel = a content webview + a
                         ~28px chrome webview (move/resize/close/focus),
                         moved/raised together; manager, restore, webview, geometry,
-                        ids, state, persist
+                        ids, state, persist, fullwindow, webguard (pure: web
+                        allow-list, media permissions, title unread count)
   src/gamemode/       — mod.rs (enter/exit, commands, poll, emits `game-mode`),
                         decide.rs (pure), fullscreen.rs (cfg(windows) + stub)
   src/lib.rs          — wiring + invoke_handler list only
@@ -106,7 +107,7 @@ persisted `game_mode_auto` toggle (default on).
 ## The module contract (read `src/core/module.ts` for the real types)
 
 A module is a `ModuleManifest`: `id` (reverse-DNS, e.g. `"hub.notes"`),
-`panel` (`"list"` = generic panel; `"custom"` = own React panel, requires `ui`; `"web"` with `web: { url, profile }` for an embedded site with a persistent profile), `skills` (named async functions), and
+`panel` (`"list"` = generic panel; `"custom"` = own React panel, requires `ui`; `"web"` with `web: { url, profile, hosts?, size?, min? }` for an embedded site with a persistent profile, https allow-list and Full window toggle; see modules/discord), `skills` (named async functions), and
 `load()` (returns rows). Everything else is optional generic UI the panel
 already knows how to render — **adding a new one of these is the
 right move before writing bespoke UI**:
@@ -221,8 +222,10 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
   stale `-wal`/`-shm` next to the restored db, copies over an open DB, and does
   no validation; needs its own fix.
 - email, pentest, social are not yet redesigned (generic panel).
-- Specified in `docs/superpowers/specs/` but not built: Discord panel (embedded
-  web app; Go Live must work), multi-site chat, skills/MCP hub, browser bot.
+- Discord panel is built (modules/discord) but media permissions, the screen-share
+  picker/Go Live and the unread moon are unverified on Windows; checklist in
+  `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.
+- Specified in `docs/superpowers/specs/` but not built: multi-site chat, skills/MCP hub, browser bot.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
   price); Home Network "new" means new this session; Calendar "overdue" means
   unfiled notes.

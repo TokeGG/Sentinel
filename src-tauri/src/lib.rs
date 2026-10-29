@@ -49,6 +49,7 @@ pub fn run() {
             resize_panel,
             focus_panel,
             get_panel,
+            toggle_full_window,
             restore_layout,
             gamemode::set_game_mode,
             gamemode::set_game_mode_auto
