@@ -11,6 +11,7 @@ export const skillsModule: ModuleManifest = {
   name: "Skills & MCP",
   accent: "#fd93e5",
   ring: "system",
+  category: "dev",
   icon: "skills",
   description: "Skills and MCP servers: bundled examples plus anything you install from GitHub after confirming the exact files and command. Nothing runs until you switch it on.",
   panel: "custom",

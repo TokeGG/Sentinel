@@ -1,7 +1,7 @@
 // One bot run, end to end (Tauri-coupled glue; the decisions are in agent.ts and the pure files it uses).
 // Starts only when the panel's Run button calls it. Picks a brain variant, gathers notes/skills/tools, opens the
 // bot browser, runs the agent, then ALWAYS closes the browser and feeds the episode to the learning step.
-import { fetch } from "@tauri-apps/plugin-http";
+import { ollamaFetch as fetch } from "./ollamaFetch";
 import { logActivity } from "../../core/db";
 import { listSkills } from "../skills/registry";
 import { listMcpTools } from "../skills/mcp";

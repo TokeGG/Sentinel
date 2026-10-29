@@ -1,6 +1,7 @@
 ---
 name: meeting-notes-cleanup
 description: Turn rough meeting notes into a clean summary with decisions, action items (owner and date) and open questions.
+category: productivity
 ---
 
 # Meeting notes cleanup

@@ -1,6 +1,7 @@
 ---
 name: research-with-citations
 description: Research a question across several web pages and answer with claims that each cite the page they came from.
+category: news, productivity
 ---
 
 # Research with citations

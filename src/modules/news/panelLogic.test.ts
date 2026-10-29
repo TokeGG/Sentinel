@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import "./sources/logic.test.ts"; // source catalog tests (run with this listed file)
 import { feedSections, filterBySource, sourceLabel, sourcesOf } from "./panelLogic.ts";
 
 const rows = [

@@ -9,7 +9,12 @@ export function AddRoom({ busy, onAdd }: { busy: boolean; onAdd(input: string, s
   const [input, setInput] = useState("");
   const [chatroom, setChatroom] = useState("");
   const ref = input.trim() ? detectRoom(input, site) : null;
-  if (!open) return <button type="button" className="ui-btn chat-plus" title="Add room" onClick={() => setOpen(true)}>+</button>;
+  if (!open) return (
+    <>
+      <button type="button" className="ui-btn chat-plus" title="Add room" onClick={() => setOpen(true)}>+</button>
+      <button type="button" className="ui-btn" disabled={busy} title="destiny.gg chat as its own embedded tab" onClick={() => void onAdd("destiny.gg", "dgg", "")}>+ destiny.gg</button>
+    </>
+  );
   return (
     <form
       className="chat-add"
@@ -30,7 +35,7 @@ export function AddRoom({ busy, onAdd }: { busy: boolean; onAdd(input: string, s
       {ref?.site === "kick" && (
         <>
           <input value={chatroom} onChange={(e) => setChatroom(e.target.value.replace(/\D/g, ""))} placeholder="Kick chatroom id (optional)" inputMode="numeric" />
-          <span className="chat-hint">Only needed if Kick blocks the lookup. Open kick.com/api/v2/channels/{ref.target} in your browser (or the page source / network tab) and copy the number in "chatroom":{"{"}"id":NNN{"}"}.</span>
+          <span className="chat-hint">Kick rooms open as the kick.com popout chat (embed); the id is only for "Try native" if Kick blocks the lookup. Open kick.com/api/v2/channels/{ref.target} in your browser (or the page source / network tab) and copy the number in "chatroom":{"{"}"id":NNN{"}"}.</span>
         </>
       )}
       <button type="submit" className="ui-btn primary" disabled={busy || !ref}>Add</button>

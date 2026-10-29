@@ -2,6 +2,7 @@
 name: deal-search
 description: Find and compare current deals for a product the user names, using the Deals module sources.
 module: hub.deals
+category: deals
 ---
 
 # Deal search

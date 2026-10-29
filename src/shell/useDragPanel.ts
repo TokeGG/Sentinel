@@ -4,11 +4,13 @@
 // the element holding the pointer capture).
 import { useRef, useState } from "react";
 import { dragRect, resizeRect, type Rect } from "./layout";
-import { snapAfterDrag } from "./desk/layoutOps";
+import { finishMove, finishResize, previewSnap } from "./snap/dragSnap";
+import { edgeZone, zoneRect, type Zone } from "./snap/zones";
+import { snapPrefsNow } from "./snap/snapPrefs";
 import { commit, dragMove, dragResize, focusPanel, getPanel, mainClientRect, MIN } from "./panelApi";
 
 export type Kind = "move" | "resize";
-type Drag = { sx: number; sy: number; start: Rect; screen: Rect; dx: number; dy: number; raf: number };
+type Drag = { sx: number; sy: number; ox: number; oy: number; start: Rect; screen: Rect; dx: number; dy: number; raf: number; zone: Zone | null };
 
 export function useDragPanel(id: string, kind: Kind, min = MIN) {
   const drag = useRef<Drag | null>(null);
@@ -27,6 +29,10 @@ export function useDragPanel(id: string, kind: Kind, min = MIN) {
     if (kind === "move") {
       const r = dragRect(d.start, d.dx, d.dy, d.screen, min);
       dragMove(id, r.x, r.y).catch(fail("drag"));
+      // Pointer in main-client px: the chrome strip sits at the panel's top-left.
+      const pr = snapPrefsNow();
+      const z = pr.on ? edgeZone({ x: d.start.x + d.ox + d.dx, y: d.start.y + d.oy + d.dy }, d.screen) : null;
+      if (z !== d.zone) { d.zone = z; previewSnap(z ? zoneRect(z, d.screen, pr.gap) : null); }
     } else {
       const r = resizeRect(d.start, d.dx, d.dy, d.screen, min);
       dragResize(id, r.w, r.h).catch(fail("drag"));
@@ -38,13 +44,13 @@ export function useDragPanel(id: string, kind: Kind, min = MIN) {
     armed.current = true;
     setErr(null);
     e.currentTarget.setPointerCapture(e.pointerId);
-    const { screenX: sx, screenY: sy } = e;
+    const { screenX: sx, screenY: sy, clientX: ox, clientY: oy } = e;
     drag.current = null;
     const my = ++press.current;
     try {
       const [p, screen] = await Promise.all([getPanel(id), mainClientRect()]);
       if (my !== press.current) return; // released before the rect arrived
-      drag.current = { sx, sy, start: p.rect, screen, dx: 0, dy: 0, raf: 0 };
+      drag.current = { sx, sy, ox, oy, start: p.rect, screen, dx: 0, dy: 0, raf: 0, zone: null };
     } catch (x) {
       fail("drag")(x);
     }
@@ -68,7 +74,8 @@ export function useDragPanel(id: string, kind: Kind, min = MIN) {
         drag.current = d;
         flush();
         drag.current = null;
-        if (kind === "move") await snapAfterDrag(id).catch(() => {}); // edge snapping
+        if (kind === "move") await finishMove(id, d.zone); // zone place or edge snap
+        else await finishResize(id, d.start).catch(() => {}); // neighbours follow
         await commit(await getPanel(id)); // persist once, at drag end
       }
       await focusPanel(id); // raise last: may re-create (and so destroy) this webview

@@ -8,3 +8,5 @@ pub mod restore;
 pub mod webguard;
 pub mod fullwindow;
 pub mod embed;
+pub mod browser;
+pub mod browser_os;

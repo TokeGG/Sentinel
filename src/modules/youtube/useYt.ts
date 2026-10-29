@@ -17,6 +17,9 @@ import { splitRows, watchUrl } from "./panelLogic";
 import { agoLabel, filterVideos, matchWatched, upNext, type View } from "./viewLogic";
 import { videoTaste } from "./taste";
 import { useYtExtras } from "./useYtExtras";
+import { useLive } from "./LiveView";
+import { popOut } from "./popOut";
+import { buildQueue } from "./queue";
 
 const age = (d: string | null) => (d ? agoLabel(ago(utcDate(d))) : "");
 
@@ -33,6 +36,7 @@ export function useYt(module: ModuleManifest) {
   const taste = useTaste(module.id);
   const d = useMemo(() => splitRows(rows), [rows]);
   const x = useYtExtras(d.videos);
+  const live = useLive(run);
   const seen = useMemo(() => new Set(d.watched.map((w) => w.videoId)), [d.watched]);
   const queue = useMemo(() => new Set(d.later.map((l) => l.videoId)), [d.later]);
   const names = useMemo(() => new Map(d.channels.map((c) => [c.channelId, c.title])), [d.channels]);
@@ -65,12 +69,12 @@ export function useYt(module: ModuleManifest) {
     if (ratingOf(d.signals, playing.videoId) === r) void run("clear_signal", { kind: "video", id: playing.videoId, signal: r });
     else sig("video", playing.videoId, r, playing);
   };
-  async function chat() {
+  async function chat(c: Card | null = playing) {
     const chatMod = registry.find((mm) => mm.id === "hub.chat");
-    if (!chatMod || !playing) return setNote("The Chat module is not available");
+    if (!chatMod || !c) return setNote("The Chat module is not available");
     try {
       setNote(null);
-      const out = (await findSkill(chatMod, "add_room").run({ input: watchUrl(playing.videoId), site: "youtube", label: `YT ${playing.title.slice(0, 24)}` })) as { id?: string };
+      const out = (await findSkill(chatMod, "add_room").run({ input: watchUrl(c.videoId), site: "youtube", label: `YT ${c.title.slice(0, 24)}` })) as { id?: string };
       await emit("chat-rooms-changed", { id: out?.id });
       await openPanel(chatMod);
     } catch (e) {
@@ -82,8 +86,11 @@ export function useYt(module: ModuleManifest) {
   const go = (v: View) => { setView(v); setNote(null); };
   const visible = filterVideos(d.videos, { chip: "all", query: "", seen, signals: d.signals });
   const next = playing ? upNext(playing.videoId, rec, visible, seen).map(card) : [];
+  // Pop-out: continue through Watch later / the playlist holding it, else Up next.
+  const pop = (c: Card) => void popOut(buildQueue(c, [laterCards, ...x.playlists.map((p) => p.items)], next, x.resumeAt(c.videoId)))
+    .then(() => { setMini(false); if (view === "watch") setView("home"); }).catch((e) => setNote(e instanceof Error ? e.message : String(e)));
   const recCards = rec.map((v) => ({ ...card(v), meta: `${age(v.publishedAt)} · ${v.why}` }));
 
   return { ...m, d, x, view, go, setView, chip, setChip, query, setQuery, q, playing, setPlaying, mini, setMini, forYou, setForYou, taste, note,
-    seen, queue, named, latest, recCards, laterCards, historyCards, act, rate, chat, next, rating: playing ? ratingOf(d.signals, playing.videoId) : null };
+    seen, queue, named, latest, recCards, laterCards, historyCards, act, rate, chat, next, live, pop, rating: playing ? ratingOf(d.signals, playing.videoId) : null };
 }

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import { EmptyState, ErrorLine } from "../../ui/kit";
 import type { NowPlaying } from "./api";
 import type { LiveStream, Score } from "./parsers";

@@ -25,6 +25,7 @@ export const mediaModule: ModuleManifest = {
   name: "Media",
   accent: "#008888",
   ring: "media",
+  category: "media",
   icon: "media",
   description: "Now playing, Twitch live follows, show tracker, image folder and sports scores.",
   panel: "custom",

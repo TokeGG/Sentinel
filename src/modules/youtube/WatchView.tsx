@@ -1,7 +1,7 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import { safeLink } from "../../ui/safeLink";
 import { Avatar, byLine, type Card, type CardActions } from "./Cards";
-import { Player } from "./Player";
+import { ResizablePlayer } from "./ResizablePlayer";
 import { thumbUrl, watchUrl } from "./panelLogic";
 import { RATES } from "./extras";
 import type { YtX } from "./useYtExtras";
@@ -17,18 +17,19 @@ interface Props {
   onChat(): void;
   onClose(): void;
   onMini(): void;
+  onPop(): void;
   x: YtX;
 }
 
 // Big player on the left, "Up next" on the right (stacks under it when narrow).
-export function WatchView({ playing, next, queue, rating, busy, act, onRate, onChat, onClose, onMini, x }: Props) {
+export function WatchView({ playing, next, queue, rating, busy, act, onRate, onChat, onClose, onMini, onPop, x }: Props) {
   const rate = (playing.channelId && x.speed.get(playing.channelId)) || 1;
   const link = safeLink(watchUrl(playing.videoId));
   const queued = queue.has(playing.videoId);
   return (
     <div className="yt-watch">
       <div className="yt-watch-main">
-        <Player videoId={playing.videoId} title={playing.title} rate={rate} start={x.resumeAt(playing.videoId)}
+        <ResizablePlayer videoId={playing.videoId} title={playing.title} rate={rate} start={x.resumeAt(playing.videoId)} onEnded={() => next[0] && act.play(next[0])}
           onProgress={(t, d) => x.saveProgress({ videoId: playing.videoId, channelId: playing.channelId, title: playing.title, seconds: t, duration: d })} />
         <h3 className="yt-watch-title">{playing.title}</h3>
         <div className="yt-watch-row">
@@ -45,6 +46,7 @@ export function WatchView({ playing, next, queue, rating, busy, act, onRate, onC
             {x.playlists.length > 0 && <select className="ui-btn" value="" aria-label="Add to playlist" onChange={(e) => e.target.value && x.addToPlaylist(Number(e.target.value), playing)}>
               <option value="">+ Playlist</option>{x.playlists.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select>}
             <button type="button" className="ui-btn" title="Keep playing in a small player while you browse" onClick={onMini}>Mini player</button>
+            <button type="button" className="ui-btn" title="Pop out into its own floating player (keeps playing when this panel closes)" onClick={onPop}>Pop out</button>
             <button type="button" className="ui-btn" onClick={onClose}>Close</button>
           </div>
         </div>

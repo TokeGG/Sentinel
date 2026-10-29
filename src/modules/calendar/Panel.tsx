@@ -4,6 +4,7 @@ import { EmptyState, ErrorLine } from "../../ui/kit";
 import { Section, Sections } from "../../ui/useCustomize";
 import { useModule, type ModuleRow } from "../../ui/useModule";
 import { AgendaItem } from "./AgendaItem";
+import { CardCtx, ItemCard, type CardSubject } from "./ItemCard";
 import { IcsTools } from "./IcsTools";
 import { ItemForm } from "./ItemForm";
 import { MonthGrid } from "./MonthGrid";
@@ -24,6 +25,7 @@ import { agendaRows } from "./taskLogic";
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, error, busy, run } = useModule(module);
   const [editing, setEditing] = useState<ModuleRow | null>(null);
+  const [sel, setSel] = useState<CardSubject | null>(null);
   const [tab, bar] = useSectionTabs(CAL_TABS);
   const rem = useReminders();
   const on = (t: string) => tab === t;
@@ -34,6 +36,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
     <AgendaItem key={String(r.id)} r={r} overdue={overdue} now={now} busy={busy} run={run} onEdit={setEditing} />
   );
   return (
+    <CardCtx.Provider value={setSel}>
     <div className="cal-root">
       <h2 className="ui-head">
         <span className="ui-dot" />
@@ -93,6 +96,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         {on("money") && <Section id="money"><MoneyTab /></Section>}
         {on("bookmarks") && <Section id="bookmarks"><BookmarksTab /></Section>}
       </Sections>
+      {sel && <ItemCard key={String(sel.r.id)} s={sel} busy={busy} run={run} onClose={() => setSel(null)} />}
     </div>
+    </CardCtx.Provider>
   );
 }

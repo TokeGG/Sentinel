@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { applySignal, emptyProfile, score } from "../../core/taste/model.ts";
 import { CATEGORIES, DEFAULT_SOURCES } from "./defaults.ts";
 import { dealInfo, percentOff, priceBand, storeOf, tagOf } from "./price.ts";
-import { seedIfEmpty, type SeedDb } from "./seed.ts";
+import { seedMissing, type SeedDb } from "./seed.ts";
 import { dealTaste } from "./taste.ts";
 
 describe("price parsing", () => {
@@ -35,28 +35,26 @@ describe("price parsing", () => {
 });
 
 describe("default sources + seeding", () => {
-  function fake(initial: number) {
-    const rows = new Set<string>();
-    let count = initial;
+  function fake(initial: string[]) {
+    const rows = new Set<string>(initial);
     const db: SeedDb = {
-      select: async <T,>() => [{ n: count }] as unknown as T,
-      execute: async (sql, args) => { if (sql.includes("INTO deal_sources")) { rows.add(String(args![0])); count = rows.size; } },
+      select: async <T,>() => [...rows].map((url) => ({ url })) as unknown as T,
+      execute: async (sql, args) => { if (sql.includes("INTO deal_sources")) rows.add(String(args![0])); },
     };
     return { db, rows };
   }
-  it("defaults are unique https urls with valid categories", () => {
+  it("defaults are unique https urls with valid categories, >= 25 per main category, every store page filled", () => {
     assert.equal(new Set(DEFAULT_SOURCES.map((s) => s.url)).size, DEFAULT_SOURCES.length);
-    for (const s of DEFAULT_SOURCES) { assert.match(s.url, /^https:\/\//); assert.ok(CATEGORIES.some((c) => c.id === s.category)); }
+    for (const s of DEFAULT_SOURCES) { assert.match(s.url, /^https:\/\//); assert.ok(CATEGORIES.some((c) => c.id === s.category), s.category); }
+    for (const c of ["pc", "games", "general", "tech", "home"]) assert.ok(DEFAULT_SOURCES.filter((s) => s.category === c).length >= 25, c);
+    for (const c of ["amazon", "newegg", "bestbuy", "steam", "epic", "gog", "humble"]) assert.ok(DEFAULT_SOURCES.some((s) => s.category === c), c);
   });
-  it("seeds an empty table once, never a populated one", async () => {
-    const e = fake(0);
-    assert.equal(await seedIfEmpty(e.db), true);
-    assert.equal(e.rows.size, DEFAULT_SOURCES.length);
-    assert.equal(await seedIfEmpty(e.db), false); // now populated
-    assert.equal(e.rows.size, DEFAULT_SOURCES.length);
-    const user = fake(2);
-    assert.equal(await seedIfEmpty(user.db), false);
-    assert.equal(user.rows.size, 0);
+  it("adds only missing feeds, is idempotent, and never re-adds a removed one", async () => {
+    const e = fake([DEFAULT_SOURCES[0].url, "https://mine.example/feed"]);
+    assert.equal(await seedMissing(e.db, { [DEFAULT_SOURCES[1].url]: { removed: true } }), DEFAULT_SOURCES.length - 2);
+    assert.equal(e.rows.has(DEFAULT_SOURCES[1].url), false);
+    assert.equal(await seedMissing(e.db, {}), 1); // only the un-removed one, when the state forgets it
+    assert.equal(await seedMissing(e.db, {}), 0);
   });
 });
 

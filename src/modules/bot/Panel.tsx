@@ -14,6 +14,7 @@ import { WorkflowPane } from "./WorkflowPane";
 import { useBotRun } from "./useBotRun";
 import { useFx } from "./useFx";
 import { useModelStatus } from "./useModelStatus";
+import { shortStatus } from "./ollamaStatus";
 import "./bot.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -28,7 +29,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       <h2 className="ui-head bot-head"><span className="ui-dot" />{module.name}<span className="bot-state">{bot.running ? "running" : "idle"}</span></h2>
       <div className="bot-status" role="status">
         <i className="bot-led" aria-hidden />
-        <span>{model.status.ok ? "local model online" : "local model offline"}</span>
+        <span>{shortStatus(model.status)}</span>
         <span className="bot-dim">{bot.running ? `${bot.log.length} log lines` : "waiting for a goal"}</span>
         <b className="bot-prog" aria-hidden />
       </div>

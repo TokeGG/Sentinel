@@ -12,7 +12,8 @@ import { PostCard, type CardActions } from "./PostCard";
 import { cardActions, postKey } from "./actionLogic";
 import { useActions } from "./useActions";
 import { dividerIndex, filterPosts, mergePosts, platformColor, rowToPost, type FeedPost } from "./panelLogic";
-import { FEED_TAB, SOCIAL_TABS, parseTab, siteOf } from "./embedSites";
+import { FEED_TAB, FOLLOWS_TAB, SOCIAL_TABS, parseTab, siteOf } from "./embedSites";
+import { FollowsTab } from "./FollowsTab";
 import { TasteBar } from "../../ui/TasteBar";
 import { useTasteView } from "../../ui/useTasteView";
 import { socialTaste } from "./taste";
@@ -86,6 +87,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   return (
     <div className="soc-root">
       <Tabs className="soc-tabs" tabs={SOCIAL_TABS} active={tab} onChange={setTab} />
+      {tab === FOLLOWS_TAB && <FollowsTab />}
       {tab === FEED_TAB && <>
       <h2 className="ui-head soc-bar">
         <span className="ui-dot" />

@@ -19,8 +19,10 @@ test("site configs are safe: https, host allowed, valid ids and profiles, unique
   }
 });
 
-test("tabs: Feed first, then X, Facebook, Instagram; unknown values fall back to Feed", () => {
-  assert.deepEqual(SOCIAL_TABS.map((t) => t.label), ["Feed", "X", "Facebook", "Instagram"]);
+test("tabs: Feed, Following & Likes, then X, Facebook, Instagram; unknown values fall back to Feed", () => {
+  assert.deepEqual(SOCIAL_TABS.map((t) => t.label), ["Feed", "Following & Likes", "X", "Facebook", "Instagram"]);
+  assert.equal(parseTab("follows"), "follows");
+  assert.equal(siteOf("follows"), undefined);
   assert.equal(parseTab("facebook"), "facebook");
   for (const bad of [null, undefined, "", "tiktok", 3]) assert.equal(parseTab(bad), FEED_TAB);
   assert.equal(siteOf(FEED_TAB), undefined);

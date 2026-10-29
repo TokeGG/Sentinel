@@ -14,6 +14,7 @@ export const botModule: ModuleManifest = {
   name: "Browser Bot",
   accent: "#fea669",
   ring: "system",
+  category: "dev",
   icon: "bot",
   description: "Type a goal; a local model browses in its own window to reach it, asking before anything irreversible. Learns from your notes and thumbs.",
   panel: "custom",

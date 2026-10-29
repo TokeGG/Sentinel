@@ -50,6 +50,7 @@ export const backupModule: ModuleManifest = {
   name: "Backup & Snapshot",
   accent: "#6ba630",
   ring: "system",
+  category: "system",
   icon: "backup",
   description:
     "One-click backup/restore of Sentinel's own database — not your whole PC. Restart the app after a restore.",

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { applyClear, badgeLabel, chatOptions, chatSections, clock, isAtBottom, isMention, moved, pushCapped, toRooms, visibleRooms, webPanelRef } from "./panelLogic.ts";
+import { applyClear, badgeLabel, chatOptions, chatSections, clock, isAtBottom, isMention, moved, pushCapped, toRooms, visibleRooms, webPanelRef, showsEmbed } from "./panelLogic.ts";
 import { customizeError } from "../../core/customizeChecks.ts";
 import type { Incoming, Room } from "./types.ts";
 
@@ -65,4 +65,13 @@ test("customize declaration is valid and Panel.tsx sections match it", () => {
   const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
   const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
   assert.deepEqual(used, chatSections.map((x) => x.id).sort());
+});
+
+test("Kick and destiny.gg default to the embed; Try native flips it; twitch stays native", () => {
+  assert.equal(showsEmbed({ connect: 1, embedFallback: 1, defaultEmbed: true }, false), true);
+  assert.equal(showsEmbed({ connect: 1, embedFallback: 1, defaultEmbed: true }, true), false);
+  assert.equal(showsEmbed({ connect: 1, embedFallback: 1 }, false), false);
+  assert.equal(showsEmbed({ connect: 1, embedFallback: 1 }, true), true);
+  assert.equal(showsEmbed({}, false), true);
+  for (const f of ["kick", "dgg"]) assert.match(readFileSync(new URL(`./connectors/${f}.ts`, import.meta.url), "utf8"), /defaultEmbed: true/);
 });

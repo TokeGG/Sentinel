@@ -1,6 +1,6 @@
 // One News card: source + tag/reliability badges, title, read-later, highlight note, podcast audio.
 import { useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink";
 import type { Ranked, TasteItem } from "../../core/taste/model";
 import type { Taste } from "../../core/taste/useTaste";
 import { safeLink } from "../../ui/safeLink";

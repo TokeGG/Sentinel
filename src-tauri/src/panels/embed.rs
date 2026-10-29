@@ -17,10 +17,14 @@ pub struct EmbedSpec {
     pub(super) url: String,
     pub(super) profile: String,
     pub(super) hosts: Vec<String>,
+    pub(super) private: bool, // browser tabs only: no profile data kept
 }
 
 /// Create the embed's webview (profile data dir by name, never the label).
 pub(super) fn add_embed(app: &AppHandle, id: &str, em: &EmbedSpec, outer: super::persist::Rect) -> Result<(), String> {
+    if super::ids::is_tab_site(&em.site) {
+        return super::browser::add_tab(app, id, em, outer);
+    }
     let b = tauri::WebviewBuilder::new(embed_label(id, &em.site), tauri::WebviewUrl::External(parse_web_url(&em.url)?))
         .data_directory(app.path().app_data_dir().map_err(e)?.join("profiles").join(&em.profile));
     add(app, guard(b, app, id, &em.hosts, false), embed_rect(outer))
@@ -30,11 +34,11 @@ pub(super) fn add_embed(app: &AppHandle, id: &str, em: &EmbedSpec, outer: super:
 #[tauri::command]
 pub async fn embed_show(app: AppHandle, id: String, site: String, url: String, profile: String, hosts: Option<Vec<String>>) -> Result<(), String> {
     validate(&id, Some(&profile))?;
-    if !is_valid_site(&site) {
+    if !is_valid_site(&site) || super::ids::is_tab_site(&site) {
         return Err(format!("invalid site {site:?}"));
     }
     parse_web_url(&url)?;
-    let em = EmbedSpec { site, hosts: effective_hosts(&url, hosts), url, profile };
+    let em = EmbedSpec { site, hosts: effective_hosts(&url, hosts), url, profile, private: false };
     let s = {
         let specs = app.state::<Specs>();
         let mut m = specs.0.lock().map_err(e)?;

@@ -4,6 +4,7 @@ import { Avatar } from "./Cards";
 import type { Sig } from "./library";
 import type { Channel } from "./panelLogic";
 import { cleanName } from "./extras";
+import { Suggested } from "./Suggested";
 
 // Channel management: open one (Home filtered to it), remove, and restore what was hidden.
 export function ChannelsView({ channels, signals, busy, run, onOpen, groups, uploads, onGroup }: {
@@ -33,6 +34,7 @@ export function ChannelsView({ channels, signals, busy, run, onOpen, groups, upl
           <button type="button" className="ui-btn" disabled={busy} onClick={() => void run("remove_channel", { channelId: c.channelId })}>Remove</button>
         </div>
       ))}
+      <Suggested handles={channels.map((c) => c.handle)} busy={busy} run={run} />
       {hidden.length > 0 && (
         <>
           <h4 className="yt-sub">Hidden ({hidden.length})</h4>

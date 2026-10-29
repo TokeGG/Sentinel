@@ -105,6 +105,7 @@ export const clipboardModule: ModuleManifest = {
   name: "Clipboard & Quick-Launch",
   accent: "#a5b724",
   ring: "system",
+  category: "productivity",
   icon: "clipboard",
   description:
     "Quick-launch shortcuts (apps/files/folders you add) plus a clipboard history. Polling is off by default — switch on Auto-refresh to start capturing.",

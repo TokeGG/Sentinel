@@ -24,6 +24,7 @@ export const ICONS: Record<string, string> = {
   chat: "M4 5h16v11H9l-5 4z M8 10h8 M8 13h5",
   skills: "M12 3l2.5 5.5L20 9.3l-4 4 1 5.7-5-2.8-5 2.8 1-5.7-4-4 5.5-.8z",
   congress: "M3 21h18 M5 21v-8 M9 21v-8 M15 21v-8 M19 21v-8 M3 13h18 M5 10a7 7 0 0 1 14 0 M12 3v3",
+  browser: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M3 12h18 M12 3c2.5 2.5 3.8 5.5 3.8 9s-1.3 6.5-3.8 9 M12 3c-2.5 2.5-3.8 5.5-3.8 9s1.3 6.5 3.8 9",
   bot: "M5 8h14v11H5z M12 8V4 M10 4h4 M9 12v2 M15 12v2 M2 12v4 M22 12v4",
 };
 

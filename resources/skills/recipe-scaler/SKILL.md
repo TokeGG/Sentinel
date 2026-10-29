@@ -1,6 +1,7 @@
 ---
 name: recipe-scaler
 description: Scale a recipe to a different number of servings, convert units if asked, and keep the method consistent.
+category: productivity
 ---
 
 # Recipe scaler

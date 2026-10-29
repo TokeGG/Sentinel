@@ -20,6 +20,12 @@ export function ConnPanel({ status, detail, log, canEmbed, onRetry, onEmbed }: P
           {status === "connecting" ? "Connecting…" : (detail ?? (status === "closed" ? "Disconnected" : "Error"))}{" "}
           {bad && <button type="button" className="ui-btn" onClick={onRetry}>Retry</button>}{" "}
           {bad && canEmbed && <button type="button" className="ui-btn" onClick={onEmbed}>Use embed instead</button>}
+          {bad && (
+            <div className="chat-help">
+              Not working? Copy the connection log and send it to the developer:{" "}
+              <button type="button" className="ui-btn" onClick={() => void navigator.clipboard?.writeText(log.text()).catch(() => {})}>Copy connection log</button>
+            </div>
+          )}
         </div>
       )}
       <details className="chat-conn">

@@ -10,6 +10,7 @@ export const financeModule: ModuleManifest = {
   name: "Finance",
   accent: "#d4c021",
   ring: "daily",
+  category: "finance",
   icon: "finance",
   description:
     "Stock/ETF (Stooq) and crypto (CoinGecko) watchlist, plus Senate/House trade disclosures. All free, no key, no account linking.",

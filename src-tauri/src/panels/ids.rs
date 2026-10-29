@@ -27,6 +27,14 @@ pub fn embed_label(id: &str, site: &str) -> String {
 pub fn is_valid_site(s: &str) -> bool {
     !s.is_empty() && s.len() <= 16 && s.bytes().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
 }
+/// Browser tab embeds use the site name `tab<n>` (no Social site starts with "tab").
+pub fn is_tab_site(s: &str) -> bool {
+    s.strip_prefix("tab").is_some_and(|d| !d.is_empty() && d.len() <= 9 && d.bytes().all(|c| c.is_ascii_digit()))
+}
+/// Is this webview label a browser tab (`embed-<panel>-tab<n>`)?
+pub fn is_tab_label(label: &str) -> bool {
+    label.starts_with("embed-") && label.rsplit_once('-').is_some_and(|(_, s)| is_tab_site(s))
+}
 /// Does webview `label` belong to panel `id`'s embeds?
 pub fn embed_of(label: &str, id: &str) -> bool {
     label.strip_prefix("embed-").and_then(|r| r.rsplit_once('-')).is_some_and(|(own, site)| own == id.replace('.', "_") && is_valid_site(site))
@@ -87,6 +95,12 @@ mod tests {
         assert_eq!(chrome_label("hub.notes"), "chrome-hub_notes");
         assert_ne!(chrome_label("a.b"), chrome_label("a-b"));
         assert_ne!(chrome_label("hub.notes"), label("hub.notes"));
+    }
+    #[test]
+    fn tab_sites() {
+        assert!(is_tab_site("tab1") && is_tab_site("tab123"));
+        assert!(!is_tab_site("tab") && !is_tab_site("x") && !is_tab_site("tabx") && !is_tab_site("instagram"));
+        assert!(is_tab_label(&embed_label("hub.browser", "tab4")) && !is_tab_label(&embed_label("hub.social", "x")));
     }
     #[test]
     fn embed_labels_belong_to_exactly_one_panel() {

@@ -2,6 +2,7 @@
 name: note-summarize
 description: Summarise one or more notes from the Notes module into key points and open action items.
 module: hub.notes
+category: productivity
 ---
 
 # Note summarize

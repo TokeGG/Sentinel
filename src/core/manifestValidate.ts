@@ -1,6 +1,7 @@
 // validateManifest(): rejects a bad manifest at registration (split out of module.ts for the size cap).
 import { skillRefs, uiError, webError } from "./manifestChecks.ts";
 import { accentError, customizeError, iconError, ringError } from "./customizeChecks.ts";
+import { categoryError } from "./categories.ts";
 import type { ModuleManifest, PanelKind } from "./module.ts";
 
 const PANEL_KINDS: PanelKind[] = ["list", "table", "chat", "custom", "web"];
@@ -69,7 +70,7 @@ export function validateManifest(m: ModuleManifest, existing: ModuleManifest[]) 
     throw new ManifestError(`${where}: search must be a function`);
   }
   const extraErr = webError(m) ?? uiError(m) ?? accentError(m.accent) ?? ringError(m.ring) ??
-    iconError(m.icon) ?? customizeError(m.customize);
+    iconError(m.icon) ?? customizeError(m.customize) ?? categoryError(m.category);
   if (extraErr) throw new ManifestError(`${where}: ${extraErr}`);
   const credKeys = new Set<string>();
   for (const f of m.credentialFields ?? []) {

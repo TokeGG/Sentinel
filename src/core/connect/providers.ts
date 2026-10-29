@@ -57,7 +57,7 @@ export const PROVIDERS: Provider[] = [
   { id: "github", label: "GitHub", flow: "device-code", deviceUrl: "https://github.com/login/device/code", tokenUrl: "https://github.com/login/oauth/access_token",
     scopes: ["read:user"], clientGroup: "github", headers: { Accept: "application/json" }, purpose: "GitHub panel: your starred repos; higher API rate limits for skill installs." },
   { id: "reddit", label: "Reddit", flow: "loopback-pkce", authUrl: "https://www.reddit.com/api/v1/authorize", tokenUrl: "https://www.reddit.com/api/v1/access_token",
-    scopes: ["read", "identity", "vote", "submit"], clientGroup: "reddit", redirect: loop(53684), authExtra: { duration: "permanent" }, pkce: false, basicAuth: true,
+    scopes: ["read", "identity", "vote", "submit", "mysubreddits", "history"], clientGroup: "reddit", redirect: loop(53684), authExtra: { duration: "permanent" }, pkce: false, basicAuth: true,
     headers: UA, purpose: "Social panel: your Reddit feed, votes and comments." },
 ];
 

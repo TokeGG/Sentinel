@@ -1,4 +1,5 @@
 import { test } from "node:test";
+import "./api.test.ts"; // GovTrack reply/fallback tests (run with this listed file)
 import assert from "node:assert/strict";
 import { BILLS, ROLES, VOTES } from "./fixtures.ts";
 import { STAGES, cleanName, parseBills, parseMembers, parseVotes, partyCode, statusStage, timeline } from "./parse.ts";

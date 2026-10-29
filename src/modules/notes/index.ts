@@ -61,6 +61,7 @@ export const notesModule: ModuleManifest = {
   name: "Notes",
   accent: "#b78b06",
   ring: "daily",
+  category: "productivity",
   icon: "notes",
   description: "Quick-capture inbox plus a markdown notebook: folders, tags, search, backlinks, graph, journal, flashcards, snippets, document vault and web clipper.",
   panel: "custom",

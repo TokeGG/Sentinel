@@ -1,6 +1,6 @@
 // "My representatives": enter state + district; shows your senators/House member and their recent votes.
 import { useEffect, useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink";
 import { EmptyState } from "../../ui/kit";
 import { safeLink } from "../../ui/safeLink";
 import type { ModuleState } from "../../ui/useModule";

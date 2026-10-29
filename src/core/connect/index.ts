@@ -2,11 +2,12 @@
 // the OS keychain (store.ts); refresh is silent; nothing here logs a token.
 import { missingScopes } from "./oauth.ts";
 import { clientIdFor, getClientSecret } from "./clientStore.ts";
-import { deviceSignIn, loopbackSignIn, type DevicePrompt } from "./flow.ts";
+import { cancelLoopback, deviceSignIn, loopbackSignIn, type DevicePrompt } from "./flow.ts";
+import { explainError } from "./diagnose.ts";
 import { send } from "./http.ts";
 import { identify } from "./identity.ts";
 import { hostOfAccount, normalizeInstance } from "./mastodonLogic.ts";
-import { mastodonClientId, mastodonSecret, registerApp } from "./mastodonReg.ts";
+import { forgetRegistration, mastodonClientId, mastodonSecret, registerApp } from "./mastodonReg.ts";
 import { endpoint, getProvider, redirectUri, type Provider } from "./providers.ts";
 import type { TokenEndpoint } from "./requests.ts";
 import { dropRow, keychainTokens, listRows, saveRow, setLastError, tokenKey, type AccountRow } from "./store.ts";
@@ -30,7 +31,7 @@ const changed = () => listeners.forEach((f) => f());
 const prompts = new Map<string, DevicePrompt>();
 export const devicePrompt = (providerId: string): DevicePrompt | undefined => prompts.get(providerId);
 const cancelled = new Set<string>();
-export const cancelConnect = (providerId: string): void => void cancelled.add(providerId);
+export const cancelConnect = (providerId: string): void => { cancelled.add(providerId); void cancelLoopback(getProvider(providerId)); };
 
 export const listAccounts = (providerId?: string): Promise<AccountRow[]> => listRows(providerId);
 
@@ -47,8 +48,23 @@ async function endpointFor(p: Provider, instance?: string): Promise<{ ep: TokenE
   return { ep: { ...base, clientId, clientSecret: p.clientSecret ? await getClientSecret(p.clientGroup!) : undefined }, authUrl };
 }
 
-export async function connect(providerId: string, opts: { instance?: string; onPrompt?: (d: DevicePrompt | null) => void } = {}): Promise<AccountRow> {
+export interface ConnectOpts { instance?: string; onPrompt?: (d: DevicePrompt | null) => void; onLink?: (url: string | null) => void }
+
+/** Signs in; every failure is rethrown with a precise message and next step (diagnose.ts). */
+export async function connect(providerId: string, opts: ConnectOpts = {}): Promise<AccountRow> {
   const p = getProvider(providerId);
+  try {
+    return await connectRaw(p, opts);
+  } catch (e) {
+    if (e instanceof MissingClientId) throw e;
+    const raw = e instanceof Error ? e.message : String(e);
+    const host = p.dynamicInstance ? normalizeInstance(opts.instance ?? "") : null;
+    if (host && /invalid_client|unauthorized_client/i.test(raw)) await forgetRegistration(host).catch(() => {});
+    throw new Error(explainError(p, raw));
+  }
+}
+
+async function connectRaw(p: Provider, opts: ConnectOpts): Promise<AccountRow> {
   let instance: string | undefined;
   if (p.dynamicInstance) {
     instance = normalizeInstance(opts.instance ?? "") ?? undefined;
@@ -59,7 +75,7 @@ export async function connect(providerId: string, opts: { instance?: string; onP
   cancelled.delete(p.id);
   const tokens = p.flow === "device-code"
     ? await deviceSignIn(p, ep, (d) => { d ? prompts.set(p.id, d) : prompts.delete(p.id); opts.onPrompt?.(d); changed(); }, () => cancelled.has(p.id))
-    : await loopbackSignIn(p, ep, authUrl!);
+    : await loopbackSignIn(p, ep, authUrl!, opts.onLink);
   const gap = p.strictScopes && tokens.scopes.length ? missingScopes(tokens.scopes, p.scopes) : [];
   if (gap.length) throw new Error(`${p.label} did not grant: ${gap.join(", ")}. Press Connect again and accept every permission.`);
   const who = await identify(p, tokens, instance);

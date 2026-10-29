@@ -9,6 +9,7 @@ export const gamesModule: ModuleManifest = {
   name: "Games",
   accent: "#0077ee",
   ring: "media",
+  category: "media",
   icon: "games",
   description: "Your installed Steam and Epic games, launch, favourites and patch notes.",
   panel: "custom",

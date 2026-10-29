@@ -9,7 +9,7 @@ import { advance } from "./stars.ts";
 import { makeCam, planeToWorld, project, type Cam, type Proj, type V3 } from "./proj.ts";
 import { makeLabelSet, type LabelSet } from "./labels.ts";
 
-export type Slot = { id: string; name: string; ring: Ring; index: number; count: number; hue: number; icon?: string };
+export type Slot = { id: string; name: string; ring: Ring; index: number; count: number; hue: number; icon?: string; phase?: number };
 export type Scene = {
   slots: Slot[];
   orbitT: number; // shared orbit clock, orbit-seconds (stepRing: integral of dt x speed)
@@ -20,7 +20,7 @@ export type Scene = {
   sz: Float64Array; // depth (bigger = farther; sun 0)
   rad: Float64Array; // screen radius after ring size and perspective
   order: Int32Array; // body indices far -> near (depth sorted)
-  cam: Cam; px: number; py: number; // camera and pointer parallax target (-1..1)
+  cam: Cam; // fixed camera (no pointer parallax)
   labels: LabelSet;
   starT: number; // star-field time, seconds
   hover: number; // planet index, SUN (-2) or -1
@@ -32,12 +32,13 @@ export type View = { tx: number; ty: number; scale: number };
 const RINGS: Ring[] = ["daily", "media", "system", "security"];
 type Meta = Pick<ModuleManifest, "id" | "name" | "ring" | "icon" | "accent">;
 
-/** Ring by ring (inner first), registry order inside a ring. */
-export function buildSlots(mods: Meta[]): Slot[] {
+/** Ring by ring (inner first), registry order inside a ring. `pos` (dragged planets)
+ *  overrides a module's ring and gives it a fixed phase instead of an even slot. */
+export function buildSlots(mods: Meta[], pos: Record<string, { ring: Ring; phase: number }> = {}): Slot[] {
   return RINGS.flatMap((ring) => {
-    const on = mods.filter((m) => ringOf(m) === ring);
+    const on = mods.filter((m) => (pos[m.id]?.ring ?? ringOf(m)) === ring);
     return on.map((m, index) => ({
-      id: m.id, name: m.name, ring, index, count: on.length, icon: m.icon,
+      id: m.id, name: m.name, ring, index, count: on.length, icon: m.icon, ...(pos[m.id] ? { phase: pos[m.id].phase } : {}),
       hue: (m.accent ? hueOf(m.accent) : null) ?? hashId(m.id) % 360,
     }));
   });
@@ -54,7 +55,7 @@ export function makeScene(slots: Slot[], prev?: Scene | null): Scene {
   return {
     slots, orbitT: prev?.orbitT ?? 0, lag, slow: new Float64Array(n).fill(1),
     sx: new Float64Array(n + 1), sy: new Float64Array(n + 1), sz: new Float64Array(n + 1), rad: new Float64Array(n + 1),
-    order: Int32Array.from({ length: n + 1 }, (_, i) => i), cam: prev?.cam ?? makeCam(), px: 0, py: 0, labels: makeLabelSet(n),
+    order: Int32Array.from({ length: n + 1 }, (_, i) => i), cam: makeCam(), labels: makeLabelSet(n),
     starT: prev?.starT ?? 0, hover: -1, hoverMs: 0, idleMs: 0,
   };
 }

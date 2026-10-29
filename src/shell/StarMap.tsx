@@ -2,7 +2,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type { ModuleManifest } from "../core/module";
 import { ensureSky, drawSky, prepCanvas, type Sky } from "./Sky";
 import { buildSlots, fitView, makeScene, stepScene, type Layers, type Scene, type View } from "./mapLayout";
-import { placeScene, stepCam } from "./place3d";
+import { placeScene } from "./place3d";
+import { nearestRingPoint, phaseFor, type PlanetPos } from "./planetDrag";
+import { getPlanetPos, setPlanetPos, subscribePlanetPos } from "./planetPosStore";
 import { hitTest, SUN } from "./mapHit";
 import { drawScene, type Sprites } from "./mapDraw";
 import { getMotion, subscribeMotion } from "./motionStore";
@@ -15,9 +17,9 @@ import { openMaster, openPanel } from "./panelApi";
 
 const LAYERS: Layers = { stars: true, orbit: true, speed: 1 }; // reused every frame
 
-// Canvas 3D solar system (tilted orbits, shaded planets, depth sorted, pointer parallax),
+// Canvas 3D solar system (tilted orbits, shaded planets, depth sorted, fixed camera),
 // drawn by useMapLoop. The sun opens the Master Hub; a planet opens its panel;
-// drag pans, wheel/pinch zooms. Planets are not draggable.
+// wheel/pinch zoom about the centre; dragging a planet re-homes it on the nearest ring.
 export function StarMap({ modules, onError }: { modules: ModuleManifest[]; onError: (m: string) => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const view = useRef<View>({ tx: 0, ty: 0, scale: 1 });
@@ -27,10 +29,17 @@ export function StarMap({ modules, onError }: { modules: ModuleManifest[]; onErr
   const prevScene = useRef<Scene | null>(null);
   const sprites = useRef<Sprites>({ planets: [] });
   const [hovering, setHovering] = useState(false);
+  const [pos, setPos] = useState<PlanetPos>({});
+  const dragging = useRef<{ i: number; x: number; y: number } | null>(null);
+  useEffect(() => {
+    const load = () => getPlanetPos().then(setPos).catch((e) => onError(`Planet positions: ${String(e)}`));
+    load();
+    return subscribePlanetPos(load);
+  }, []);
   const scene = useMemo(() => {
     sprites.current.planets = [];
-    return (prevScene.current = makeScene(buildSlots(modules), prevScene.current));
-  }, [modules]);
+    return (prevScene.current = makeScene(buildSlots(modules, pos), prevScene.current));
+  }, [modules, pos]);
 
   const setHover = (i: number) => {
     if (i === scene.hover) return false;
@@ -53,9 +62,10 @@ export function StarMap({ modules, onError }: { modules: ModuleManifest[]; onErr
       LAYERS.orbit = m.orbitMotion;
       LAYERS.speed = m.orbitSpeed;
       stepScene(scene, dtMs, LAYERS);
-      stepCam(scene, dtMs);
     }
     placeScene(scene, view.current);
+    const d = dragging.current;
+    if (d && d.i < scene.slots.length) { scene.sx[d.i] = d.x; scene.sy[d.i] = d.y; scene.sz[d.i] = -1e6; }
     if (dtMs > 0) hoverAt(pointer.current);
     const sk = (sky.current = ensureSky(sky.current, w, h, dpr));
     drawSky(ctx, sk, scene.starT);
@@ -80,18 +90,27 @@ export function StarMap({ modules, onError }: { modules: ModuleManifest[]; onErr
     ro.observe(c);
     fit();
     return () => ro.disconnect();
-  }, [scene]);
+  }, []);
 
   const input = useMapInput(canvas, view, redraw, {
     hover(p) {
       pointer.current = p;
       scene.idleMs = 0;
-      scene.px = p ? (p.x / size.current.w - 0.5) * 2 : 0;
-      scene.py = p ? (p.y / size.current.h - 0.5) * 2 : 0;
       placeScene(scene, view.current);
       if (hoverAt(p)) redraw();
     },
-    panning() { pointer.current = null; setHover(-1); },
+    pick(p) { placeScene(scene, view.current); return hitTest(scene, p.x, p.y); },
+    drag(i, p) { pointer.current = null; setHover(-1); dragging.current = { i, x: p.x, y: p.y }; },
+    cancel() { dragging.current = null; redraw(); },
+    drop(i, p) {
+      dragging.current = null;
+      const id = scene.slots[i]?.id;
+      if (!id) return;
+      const { ring, angle } = nearestRingPoint(scene.cam, view.current, p.x, p.y);
+      scene.lag[i] = 0;
+      setPlanetPos({ ...pos, [id]: { ring, phase: phaseFor(ring, angle, scene.orbitT) } })
+        .catch((e) => onError(`Save planet position: ${String(e)}`));
+    },
     click(p) {
       placeScene(scene, view.current); // hit-test the bodies where they are NOW
       const i = hitTest(scene, p.x, p.y);

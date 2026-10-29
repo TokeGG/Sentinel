@@ -7,6 +7,7 @@ import {
 import { getRestorePanels, setRestorePanels } from "../settingsStore";
 import { SPEED_MAX, SPEED_MIN } from "../orbit";
 import { Head, Switch } from "./Switch";
+import { resetPlanetPos } from "../planetPosStore";
 
 // null = still loading. A failed read shows the default (`fallback`).
 function useSetting<T>(get: () => Promise<T>, fallback: T, onError: (e: unknown) => void) {
@@ -57,6 +58,8 @@ export function GeneralSection({ onError }: { onError(e: unknown): void }) {
         Notification moons <small className="ui-meta">unread counts around planets</small></Switch></Row>
       <Row><Switch checked={restore ?? true} disabled={restore === null} onChange={change(setRestorePanels, setRestore)}>
         Reopen panels at startup</Switch></Row>
+      <Row><button className="ui-btn" onClick={() => resetPlanetPos().catch(onError)}>Reset planet positions</button>
+        <small className="ui-meta">undo planets you dragged to other orbits</small></Row>
     </section>
   );
 }

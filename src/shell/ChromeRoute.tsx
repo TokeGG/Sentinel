@@ -3,9 +3,11 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { registry } from "../core/module";
-import { closePanel, commit, getPanel, MASTER_ID, SETTINGS_ID, toggleFullWindow } from "./panelApi";
+import { closePanel, commit, getPanel, MASTER_ID, SETTINGS_ID, toggleFullWindow, YTPLAYER_ID } from "./panelApi";
 import { useDragPanel } from "./useDragPanel";
 import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
+import { sendCmd } from "./desk/shellCmd";
+import { SNAP_ID } from "./desk/ids";
 
 const PREFIX = "#/chrome/";
 /** Never throws: malformed %-escapes yield "" (renders "Module not found"). */
@@ -37,7 +39,7 @@ export function ChromeRoute({ id }: { id: string }) {
   return (
     <div className="panel-chrome" style={m?.accent ? ({ "--accent": m.accent } as CSSProperties) : undefined} {...handlers}>
       <i className={`panel-chrome-dot${unread > 0 ? " new" : ""}`} title={unread > 0 ? `${unread} new` : undefined} />
-      <span className="panel-chrome-title" style={err ? { color: "var(--bad)" } : undefined} title={err ?? undefined}>{err ?? (m ? m.name : id === SETTINGS_ID ? "Settings" : id === MASTER_ID ? "Master Hub" : id ? id : "Module not found")}</span>
+      <span className="panel-chrome-title" style={err ? { color: "var(--bad)" } : undefined} title={err ?? undefined}>{err ?? (m ? m.name : id === SETTINGS_ID ? "Settings" : id === MASTER_ID ? "Master Hub" : id === YTPLAYER_ID ? "Mini player" : id ? id : "Module not found")}</span>
       {m && m.panel !== "web" && (
         <button className="panel-chrome-gear" title="Customize" aria-label="Customize panel"
           onClick={() => emitTo(panelLabel(id), PANEL_CUSTOMIZE, { id }).catch(fail("customize"))}>⚙</button>
@@ -46,8 +48,20 @@ export function ChromeRoute({ id }: { id: string }) {
         <button className="panel-chrome-gear" title={full ? "Restore size" : "Full window"} aria-label="Toggle full window"
           onClick={() => toggleFullWindow(id).then(setFull, fail("full window"))}>{full ? "⤡" : "⤢"}</button>
       )}
+      {id !== SNAP_ID && <SnapButton id={id} onError={fail("snap layouts")} />}
       <button className="panel-chrome-close" title="Close" aria-label="Close panel"
         onClick={() => closePanel(id).catch(fail("close"))}>×</button>
     </div>
+  );
+}
+
+// Snap Layouts: click, or hover ~0.5 s like the Windows 11 maximise button.
+function SnapButton({ id, onError }: { id: string; onError(e: unknown): void }) {
+  const [t, setT] = useState(0);
+  const open = () => sendCmd({ type: "snapLayouts", id }).catch(onError);
+  return (
+    <button className="panel-chrome-gear" title="Snap layouts (Ctrl+Alt+Z)" aria-label="Snap layouts"
+      onMouseEnter={() => setT(window.setTimeout(open, 500))} onMouseLeave={() => clearTimeout(t)}
+      onClick={() => { clearTimeout(t); open(); }}>▦</button>
   );
 }

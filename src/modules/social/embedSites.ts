@@ -12,7 +12,8 @@ export const SOCIAL_SITES: EmbedSite[] = [
   { id: "instagram", label: "Instagram", url: "https://www.instagram.com", profile: "instagram", hosts: ["instagram.com", "*.instagram.com", "*.cdninstagram.com", "*.fbcdn.net"] },
 ];
 
-export const SOCIAL_TABS = [{ id: FEED_TAB, label: "Feed" }, ...SOCIAL_SITES.map(({ id, label }) => ({ id, label }))];
+export const FOLLOWS_TAB = "follows";
+export const SOCIAL_TABS = [{ id: FEED_TAB, label: "Feed" }, { id: FOLLOWS_TAB, label: "Following & Likes" }, ...SOCIAL_SITES.map(({ id, label }) => ({ id, label }))];
 
 /** A stored/unknown value -> a valid tab id (Feed when unrecognised). */
 export const parseTab = (raw: unknown): string => (SOCIAL_TABS.some((t) => t.id === raw) ? (raw as string) : FEED_TAB);

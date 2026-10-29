@@ -1,8 +1,8 @@
 //! Webview pair handling for one panel (Task 9b): content (`label()`) +
 //! chrome strip (`chrome_label()`), always created, placed, shown, hidden
 //! and closed together. Pure split of the outer rect lives in geometry.rs.
-use super::geometry::{embed_rect, geometry, grip_rect};
-use super::ids::{chrome_label, embed_label, embed_of, grip_label, label, parse_web_url};
+use super::geometry::{browser_rect, embed_rect, geometry, grip_rect};
+use super::ids::{chrome_label, embed_label, embed_of, grip_label, is_tab_label, label, parse_web_url};
 use super::manager::{e, spec, Specs, Spec};
 use super::persist::Rect;
 use super::webguard::{allowed_host, permission_granted, unread_from_title};
@@ -88,6 +88,7 @@ pub(crate) enum Part {
     Chrome,
     Grip,
     Embed,
+    Tab, // in-app browser tab (browser.rs)
 }
 /// The webviews of a panel that currently exist.
 pub(crate) fn webviews(app: &AppHandle, id: &str) -> Vec<(tauri::Webview, Part)> {
@@ -95,7 +96,7 @@ pub(crate) fn webviews(app: &AppHandle, id: &str) -> Vec<(tauri::Webview, Part)>
         .into_iter()
         .filter_map(|(l, p)| app.get_webview(&l).map(|w| (w, p)))
         .collect();
-    v.extend(app.webviews().into_iter().filter(|(l, _)| embed_of(l, id)).map(|(_, w)| (w, Part::Embed)));
+    v.extend(app.webviews().into_iter().filter(|(l, _)| embed_of(l, id)).map(|(l, w)| (w, if is_tab_label(&l) { Part::Tab } else { Part::Embed })));
     v
 }
 /// Close all webviews; tries all even if the first fails.
@@ -112,7 +113,8 @@ pub(crate) fn destroy(app: &AppHandle, id: &str) -> Result<(), String> {
 pub(crate) fn set_visible(app: &AppHandle, id: &str, visible: bool) -> Result<(), String> {
     let active = spec(&app.state::<Specs>(), id).ok().and_then(|s| s.embed).map(|em| embed_label(id, &em.site));
     for (w, p) in webviews(app, id) {
-        let r = if visible && (p != Part::Embed || active.as_deref() == Some(w.label())) { w.show() } else { w.hide() };
+        let shown = !matches!(p, Part::Embed | Part::Tab) || active.as_deref() == Some(w.label());
+        let r = if visible && shown { w.show() } else { w.hide() };
         r.map_err(e)?;
     }
     Ok(())
@@ -124,6 +126,7 @@ fn part_rect(outer: Rect, p: Part) -> Rect {
         Part::Chrome => chrome,
         Part::Grip => grip_rect(outer),
         Part::Embed => embed_rect(outer),
+        Part::Tab => browser_rect(outer),
     }
 }
 /// Re-apply the geometry of `outer` to every webview (position + size).

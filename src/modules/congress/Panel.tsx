@@ -1,6 +1,5 @@
 import { useState } from "react";
 import type { ModuleManifest } from "../../core/module";
-import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Chip, EmptyState, ErrorLine, Tabs } from "../../ui/kit";
 import { TasteBar } from "../../ui/TasteBar";
@@ -30,7 +29,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
 
   const sync = async () => {
     const out = (await run("sync_congress")) as { bills: number; votes: number; members: number; updated: number; errors: string[] } | undefined;
-    if (out) setNote(`Synced ${out.bills} bills, ${out.votes} votes, ${out.members} members${out.errors.length ? ` · ${out.errors.length} part(s) failed: ${out.errors[0]}` : ""}`);
+    if (out) setNote(`Synced ${out.bills} bills, ${out.votes} votes, ${out.members} members${out.errors.length ? ` · ${out.errors.length} problem(s): ${out.errors.join(" | ")}` : ""}`);
   };
   const syncBtn = (
     <button type="button" className="ui-btn primary" disabled={busy} onClick={() => void sync()}>{busy ? "Syncing…" : "Sync Congress"}</button>
@@ -49,12 +48,11 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="sync">
           <div className="ui-controls">
             {syncBtn}
-            <ScheduleToggle module={module} />
             {!none && <ConfirmButton label="Clear synced data" disabled={busy} title="Deletes the cached bills, votes and members; follows are kept" onConfirm={() => void run("clear_cache")} />}
             {updates > 0 && <button type="button" className="ui-btn" disabled={busy} onClick={() => void run("mark_seen")}>Mark all seen</button>}
           </div>
-          {note && <p className="ui-meta" role="status">{note}</p>}
-          <p className="ui-meta">Data from GovTrack.us (public API, no key). Only fetched when you sync.</p>
+          {note && <p className="ui-meta cg-note" role="status">{note}</p>}
+          <p className="ui-meta">Data from GovTrack.us (public API, no key). Only fetched when you press Sync.</p>
         </Section>
         <Section id="search">
           <div className="cg-filters">

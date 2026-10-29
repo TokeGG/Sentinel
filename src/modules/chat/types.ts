@@ -56,5 +56,7 @@ export interface Connector {
   urls?(room: RoomRef, host: string): { frame: string; panel: string };
   /** Popout/embed URL to show when the socket connection cannot be made. */
   embedFallback?(room: RoomRef): string;
+  /** Show embedFallback by default; the live socket is the opt-in "Try native" (Kick, destiny.gg). */
+  defaultEmbed?: boolean;
   auth?: { credentialKey: string; help: string };
 }

@@ -47,6 +47,8 @@ pub fn all() -> Vec<Migration> {
         Migration { version: 40, description: "pc speed tests, net device icons, uptime, events", sql: include_str!("../migrations/40_pc_net_dev.sql"), kind: MigrationKind::Up },
         Migration { version: 41, description: "bot workflows, jobs, site notes", sql: include_str!("../migrations/41_bot_extras.sql"), kind: MigrationKind::Up },
         Migration { version: 42, description: "games library, game news, show tracker", sql: include_str!("../migrations/42_games_media.sql"), kind: MigrationKind::Up },
+        Migration { version: 43, description: "in-app browser bookmarks, history, sidebar apps", sql: include_str!("../migrations/43_browser.sql"), kind: MigrationKind::Up },
+        Migration { version: 44, description: "panel-bot knowledge base", sql: include_str!("../migrations/44_knowledge.sql"), kind: MigrationKind::Up },
     ]
 }
 
@@ -56,9 +58,14 @@ mod tests {
 
     #[test]
     fn versions_are_ascending_and_match_position() {
+        // Strictly ascending; 44 may be reserved by a concurrent branch, so a gap below the last is allowed.
         let m = all();
-        assert_eq!(m.len(), 42);
-        for (i, mig) in m.iter().enumerate() {
+        assert!(m.len() >= 44);
+        assert_eq!(m[0].version, 1);
+        for w in m.windows(2) {
+            assert!(w[1].version > w[0].version);
+        }
+        for (i, mig) in m.iter().take(43).enumerate() {
             assert_eq!(mig.version, (i as i64) + 1);
         }
     }

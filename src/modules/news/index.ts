@@ -3,6 +3,8 @@ import { registerModule, type ModuleManifest } from "../../core/module";
 import { fetchFeeds, loadItems, seedPreset, setSaved, setSourceMeta } from "./store";
 import { feedOps } from "./feedOps";
 import { feedSections } from "./panelLogic";
+import { congressModule } from "../congress/index";
+import { unseenCount } from "../congress/store";
 
 async function addSource(args?: Record<string, unknown>) {
   const url = String(args?.url ?? "").trim();
@@ -20,8 +22,9 @@ export const newsModule: ModuleManifest = {
   name: "News",
   accent: "#7bc6ff",
   ring: "daily",
+  category: "news",
   icon: "news",
-  description: "RSS/Atom feeds you add — fetched on demand, deduped by guid.",
+  description: "RSS/Atom feeds (curated sources you can check, disable or remove, plus your own) and a Congress tab (GovTrack bills, votes, members). Fetched on demand, deduped by guid.",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: {
@@ -35,7 +38,10 @@ export const newsModule: ModuleManifest = {
     { name: "set_source_meta", run: setSourceMeta },
     { name: "seed_preset", run: seedPreset },
     ...feedOps("news", "news_sources", "news_items"),
+    ...congressModule.skills, // Congress tab (sync_congress, follow, set_seat, ...)
   ],
+  // Followed bills in the Congress tab whose status changed (counts only).
+  badge: unseenCount,
   load: loadItems,
   quickAdd: { skill: "add_source", argName: "url", placeholder: "Add an RSS/Atom feed URL…" },
   actions: [{ label: "Fetch now", skill: "fetch_feeds" }],

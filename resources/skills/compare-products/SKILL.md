@@ -1,6 +1,7 @@
 ---
 name: compare-products
 description: Compare two to five products side by side (price, key specs, reviews) from shop or review pages, and recommend one for the user's needs.
+category: deals
 ---
 
 # Compare products

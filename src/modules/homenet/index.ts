@@ -9,6 +9,7 @@ export const homeNetModule: ModuleManifest = {
   name: "Home Network",
   accent: "#02aa94",
   ring: "system",
+  category: "system",
   icon: "homenet",
   description:
     "Devices from your OS's own ARP cache — passive, no active scan. Doubles as the allow-list source for the Pentest Lab's own-infrastructure scope; \"Send to Lab\" adds a device to an active engagement.",

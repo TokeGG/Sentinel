@@ -1,6 +1,7 @@
 ---
 name: travel-planner
 description: Plan a trip itinerary (days, sights, transport, rough costs) from the user's dates, budget and interests; never books anything.
+category: productivity
 ---
 
 # Travel planner

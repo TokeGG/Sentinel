@@ -95,3 +95,12 @@ button.yt-meta:hover .yt-ctitle { color: var(--accent-text); }
 .yt-groups { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
 .yt-grp-in { width: 80px; font-size: var(--fs-xs); }
 .yt { position: relative; }
+.yt-resize { position: relative; max-width: 100%; }
+.yt-resize-h { position: absolute; right: -4px; bottom: -4px; width: 16px; height: 16px; cursor: nwse-resize; border-right: 3px solid var(--accent-line, var(--line)); border-bottom: 3px solid var(--accent-line, var(--line)); border-radius: 0 0 6px 0; touch-action: none; }
+.yt-pip-bar[draggable="true"] { cursor: grab; }
+.yt-live { display: grid; gap: var(--gap); }
+.yt-live-badge { color: var(--bad, #e5484d); font-weight: 600; font-size: var(--fs-xs); }
+.ytp { display: flex; flex-direction: column; height: 100%; background: #000; }
+.ytp .yt-player iframe { border-radius: 0; }
+.ytp-bar { display: flex; align-items: center; gap: 6px; padding: 4px 8px; font-size: var(--fs-xs); background: var(--surface); }
+.ytp-bar .yt-ctitle { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

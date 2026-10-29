@@ -6,6 +6,7 @@ import { initScheduler, setTimersOwner, syncModule, SCHEDULE_CHANGED } from "./c
 import { listen } from "@tauri-apps/api/event";
 import { StarMap } from "./shell/StarMap";
 import { GameHud } from "./shell/GameHud";
+import { SnapPreview } from "./shell/snap/SnapPreview";
 import { TitleBar } from "./shell/TitleBar";
 import { PanelRoute, panelIdFromHash } from "./shell/PanelRoute";
 import { restore, LAYOUT_COMMIT, LAYOUT_DELETE, type SavedPanel } from "./shell/panelApi";
@@ -31,7 +32,6 @@ import "./modules/deals";
 import "./modules/email";
 import "./modules/social";
 import "./modules/calendar";
-import "./modules/congress";
 import "./modules/backup";
 import "./modules/pentest";
 import "./modules/clipboard";
@@ -41,6 +41,7 @@ import "./modules/chat";
 import "./modules/skills";
 import "./modules/bot";
 import "./modules/games";
+import "./modules/browser";
 import "./modules/media";
 import "./App.css";
 import "./shell/desk/desk.css";
@@ -101,6 +102,7 @@ function MainShell() {
         <StarMap modules={registry} onError={setError} />
         <div className="sky-tint" style={{ background: skyTint }} />
         <Tour />
+        <SnapPreview />
         {error && (
           <div className="hud-error" role="alert">
             <span>{error}</span>

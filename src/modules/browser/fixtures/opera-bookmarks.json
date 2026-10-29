@@ -1,0 +1,16 @@
+{
+  "checksum": "abc",
+  "roots": {
+    "bookmark_bar": { "children": [
+      { "name": "Sentinel", "type": "url", "url": "https://github.com/TokeGG/Sentinel" },
+      { "name": "Dev", "type": "folder", "children": [
+        { "name": "MDN", "type": "url", "url": "https://developer.mozilla.org/" },
+        { "name": "Local", "type": "url", "url": "file:///C:/x.html" }
+      ] }
+    ], "name": "Bookmarks bar", "type": "folder" },
+    "other": { "children": [ { "name": "", "type": "url", "url": "http://example.com/" } ], "name": "Other bookmarks", "type": "folder" },
+    "synced": { "children": [], "name": "Mobile bookmarks", "type": "folder" },
+    "custom_root": { "speedDial": { "children": [ { "name": "Opera", "type": "url", "url": "https://www.opera.com/" } ], "name": "Speed Dial", "type": "folder" } }
+  },
+  "version": 1
+}

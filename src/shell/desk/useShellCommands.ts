@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { emit, listen } from "@tauri-apps/api/event";
 import type { Rect } from "../layout";
 import { getPanel } from "../panelApi";
-import { CAPTURE_ID, HELP_ID, PALETTE_ID, PANEL_CLOSED, PANEL_FOCUSED, SHELL_CMD } from "./ids";
+import { CAPTURE_ID, HELP_ID, PALETTE_ID, SNAP_ID, PANEL_CLOSED, PANEL_FOCUSED, SHELL_CMD } from "./ids";
 import type { ShellCmd } from "./keymap";
 import { drop, emptyNav, popClosed, pushClosed, step, visit, type Closed } from "./nav";
 import { isKnown, moveToNextMonitor, openById, raisePins, saveNamedLayout, switchLayout, tileAll, toggleFocusMode, togglePin } from "./layoutOps";
@@ -44,17 +44,23 @@ export function useShellCommands(fail: (e: unknown) => void) {
         case "pin": { const id = c.id ?? nav.current.cur; return id ? togglePin(id).then(() => {}) : undefined; }
         case "gameMode": return emit("tray-game-mode");
         case "nextMonitor": return moveToNextMonitor();
+        case "snapLayouts": {
+          const id = c.id ?? nav.current.cur;
+          if (!id || id === SNAP_ID) return;
+          try { localStorage.setItem("snap_target", id); } catch { /* storage off */ }
+          return openById(SNAP_ID);
+        }
       }
     };
     const un = [
       listen<ShellCmd>(SHELL_CMD, ({ payload }) => { Promise.resolve(run(payload)).catch(fail); }),
       listen<{ id: string; auto?: boolean }>(PANEL_FOCUSED, ({ payload }) => {
-        if (payload.auto || payload.id === PALETTE_ID) return;
+        if (payload.auto || payload.id === PALETTE_ID || payload.id === SNAP_ID) return;
         nav.current = visit(nav.current, payload.id);
         raisePins(payload.id).catch(fail);
       }),
       listen<{ id: string; rect?: Rect }>(PANEL_CLOSED, ({ payload }) => {
-        if (payload.id === PALETTE_ID || payload.id === CAPTURE_ID) return;
+        if (payload.id === PALETTE_ID || payload.id === CAPTURE_ID || payload.id === SNAP_ID) return;
         nav.current = drop(nav.current, payload.id);
         closed.current = pushClosed(closed.current, payload);
       }),

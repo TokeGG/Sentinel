@@ -76,3 +76,7 @@ export function webPanelRef(url: string): { id: string; profile: string } {
   try { host = new URL(url).hostname; } catch { /* keep default */ }
   return { id: `hub.chat.web-${h.toString(16)}`, profile: `chat-${host.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}`.slice(0, 32).replace(/-+$/, "") };
 }
+
+/** Embed or live socket for a room: `toggled` = the user flipped the connector's default this session. */
+export const showsEmbed = (c: { connect?: unknown; embedFallback?: unknown; defaultEmbed?: boolean }, toggled: boolean): boolean =>
+  !c.connect || (Boolean(c.embedFallback) && Boolean(c.defaultEmbed) !== toggled);

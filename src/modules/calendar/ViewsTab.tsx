@@ -1,5 +1,6 @@
 // Month / Week / Day / Agenda views. Own items are draggable onto a day (move_item keeps the time).
-import { useState, type DragEvent } from "react";
+import { useContext, useState, type DragEvent } from "react";
+import { CardCtx } from "./ItemCard";
 import { Tabs } from "../../ui/kit";
 import type { ModuleRow, ModuleState } from "../../ui/useModule";
 import { DayBlocks } from "./DayBlocks";
@@ -11,8 +12,9 @@ const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 function Chip({ r }: { r: ModuleRow }) {
   const id = r.itemId;
+  const open = useContext(CardCtx);
   return (
-    <span className="cal-chip" draggable={id != null} title={id != null ? "Drag to another day" : String(r.source ?? "")}
+    <span className="cal-chip" role="button" tabIndex={0} onClick={() => open({ r })} onKeyDown={(e) => e.key === "Enter" && open({ r })} draggable={id != null} title={id != null ? "Click for details, drag to another day" : String(r.source ?? "")}
       onDragStart={(e) => id != null && e.dataTransfer.setData("text/x-cal-item", String(id))}>
       {timeText(r) && <b>{timeText(r)} </b>}{itemTitle(r)}
     </span>

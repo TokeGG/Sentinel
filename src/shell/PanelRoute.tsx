@@ -9,23 +9,29 @@ import { ModulePanel } from "../core/ModulePanel";
 import { registry, type ModuleManifest } from "../core/module";
 import { EmptyState, ErrorLine, PanelShell, StatusLine } from "../ui/kit";
 import { CustomizeDrawer } from "../ui/CustomizeDrawer";
+import { AssistBar } from "../ui/AssistBar";
+import { useModSettings } from "../ui/useModSettings";
 import { PanelContext, useCustomize } from "../ui/useCustomize";
 import type { PanelStatus } from "../ui/Section";
 import { errorText } from "../ui/moduleRun";
 import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
-import { MASTER_ID, SETTINGS_ID } from "./panelApi";
+import { MASTER_ID, SETTINGS_ID, YTPLAYER_ID } from "./panelApi";
 import { MasterHub } from "./MasterHub";
 import { SettingsPanel } from "./SettingsPanel";
-import { BRIEFING_ID, CAPTURE_ID, HELP_ID, PALETTE_ID } from "./desk/ids";
+import { BRIEFING_ID, CAPTURE_ID, HELP_ID, PALETTE_ID, SNAP_ID } from "./desk/ids";
+import { SnapLayouts } from "./snap/SnapLayouts";
 import { Palette } from "./desk/Palette";
 import { Briefing } from "./desk/Briefing";
 import { HelpPanel } from "./desk/HelpPanel";
 import { CaptureBox } from "./desk/CaptureBox";
 import { useAppKeys } from "./desk/useAppKeys";
 
+const YtPlayer = lazy(() => import("../modules/youtube/PopPlayer"));
+const PopPlayer = () => <Suspense fallback={null}><YtPlayer /></Suspense>;
 const SPECIAL: Record<string, ComponentType> = {
+  [YTPLAYER_ID]: PopPlayer,
   [SETTINGS_ID]: SettingsPanel, [MASTER_ID]: MasterHub, [PALETTE_ID]: Palette,
-  [BRIEFING_ID]: Briefing, [HELP_ID]: HelpPanel, [CAPTURE_ID]: CaptureBox,
+  [BRIEFING_ID]: Briefing, [HELP_ID]: HelpPanel, [CAPTURE_ID]: CaptureBox, [SNAP_ID]: SnapLayouts,
 };
 
 export function panelIdFromHash(hash: string): string | null {
@@ -83,6 +89,7 @@ function useCustomizeEvent(id: string, onToggle: () => void) {
 
 function PanelBody({ m }: { m: ModuleManifest }) {
   const cz = useCustomize(m);
+  const ms = useModSettings(m.id); // generic per-module settings: Ask bar, link mode
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<PanelStatus>({ updated: null, error: null });
   const toggle = useCallback(() => setOpen((o) => !o), []);
@@ -113,6 +120,7 @@ function PanelBody({ m }: { m: ModuleManifest }) {
         ) : (
           <ModulePanel module={m} />
         )}
+        {ms.assist && cz.ready && m.panel !== "web" && <AssistBar module={m} />}
         <StatusLine updated={status.updated} autoRefresh={auto} error={status.error} />
         {open && <CustomizeDrawer module={m} cz={cz} onClose={() => setOpen(false)} />}
       </PanelContext.Provider>

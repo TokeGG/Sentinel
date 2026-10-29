@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink";
 import type { ModuleManifest } from "../../core/module";
 import { FeedPanel } from "../news/FeedPanel";
 import { rowAge, sourceLabel } from "../news/panelLogic";
@@ -34,7 +34,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             <Chip on={cat === null} onClick={() => setCat(null)}>All</Chip>
             {CATEGORIES.map((c) => <Chip key={c.id} on={cat === c.id} onClick={() => setCat(cat === c.id ? null : c.id)}>{c.label}</Chip>)}
           </div>
-          <DealSources module={module} run={run} busy={busy} version={rows} />
+          <DealSources module={module} busy={busy} version={rows} />
           <DealExtras run={run} busy={busy} version={rows} />
         </>
       )}

@@ -3,7 +3,7 @@ import { connectorOf } from "./connectors";
 import { Composer } from "./Composer";
 import { EmbedView } from "./EmbedView";
 import { MessageRow } from "./MessageRow";
-import { isAtBottom, isMention } from "./panelLogic";
+import { isAtBottom, isMention, showsEmbed } from "./panelLogic";
 import { ConnPanel } from "./ConnPanel";
 import type { Room, RoomState } from "./types";
 import { useEmoteSets } from "./useEmoteSets";
@@ -21,11 +21,14 @@ type Props = {
 export function RoomView(p: Props) {
   const c = connectorOf(p.room.site);
   if (!c.connect) return <EmbedView room={p.room} />;
-  if (p.fallback && c.embedFallback)
+  // `fallback` = toggled away from the connector's default (embed for Kick/destiny.gg, socket for the rest).
+  if (showsEmbed(c, p.fallback) && c.embedFallback)
     return (
       <>
         <EmbedView room={{ site: "embed", target: c.embedFallback(p.room), label: p.room.label }} />
-        <div className="chat-note"><button type="button" className="ui-btn" onClick={() => p.onFallback(false)}>Try native chat again</button></div>
+        <div className="chat-note">
+          <button type="button" className="ui-btn" onClick={() => p.onFallback(!c.defaultEmbed)}>{c.defaultEmbed ? "Try native (live socket, read-only)" : "Try native chat again"}</button>
+        </div>
       </>
     );
   return <SocketRoom {...p} />;
@@ -54,7 +57,7 @@ function SocketRoom({ room, cap, stamp, epoch, visible, onActivity, onFallback, 
   return (
     <>
       {player && <iframe className="chat-player" src={player} title={`${room.label} stream`} allow="autoplay; fullscreen" allowFullScreen />}
-      <ConnPanel status={live.status} detail={live.detail} log={live.log} canEmbed={!!connectorOf(room.site).embedFallback} onRetry={() => setRetry((n) => n + 1)} onEmbed={() => onFallback(true)} />
+      <ConnPanel status={live.status} detail={live.detail} log={live.log} canEmbed={!!connectorOf(room.site).embedFallback} onRetry={() => setRetry((n) => n + 1)} onEmbed={() => onFallback(!connectorOf(room.site).defaultEmbed)} />
       <div
         className="chat-list"
         ref={list}

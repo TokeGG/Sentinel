@@ -4,15 +4,18 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { cleanTopic, PRESETS, reliabilityOk } from "./extras";
 import { parseFeed } from "./rss";
+import { enabledNewsSources, seedNewsCatalog } from "./sourceStore";
+import { timeout } from "./sources/store";
+import { pool } from "./sources/logic";
 
 export async function fetchFeeds() {
   const d = await getDb();
-  const sources = await d.select<{ id: number; url: string }[]>("SELECT id, url FROM news_sources");
+  const sources = await enabledNewsSources(); // switched-off sources are skipped
   let added = 0;
   let failed = 0;
-  for (const source of sources) {
+  await pool(sources, 6, async (source) => {
     try {
-      const items = parseFeed(await (await fetch(source.url)).text());
+      const items = parseFeed(await (await timeout(fetch(source.url), 20000)).text());
       for (const item of items) {
         const result = await d.execute(
           `INSERT OR IGNORE INTO news_items (source_id, guid, title, link, published_at) VALUES ($1, $2, $3, $4, $5)`,
@@ -25,13 +28,14 @@ export async function fetchFeeds() {
     } catch {
       failed++;
     }
-  }
+  });
   await logActivity("news", "fetch_feeds", `checked ${sources.length} source(s)`, `${added} new item(s)${failed ? `, ${failed} source(s) failed` : ""}`);
   return { added, failed };
 }
 
 /** Newest 200 items plus every saved (read-later/highlighted) one. */
 export async function loadItems(): Promise<Record<string, unknown>[]> {
+  await seedNewsCatalog().catch(() => {}); // curated feeds, added once; a failure only skips seeding
   const d = await getDb();
   return d.select(`
     SELECT i.*, s.label, s.url AS source_url, COALESCE(m.tag, '') AS tag, COALESCE(m.reliability, '') AS reliability,

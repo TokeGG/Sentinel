@@ -1,6 +1,7 @@
 ---
 name: summarize-page
 description: Summarise the web page that is open (or a given address) into a short, faithful summary with the page title and link.
+category: news, productivity
 ---
 
 # Summarise a page
