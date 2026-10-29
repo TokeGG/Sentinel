@@ -12,6 +12,15 @@ pub fn geometry(outer: Rect) -> (Rect, Rect) {
     (chrome, content)
 }
 
+/// "Full window" toggle: (current, previous, screen) -> (new rect, new previous).
+/// Not full -> fill `screen`, remember `cur`; full -> back to the remembered rect.
+pub fn toggle_full(cur: Rect, prev: Option<Rect>, screen: Rect) -> (Rect, Option<Rect>) {
+    match prev {
+        Some(p) => (p, None),
+        None => (screen, Some(cur)),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -38,5 +47,14 @@ mod tests {
         let (c, b) = geometry(r(0.0, 0.0, 0.0, 0.0));
         assert_eq!((c.w, c.h), (0.0, CHROME_H));
         assert_eq!((b.y, b.w, b.h), (CHROME_H, 0.0, 0.0));
+    }
+    #[test]
+    fn full_window_round_trips() {
+        let (a, s) = (r(10.0, 20.0, 300.0, 200.0), r(0.0, 0.0, 1600.0, 900.0));
+        let (full, prev) = toggle_full(a, None, s);
+        assert_eq!((full.w, full.h, prev.map(|p| p.w)), (1600.0, 900.0, Some(300.0)));
+        let (back, prev) = toggle_full(full, prev, s);
+        assert_eq!((back.x, back.y, back.w, back.h), (10.0, 20.0, 300.0, 200.0));
+        assert!(prev.is_none());
     }
 }

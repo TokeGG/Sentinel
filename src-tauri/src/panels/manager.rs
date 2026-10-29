@@ -15,16 +15,17 @@
 //! (create/destroy/move/resize/raise/show/hide) acts on both; `Spec.rect` is
 //! the OUTER rect and `geometry()` derives both webview rects from it.
 //!
-//! Locking: the `Mutex<Panels>`/`Specs` locks are taken in short blocks and
-//! released before any webview call.
+//! Locks (`Panels`/`Specs`) are held in short blocks, never across webview calls.
 //! Persistence: commands return `SavedPanel` data; the frontend writes
 //! `panel_layout` (see persist.rs header).
 pub use super::ids::{label, parse_web_url, validate};
 pub(crate) use super::webview::{create, destroy, set_visible};
-use super::webview::place;
+pub(super) use super::webview::place;
 pub use super::restore::*;
+pub use super::fullwindow::*;
 use super::persist::{self, Rect, SavedPanel};
 use super::state::{OpenOutcome, Panels};
+use super::webguard::effective_hosts;
 use std::collections::HashMap;
 use std::sync::Mutex;
 use tauri::{AppHandle, Manager};
@@ -34,9 +35,13 @@ pub struct Spec {
     pub(super) url: Option<String>,
     pub(super) profile: Option<String>,
     pub(super) rect: Rect,
+    /// Hosts a web panel may load (see webguard.rs); empty for app panels.
+    pub(super) hosts: Vec<String>,
+    /// Rect to return to while in "Full window"; None = not full.
+    pub(super) prev: Option<Rect>,
 }
 #[derive(Default)]
-pub struct Specs(Mutex<HashMap<String, Spec>>);
+pub struct Specs(pub(super) Mutex<HashMap<String, Spec>>);
 
 pub(crate) fn e(err: impl std::fmt::Display) -> String {
     err.to_string()
@@ -44,7 +49,7 @@ pub(crate) fn e(err: impl std::fmt::Display) -> String {
 pub(crate) fn spec(specs: &Specs, id: &str) -> Result<Spec, String> {
     specs.0.lock().map_err(e)?.get(id).cloned().ok_or_else(|| format!("unknown panel {id}"))
 }
-fn saved(id: &str, rect: Rect, panels: &Mutex<Panels>) -> Result<SavedPanel, String> {
+pub(super) fn saved(id: &str, rect: Rect, panels: &Mutex<Panels>) -> Result<SavedPanel, String> {
     let p = panels.lock().map_err(e)?;
     let st = p.state(id).ok_or_else(|| format!("unknown panel {id}"))?;
     let z = p.z_order().iter().position(|x| x == id).unwrap_or(0) as i64;
@@ -62,12 +67,11 @@ pub(crate) fn rollback(app: &AppHandle, id: &str) {
 }
 
 #[tauri::command]
-pub async fn open_panel(app: AppHandle, id: String, url: Option<String>, profile: Option<String>, rect: Rect) -> Result<(), String> {
+pub async fn open_panel(app: AppHandle, id: String, url: Option<String>, profile: Option<String>, rect: Rect, hosts: Option<Vec<String>>) -> Result<(), String> {
     validate(&id, profile.as_deref())?;
-    if let Some(u) = &url {
-        parse_web_url(u)?;
-    }
-    let s = Spec { url, profile, rect };
+    if let Some(u) = &url { parse_web_url(u)?; }
+    let hosts = url.as_deref().map(|u| effective_hosts(u, hosts)).unwrap_or_default();
+    let s = Spec { url, profile, rect, hosts, prev: None };
     app.state::<Specs>().0.lock().map_err(e)?.insert(id.clone(), s.clone());
     let outcome = app.state::<Mutex<Panels>>().lock().map_err(e)?.open(&id);
     if outcome == OpenOutcome::Focused && app.get_webview(&label(&id)).is_some() {
@@ -130,9 +134,10 @@ pub async fn focus_panel(app: AppHandle, id: String) -> Result<SavedPanel, Strin
         p.open(&id);
         top
     };
-    // Already topmost: no re-create (it would kill the chrome mid-drag).
-    if !(was_top && app.get_webview(&label(&id)).is_some()) {
-        raise(&app, &id, &s)?;
+    // Topmost or web panel: just focus (re-create kills chrome mid-drag / a live call).
+    match app.get_webview(&label(&id)) {
+        Some(w) if was_top || s.url.is_some() => w.set_focus().map_err(e)?,
+        _ => raise(&app, &id, &s)?,
     }
     saved(&id, s.rect, &app.state::<Mutex<Panels>>())
 }

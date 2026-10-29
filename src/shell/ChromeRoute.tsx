@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { emitTo } from "@tauri-apps/api/event";
 import { registry } from "../core/module";
 import { dragRect, resizeRect, type Rect } from "./layout";
-import { closePanel, commit, dragMove, dragResize, focusPanel, getPanel, mainClientRect, MIN, SETTINGS_ID } from "./panelApi";
+import { closePanel, commit, dragMove, dragResize, focusPanel, getPanel, mainClientRect, MIN, SETTINGS_ID, toggleFullWindow } from "./panelApi";
 import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
 
 const PREFIX = "#/chrome/";
@@ -26,6 +26,8 @@ export function ChromeRoute({ id }: { id: string }) {
   const drag = useRef<Drag | null>(null);
   const press = useRef(0); // bumps on every down/up so a late focus reply is dropped
   const [err, setErr] = useState<string | null>(null);
+  const [full, setFull] = useState(false);
+  const min = m?.web?.min ?? MIN;
   const fail = (what: string) => (e: unknown) => {
     console.error(what, e);
     setErr(`${what}: ${String(e)}`);
@@ -41,7 +43,7 @@ export function ChromeRoute({ id }: { id: string }) {
     const d = drag.current;
     if (!d) return;
     d.raf = 0;
-    const r = (d.kind === "move" ? dragRect : resizeRect)(d.start, d.dx, d.dy, d.screen, MIN);
+    const r = (d.kind === "move" ? dragRect : resizeRect)(d.start, d.dx, d.dy, d.screen, min);
     const p = d.kind === "move" ? dragMove(id, r.x, r.y) : dragResize(id, r.w, r.h);
     p.catch(fail("drag"));
   };
@@ -95,6 +97,10 @@ export function ChromeRoute({ id }: { id: string }) {
       {m && m.panel !== "web" && (
         <button className="panel-chrome-gear" title="Customize" aria-label="Customize panel"
           onClick={() => emitTo(panelLabel(id), PANEL_CUSTOMIZE, { id }).catch(fail("customize"))}>⚙</button>
+      )}
+      {m?.panel === "web" && (
+        <button className="panel-chrome-gear" title={full ? "Restore size" : "Full window"} aria-label="Toggle full window"
+          onClick={() => toggleFullWindow(id).then(setFull, fail("full window"))}>{full ? "⤡" : "⤢"}</button>
       )}
       <button className="panel-chrome-close" title="Close" aria-label="Close panel"
         onClick={() => closePanel(id).catch(fail("close"))}>×</button>

@@ -290,6 +290,13 @@ describe("validateManifest", () => {
         );
       }
     });
+    it("validates web.hosts, size and min", () => {
+      const bad = [{ hosts: ["localhost"] }, { hosts: ["*.tauri.localhost"] }, { hosts: ["https://x.com"] }, { hosts: ["x"] }, { size: { w: 10, h: 10 } }, { min: { w: 0, h: 400 } }];
+      for (const extra of bad) {
+        assert.throws(() => validateManifest(base({ panel: "web", web: { ...web, ...extra } }), []), ManifestError);
+      }
+      assert.doesNotThrow(() => validateManifest(base({ panel: "web", web: { ...web, hosts: ["discord.com", "*.discord.com"], size: { w: 1100, h: 720 }, min: { w: 480, h: 360 } } }), []));
+    });
     it("accepts a valid web manifest", () => {
       for (const profile of ["discord", "yt-main"]) {
         assert.doesNotThrow(() =>

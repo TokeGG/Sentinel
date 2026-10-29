@@ -1,5 +1,18 @@
 import type { ModuleManifest } from "./module.ts";
 
+/** Embedded https site. `hosts` = navigation allow-list (default: the url's host);
+ *  `size`/`min` = default and minimum panel size. */
+export type WebConfig = {
+  url: string;
+  profile: string;
+  hosts?: string[];
+  size?: { w: number; h: number };
+  min?: { w: number; h: number };
+};
+
+const HOST_PATTERN = /^(\*\.)?[a-z0-9-]+(\.[a-z0-9-]+)+$/;
+const dimOk = (d?: { w: number; h: number }) => d === undefined || (d.w >= 240 && d.h >= 160 && d.w <= 10000 && d.h <= 10000);
+
 const PROFILE_PATTERN = /^[a-z0-9][a-z0-9-]{0,31}$/; // web profile dir name: no path chars
 
 export function skillRefs(m: ModuleManifest): { what: string; skill: string }[] {
@@ -30,6 +43,9 @@ export function webError(m: ModuleManifest): string | null {
   if (!PROFILE_PATTERN.test(m.web.profile ?? "")) {
     return `web.profile must match ${PROFILE_PATTERN}, got ${JSON.stringify(m.web.profile)}`;
   }
+  const bad = (m.web.hosts ?? []).find((h) => !HOST_PATTERN.test(h) || /(^|\.)localhost$/.test(h));
+  if (bad !== undefined) return `web.hosts entry ${JSON.stringify(bad)} must be host.tld or *.host.tld`;
+  if (!dimOk(m.web.size) || !dimOk(m.web.min)) return `web.size / web.min must be at least 240x160`;
   return null;
 }
 

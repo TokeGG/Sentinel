@@ -1,10 +1,10 @@
 // Pure (no Tauri imports): a TS-side safety net for the tables of migrations
-// 17-21. tauri-plugin-sql runs its migration list only inside the first
+// 17-22. tauri-plugin-sql runs its migration list only inside the first
 // `Database.load` per process; if that migrate throws (e.g. a checksum
 // mismatch on an old database) later loads succeed WITHOUT migrating and the
 // newer tables never appear. db.ts therefore calls ensureSchema() after every
 // load. The statements must stay identical to the migration files (schema.test.ts
-// enforces it). Migrations 17-21 use CREATE TABLE IF NOT EXISTS so a plugin run
+// enforces it). Migrations 17-22 use CREATE TABLE IF NOT EXISTS so a plugin run
 // after this bootstrap does not fail on "already exists"; no database has applied
 // 17-19 yet, so editing their text cannot cause a stored-checksum mismatch.
 export const SCHEMA_STATEMENTS: string[] = [
@@ -43,6 +43,31 @@ export const SCHEMA_STATEMENTS: string[] = [
     watched_at TEXT NOT NULL DEFAULT (datetime('now')),
     secs INTEGER,
     UNIQUE (video_id, watched_at)
+)`,
+  `CREATE TABLE IF NOT EXISTS chat_rooms (
+    id TEXT PRIMARY KEY,
+    site TEXT NOT NULL,
+    target TEXT NOT NULL,
+    label TEXT NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0,
+    pinned INTEGER NOT NULL DEFAULT 0
+)`,
+  `CREATE TABLE IF NOT EXISTS social_feed (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    platform TEXT NOT NULL,
+    post_id TEXT NOT NULL,
+    name TEXT NOT NULL,
+    handle TEXT NOT NULL,
+    avatar TEXT,
+    text TEXT NOT NULL,
+    link TEXT,
+    media TEXT NOT NULL DEFAULT '[]',
+    likes INTEGER,
+    reposts INTEGER,
+    replies INTEGER,
+    posted_at TEXT,
+    fetched_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (platform, post_id)
 )`,
 ];
 

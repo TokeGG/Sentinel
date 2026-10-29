@@ -70,8 +70,8 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..21 strictly ascending
-                        (21 = youtube_watched; 17-21 idempotent `IF NOT EXISTS`); loaded by
+  migrations/NN_<module>.sql — numbered SQL, versions 1..23 strictly ascending
+                        (23 = social_feed; 17-23 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
@@ -81,7 +81,8 @@ src-tauri/
   src/panels/         — panel manager: every panel = a content webview + a
                         ~28px chrome webview (move/resize/close/focus),
                         moved/raised together; manager, restore, webview, geometry,
-                        ids, state, persist
+                        ids, state, persist, fullwindow, webguard (pure: web
+                        allow-list, media permissions, title unread count)
   src/gamemode/       — mod.rs (enter/exit, commands, poll, emits `game-mode`),
                         decide.rs (pure), fullscreen.rs (cfg(windows) + stub)
   src/lib.rs          — wiring + invoke_handler list only
@@ -106,7 +107,7 @@ persisted `game_mode_auto` toggle (default on).
 ## The module contract (read `src/core/module.ts` for the real types)
 
 A module is a `ModuleManifest`: `id` (reverse-DNS, e.g. `"hub.notes"`),
-`panel` (`"list"` = generic panel; `"custom"` = own React panel, requires `ui`; `"web"` with `web: { url, profile }` for an embedded site with a persistent profile), `skills` (named async functions), and
+`panel` (`"list"` = generic panel; `"custom"` = own React panel, requires `ui`; `"web"` with `web: { url, profile, hosts?, size?, min? }` for an embedded site with a persistent profile, https allow-list and Full window toggle; see modules/discord), `skills` (named async functions), and
 `load()` (returns rows). Everything else is optional generic UI the panel
 already knows how to render — **adding a new one of these is the
 right move before writing bespoke UI**:
@@ -129,8 +130,8 @@ reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
 **Custom panels** exist for notes, news, deals, pccare, weather, homenet,
-github, finance, calendar, backup, clipboard, filesearch, youtube. email, pentest,
-social still use the generic panel (redesigns planned). To add one:
+github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social. email, pentest
+still use the generic panel (redesigns planned). To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
 3. Wrap each user-hideable part in `<Section id="...">` inside `<Sections>`.
@@ -154,11 +155,11 @@ that migrate fails (later loads succeed without migrating).
   feed-based module.
 - **OAuth2 loopback redirect**: The loopback-redirect catcher is a *generic* Rust
   command, `oauth_listen_once(port, timeout_secs)` — reused as-is by
-  `social/connectors.ts` for Mastodon/Reddit on different ports. A new OAuth
+  `social/connectors/` for Mastodon/Reddit on different ports. A new OAuth
   connector should reuse this command, not write a new one.
-- **Multi-connector architecture**: `social/connectors.ts` — one
-  `SocialConnector` interface, each platform is a standalone object in an
-  array. Adding platform #5 is "write one connector, list it" — see that
+- **Multi-connector architecture**: `social/connectors/` — one
+  `SocialConnector` interface (types.ts), one file per platform, listed in
+  index.ts; `post` is optional (read-only where absent). Adding platform #5 is "write one connector, list it" — see that
   file's own comments before adding a 5th.
 - **Preview-before-apply for anything destructive**: `pccare/index.ts`
   (temp-file cleanup; Apply deletes exactly the previewed paths). Never wire a
@@ -190,7 +191,7 @@ relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 **File-size rule:** no .ts/.tsx/.rs file over ~150 lines (`*.test.ts` and Rust
 code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
 `scripts/check-file-size.mjs` has an ALLOW list of files awaiting their own
-split (finance, pentest, social connectors). Never add to it; shrink it.
+split (finance, pentest). Never add to it; shrink it.
 
 **Updates:** Settings > Updates (`shell/updater.ts`) checks GitHub releases
 only on a button press (no background call). Releases are tag-driven (`v*`):
@@ -205,7 +206,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
   migrations 20+ will not apply on such a DB unless mirrored in
   `SCHEMA_STATEMENTS`.
 - Only the custom panels above have the new UI; the rest is default styling.
-- `social/connectors.ts`'s Bluesky and X connectors are `authType: "manual"`
+- `social/connectors/` Bluesky and X connectors are `authType: "manual"`
   (no OAuth) — Bluesky because AT Protocol has no public-client OAuth yet,
   X because its free API tier has no usable read endpoint (stubbed on
   purpose, throws a clear error).
@@ -220,9 +221,12 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Rust `restore_database` copies only the files present in the backup, leaves
   stale `-wal`/`-shm` next to the restored db, copies over an open DB, and does
   no validation; needs its own fix.
-- email, pentest, social are not yet redesigned (generic panel).
-- Specified in `docs/superpowers/specs/` but not built: Discord panel (embedded
-  web app; Go Live must work), multi-site chat, skills/MCP hub, browser bot.
+- email, pentest are not yet redesigned (generic panel).
+- Discord panel is built (modules/discord) but media permissions, the screen-share
+  picker/Go Live and the unread moon are unverified on Windows; checklist in
+  `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.
+- Chat (`modules/chat`, `hub.chat`): sockets run in the panel webview only while it is open. Twitch read (anon IRC) + send (pasted OAuth token in keychain); Kick read via Pusher (channel lookup may be Cloudflare-blocked), read-only; destiny.gg read-only; any other site (incl. iCanHazChat) = `embed` iframe / "Open as its own panel". 7TV/BTTV/FFZ via `emoteSets.ts`. NONE of the live protocols/endpoints have been run against the real sites (sandbox had no outbound access). Add a site = one file in `chat/connectors/` + list it in `connectors/index.ts` (+ parser in `rooms.ts`).
+- Specified in `docs/superpowers/specs/` but not built: skills/MCP hub, browser bot.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
   price); Home Network "new" means new this session; Calendar "overdue" means
   unfiled notes.

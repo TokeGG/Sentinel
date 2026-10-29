@@ -11,7 +11,6 @@ export const MAX = 150;
 const ALLOW = [
   "src/modules/finance/index.ts", // scheduled for its own split (finance)
   "src/modules/pentest/index.ts", // scheduled for its own split (pentest)
-  "src/modules/social/connectors.ts", // scheduled for its own split (social connectors)
 ];
 
 export function countLines(path, text) {
