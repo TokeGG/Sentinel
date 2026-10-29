@@ -70,8 +70,8 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..22 strictly ascending
-                        (22 = chat_rooms; 17-22 idempotent `IF NOT EXISTS`); loaded by
+  migrations/NN_<module>.sql — numbered SQL, versions 1..23 strictly ascending
+                        (23 = social_feed; 17-23 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
@@ -130,8 +130,8 @@ reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
 **Custom panels** exist for notes, news, deals, pccare, weather, homenet,
-github, finance, calendar, backup, clipboard, filesearch, youtube, chat. email, pentest,
-social still use the generic panel (redesigns planned). To add one:
+github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social. email, pentest
+still use the generic panel (redesigns planned). To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
 3. Wrap each user-hideable part in `<Section id="...">` inside `<Sections>`.
@@ -155,11 +155,11 @@ that migrate fails (later loads succeed without migrating).
   feed-based module.
 - **OAuth2 loopback redirect**: The loopback-redirect catcher is a *generic* Rust
   command, `oauth_listen_once(port, timeout_secs)` — reused as-is by
-  `social/connectors.ts` for Mastodon/Reddit on different ports. A new OAuth
+  `social/connectors/` for Mastodon/Reddit on different ports. A new OAuth
   connector should reuse this command, not write a new one.
-- **Multi-connector architecture**: `social/connectors.ts` — one
-  `SocialConnector` interface, each platform is a standalone object in an
-  array. Adding platform #5 is "write one connector, list it" — see that
+- **Multi-connector architecture**: `social/connectors/` — one
+  `SocialConnector` interface (types.ts), one file per platform, listed in
+  index.ts; `post` is optional (read-only where absent). Adding platform #5 is "write one connector, list it" — see that
   file's own comments before adding a 5th.
 - **Preview-before-apply for anything destructive**: `pccare/index.ts`
   (temp-file cleanup; Apply deletes exactly the previewed paths). Never wire a
@@ -191,7 +191,7 @@ relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 **File-size rule:** no .ts/.tsx/.rs file over ~150 lines (`*.test.ts` and Rust
 code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
 `scripts/check-file-size.mjs` has an ALLOW list of files awaiting their own
-split (finance, pentest, social connectors). Never add to it; shrink it.
+split (finance, pentest). Never add to it; shrink it.
 
 **Updates:** Settings > Updates (`shell/updater.ts`) checks GitHub releases
 only on a button press (no background call). Releases are tag-driven (`v*`):
@@ -206,7 +206,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
   migrations 20+ will not apply on such a DB unless mirrored in
   `SCHEMA_STATEMENTS`.
 - Only the custom panels above have the new UI; the rest is default styling.
-- `social/connectors.ts`'s Bluesky and X connectors are `authType: "manual"`
+- `social/connectors/` Bluesky and X connectors are `authType: "manual"`
   (no OAuth) — Bluesky because AT Protocol has no public-client OAuth yet,
   X because its free API tier has no usable read endpoint (stubbed on
   purpose, throws a clear error).
@@ -221,7 +221,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Rust `restore_database` copies only the files present in the backup, leaves
   stale `-wal`/`-shm` next to the restored db, copies over an open DB, and does
   no validation; needs its own fix.
-- email, pentest, social are not yet redesigned (generic panel).
+- email, pentest are not yet redesigned (generic panel).
 - Discord panel is built (modules/discord) but media permissions, the screen-share
   picker/Go Live and the unread moon are unverified on Windows; checklist in
   `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.
