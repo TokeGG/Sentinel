@@ -2,6 +2,7 @@
 name: code-review-checklist
 description: Review a code change (diff or pull request page) with a practical checklist: correctness, tests, security, readability.
 module: hub.github
+category: dev
 ---
 
 # Code review checklist

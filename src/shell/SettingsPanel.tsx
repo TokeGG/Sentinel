@@ -15,6 +15,9 @@ import { GeneralSection } from "./settings/GeneralSection";
 import { NotificationsSection } from "./settings/NotificationsSection";
 import { JobsSection } from "./settings/JobsSection";
 import { UpdatesSection } from "./settings/UpdatesSection";
+import { ModulesSection } from "./settings/ModulesSection";
+import { KnowledgeSection } from "./settings/KnowledgeSection";
+import { DataSourcesSection } from "./settings/DataSourcesSection";
 import "./settings/settings.css";
 
 export function SettingsPanel() {
@@ -28,6 +31,9 @@ export function SettingsPanel() {
       <AccountsSection onError={onError} />
       <NotificationsSection onError={onError} />
       <JobsSection onError={onError} />
+      <ModulesSection onError={onError} />
+      <KnowledgeSection onError={onError} />
+      <DataSourcesSection onError={onError} />
       <DesktopSection onError={onError} />
       <SnapSection onError={onError} />
       <DataSection onError={onError} />

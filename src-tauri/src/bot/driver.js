@@ -31,6 +31,18 @@
   const labelOf = (e) => clean(e.getAttribute("aria-label") || e.innerText || e.value || e.placeholder || e.title || e.alt || e.name).slice(0, 100);
   const shown = (e) => { const r = e.getBoundingClientRect(), s = getComputedStyle(e); return r.width > 0 && r.height > 0 && s.visibility !== "hidden" && s.display !== "none"; };
   const bodyText = () => clean(document.body && document.body.innerText);
+  // Text on screen now: after scrolling, the page top alone hides what infinite feeds just loaded (harness scenario).
+  const viewText = () => {
+    const out = [], w = document.body ? document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT) : null;
+    let n = 0;
+    while (w && w.nextNode() && n < 1500) {
+      const p = w.currentNode.parentElement, t = clean(w.currentNode.textContent);
+      if (!t || !p) continue;
+      const r = p.getBoundingClientRect();
+      if (r.bottom > 0 && r.top < innerHeight && r.height > 0) { out.push(t); n += t.length + 1; }
+    }
+    return out.join(" ");
+  };
   const sig = () => hash(location.href + "|" + Math.round(scrollY / 20) + "|" + bodyText().slice(0, 3000) + "|" + (document.body ? document.body.innerHTML.length : 0));
   let els = [];
 
@@ -43,8 +55,8 @@
       out.push({ id: String(els.length), role: roleOf(e), text: labelOf(e), visible: r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth, rect: [r.x, r.y, r.width, r.height].map(Math.round) });
       els.push(e);
     }
-    const text = bodyText().slice(0, 4000), de = document.documentElement;
-    return { url: location.href, title: realTitle(), text, elements: out, scroll: { x: Math.round(scrollX), y: Math.round(scrollY), max: Math.max(0, de.scrollHeight - innerHeight) }, hash: sig() };
+    const text = (scrollY > 0 ? "[on screen] " + viewText() + " [page] " : "") + bodyText(), de = document.documentElement;
+    return { url: location.href, title: realTitle(), text: text.slice(0, 4000), elements: out, scroll: { x: Math.round(scrollX), y: Math.round(scrollY), max: Math.max(0, de.scrollHeight - innerHeight) }, hash: sig() };
   };
 
   const setValue = (e, text) => {
@@ -61,7 +73,7 @@
     const pick = () => { const e = els[Number(a.target)]; if (!e || !e.isConnected) throw new Error("unknown element (stale or detached)"); return e; };
     let extra = {};
     switch (a.type) {
-      case "click": { const e = pick(); e.scrollIntoView({ block: "center" }); if (e.focus) e.focus(); e.click(); break; }
+      case "click": { const e = pick(); const a2 = e.closest && e.closest("a[target]"); if (a2) a2.removeAttribute("target"); e.scrollIntoView({ block: "center" }); if (e.focus) e.focus(); e.click(); break; }
       case "type": {
         const e = pick();
         if (e.type === "password" || roleOf(e) === "password") throw new Error("password fields are never typed by the bot");

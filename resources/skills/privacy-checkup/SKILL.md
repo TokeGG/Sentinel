@@ -1,6 +1,7 @@
 ---
 name: privacy-checkup
 description: Walk the user through the privacy settings of an account or device they own (ad tracking, location, sharing, 2FA) and suggest safer choices.
+category: system
 ---
 
 # Privacy settings checkup

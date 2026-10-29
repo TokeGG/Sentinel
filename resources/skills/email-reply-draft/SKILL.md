@@ -1,6 +1,7 @@
 ---
 name: email-reply-draft
 description: Draft a clear, polite reply to an email the user pastes or has open, in the user's tone; never sends it.
+category: mail
 ---
 
 # Draft an email reply

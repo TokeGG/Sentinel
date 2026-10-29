@@ -2,6 +2,7 @@
 name: news-digest
 description: Turn the newest items from the user's News feeds into a short digest grouped by topic.
 module: hub.news
+category: news
 ---
 
 # News digest

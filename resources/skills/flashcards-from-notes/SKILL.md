@@ -2,6 +2,7 @@
 name: flashcards-from-notes
 description: Turn study notes into question/answer flashcards, one fact per card, ready for spaced repetition.
 module: hub.notes
+category: productivity
 ---
 
 # Flashcards from notes

@@ -9,6 +9,7 @@ export const chatModule: ModuleManifest = {
   name: "Chat",
   accent: "#c28efb",
   ring: "media",
+  category: "social",
   icon: "chat",
   description: "Twitch, Kick and destiny.gg chat in tabs or columns, with 7TV/BTTV/FFZ emotes; YouTube live chat and any other site as an embed.",
   panel: "custom",

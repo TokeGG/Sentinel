@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises";
 export function serve() {
   const srv = createServer(async (req, res) => {
     const name = new URL(req.url, "http://x").pathname.replace(/^\//, "") || "search.html";
-    if (!/^[a-z]+\.html$/.test(name)) { res.writeHead(404).end(); return; }
+    if (!/^[a-z0-9]+\.html$/.test(name)) { res.writeHead(404).end(); return; }
     try { res.writeHead(200, { "content-type": "text/html; charset=utf-8" }).end(await readFile(new URL(`fixtures/${name}`, import.meta.url))); }
     catch { res.writeHead(404).end(); }
   });

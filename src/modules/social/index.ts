@@ -72,6 +72,7 @@ export const socialModule: ModuleManifest = {
   name: "Social Media",
   accent: "#f57cb6",
   ring: "daily",
+  category: "social",
   icon: "social",
   description:
     "Tabs: a chronological Feed across Bluesky, Mastodon and Reddit (post to Bluesky and Mastodon; like, boost and reply where allowed), lists, mutes and an inbox of mentions/replies (Bluesky, Mastodon), plus the real X, Facebook and Instagram sites with their own persistent logins.",

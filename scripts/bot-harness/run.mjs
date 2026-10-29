@@ -11,6 +11,7 @@ import { eventsToWorkflow, readEvents } from "../../src/modules/bot/demo.ts";
 import { workflowLlm } from "../../src/modules/bot/workflow.ts";
 import { makeBridge } from "./bridge.mjs";
 import { SCENARIOS } from "./scenarios.mjs";
+import { SCENARIOS_2 } from "./scenarios2.mjs";
 import { serve } from "./server.mjs";
 
 const { chromium } = createRequire(execSync("npm root -g").toString().trim() + "/")("playwright");
@@ -38,7 +39,7 @@ const report = (name, ok, ep, extra = "") => {
   if (!ok) for (const s of ep.steps) console.log("      ", JSON.stringify(s.action), s.ok ? "ok" : s.error, s.why ?? "");
 };
 
-for (const sc of SCENARIOS) {
+for (const sc of [...SCENARIOS, ...SCENARIOS_2]) {
   const { page, core } = await session();
   const open = await core.open(base + sc.start, false);
   if (!open.ok) { failed++; console.log(`FAIL  ${sc.name}: open ${open.json}`); continue; }

@@ -22,6 +22,7 @@ export const newsModule: ModuleManifest = {
   name: "News",
   accent: "#7bc6ff",
   ring: "daily",
+  category: "news",
   icon: "news",
   description: "RSS/Atom feeds (curated sources you can check, disable or remove, plus your own) and a Congress tab (GovTrack bills, votes, members). Fetched on demand, deduped by guid.",
   panel: "custom",

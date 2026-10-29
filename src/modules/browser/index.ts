@@ -10,6 +10,7 @@ export const browserModule: ModuleManifest = {
   name: "Browser",
   accent: "#00bb44",
   ring: "daily",
+  category: "productivity",
   icon: "browser",
   description: "Built-in browser with tabs, bookmarks, history, downloads and pinned web apps.",
   panel: "custom",

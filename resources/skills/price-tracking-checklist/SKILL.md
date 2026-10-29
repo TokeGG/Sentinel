@@ -2,6 +2,7 @@
 name: price-tracking-checklist
 description: Check a product's price on its usual shops, compare with the last known price and say whether now is a good time to buy.
 module: hub.deals
+category: deals, finance
 ---
 
 # Price tracking checklist

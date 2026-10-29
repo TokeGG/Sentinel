@@ -1,6 +1,7 @@
 ---
 name: table-to-csv
 description: Extract a table (prices, schedules, specs, results) from a web page and give it back as CSV text.
+category: productivity, dev
 ---
 
 # Table to CSV

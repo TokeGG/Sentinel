@@ -9,6 +9,8 @@ import { ModulePanel } from "../core/ModulePanel";
 import { registry, type ModuleManifest } from "../core/module";
 import { EmptyState, ErrorLine, PanelShell, StatusLine } from "../ui/kit";
 import { CustomizeDrawer } from "../ui/CustomizeDrawer";
+import { AssistBar } from "../ui/AssistBar";
+import { useModSettings } from "../ui/useModSettings";
 import { PanelContext, useCustomize } from "../ui/useCustomize";
 import type { PanelStatus } from "../ui/Section";
 import { errorText } from "../ui/moduleRun";
@@ -87,6 +89,7 @@ function useCustomizeEvent(id: string, onToggle: () => void) {
 
 function PanelBody({ m }: { m: ModuleManifest }) {
   const cz = useCustomize(m);
+  const ms = useModSettings(m.id); // generic per-module settings: Ask bar, link mode
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<PanelStatus>({ updated: null, error: null });
   const toggle = useCallback(() => setOpen((o) => !o), []);
@@ -117,6 +120,7 @@ function PanelBody({ m }: { m: ModuleManifest }) {
         ) : (
           <ModulePanel module={m} />
         )}
+        {ms.assist && cz.ready && m.panel !== "web" && <AssistBar module={m} />}
         <StatusLine updated={status.updated} autoRefresh={auto} error={status.error} />
         {open && <CustomizeDrawer module={m} cz={cz} onClose={() => setOpen(false)} />}
       </PanelContext.Provider>

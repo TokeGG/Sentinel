@@ -18,6 +18,7 @@ export const congressModule: ModuleManifest = {
   name: "Congress",
   accent: "#d8d2c4",
   ring: "daily",
+  category: "news",
   icon: "congress",
   description:
     "News > Congress tab: recent bills with a status timeline, roll-call votes and current members, from the free GovTrack API (no key). Syncs only when you press Sync; follow bills to get a moon when their status changes.",

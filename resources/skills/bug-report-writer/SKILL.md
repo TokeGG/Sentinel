@@ -1,6 +1,7 @@
 ---
 name: bug-report-writer
 description: Turn a description of a problem into a clear bug report with steps to reproduce, expected and actual behaviour and environment.
+category: dev
 ---
 
 # Bug report writer

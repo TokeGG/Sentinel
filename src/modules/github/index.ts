@@ -106,6 +106,7 @@ export const githubModule: ModuleManifest = {
   name: "GitHub Discovery",
   accent: "#bd6ece",
   ring: "security",
+  category: "dev",
   icon: "github",
   description:
     "Browse trending/starred repos. \"Install\" clones to a folder you pick — never auto-run.",

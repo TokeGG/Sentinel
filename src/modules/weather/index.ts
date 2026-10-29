@@ -98,6 +98,7 @@ export const weatherModule: ModuleManifest = {
   name: "Weather & Alerts",
   accent: "#04a1cd",
   ring: "daily",
+  category: "news",
   icon: "weather",
   description: "Current conditions for places you add. No API key needed.",
   panel: "custom",

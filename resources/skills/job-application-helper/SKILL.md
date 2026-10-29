@@ -1,6 +1,7 @@
 ---
 name: job-application-helper
 description: Match a job posting to the user's experience and draft tailored CV bullet points and a short cover letter; never applies.
+category: productivity, mail
 ---
 
 # Job application helper

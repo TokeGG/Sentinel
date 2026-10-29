@@ -1,0 +1,8 @@
+.as-open { position: sticky; bottom: var(--sp-1); align-self: flex-end; margin: var(--sp-1); }
+.as-bar { border-top: 1px solid var(--line); background: var(--surface-2); padding: var(--sp-2); display: flex; flex-direction: column; gap: var(--sp-1); }
+.as-row { display: flex; gap: var(--sp-1); align-items: center; flex-wrap: wrap; }
+.as-row .ui-input { flex: 1; min-width: 12ch; }
+.as-src { font-size: var(--fs-xs); display: flex; gap: 4px; align-items: center; }
+.as-muted { color: var(--text-dim); font-size: var(--fs-xs); margin: 0; }
+.as-answer p { margin: 0 0 var(--sp-1); white-space: pre-wrap; }
+.as-cites { margin: 0 0 var(--sp-1); padding-left: var(--sp-3); font-size: var(--fs-xs); color: var(--text-dim); }

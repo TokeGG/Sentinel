@@ -5,11 +5,15 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { getSetting } from "./appSetting";
 import { BROWSER_ID, BROWSER_OPEN, BROWSER_PENDING, queueLink, safeLink } from "./safeLink";
 
+// Per-panel override (Settings > Modules > Links): each panel is its own webview, so PanelRoute sets it once.
+let panelMode: "app" | "system" | null = null;
+export const setPanelLinkMode = (m: "default" | "app" | "system") => void (panelMode = m === "default" ? null : m);
+
 /** Open a link: in-app browser (default) or the system browser. Non-http(s) links are ignored. */
 export async function openLink(l: unknown, where?: "app" | "system"): Promise<void> {
   const url = safeLink(l);
   if (!url) return;
-  const mode = where ?? ((await getSetting("links_open_in").catch(() => null)) === "system" ? "system" : "app");
+  const mode = where ?? panelMode ?? ((await getSetting("links_open_in").catch(() => null)) === "system" ? "system" : "app");
   if (mode === "system") return openUrl(url);
   try {
     localStorage.setItem(BROWSER_PENDING, queueLink(localStorage.getItem(BROWSER_PENDING), url));

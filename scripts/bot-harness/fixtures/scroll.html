@@ -1,0 +1,7 @@
+<!doctype html><html><head><title>Endless feed</title></head><body><h1>Feed</h1><ul id="f"></ul>
+<script>
+let n = 0; const f = document.getElementById("f");
+const more = () => { for (let i = 0; i < 15; i++) { n++; const li = document.createElement("li"); li.style.height = "60px";
+  li.textContent = n === 52 ? "Item 52: the golden ticket is in aisle 7" : `Item ${n}: an ordinary post with quite a lot of filler text so the whole feed gets long and the page text is big`; f.appendChild(li); } };
+more(); addEventListener("scroll", () => { if (innerHeight + scrollY >= document.body.scrollHeight - 200 && n < 90) more(); });
+</script></body></html>

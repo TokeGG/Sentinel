@@ -49,6 +49,7 @@ export const dealsModule: ModuleManifest = {
   name: "Deals & Promos",
   accent: "#ea9603",
   ring: "daily",
+  category: "deals",
   icon: "deals",
   description: "Preloaded RSS/Atom deal feeds (toggle or add your own), ordered For you by what you like and dislike. Fetches only when you press Check sources or opt in to auto-refresh.",
   panel: "custom",

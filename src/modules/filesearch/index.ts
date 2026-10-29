@@ -59,6 +59,7 @@ export const fileSearchModule: ModuleManifest = {
   name: "Local File Search",
   accent: "#03c0d8",
   ring: "system",
+  category: "system",
   icon: "filesearch",
   description:
     "Filename search over folders you add — not full-disk indexing, scoped to exactly what you've added.",

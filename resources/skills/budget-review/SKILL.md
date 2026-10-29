@@ -2,6 +2,7 @@
 name: budget-review
 description: Review a month of spending (pasted list or the Finance budgets) against the budget and suggest realistic savings.
 module: hub.finance
+category: finance
 ---
 
 # Budget review

@@ -103,6 +103,7 @@ export const pcCareModule: ModuleManifest = {
   name: "PC Care",
   accent: "#03c98f",
   ring: "system",
+  category: "system",
   icon: "pccare",
   description:
     'Live CPU/RAM/disk metrics plus tools (startup manager, disk treemap, duplicates, processes, power plans, file sorter, speed test, ports, Wi-Fi, caches, hashes); every tool runs only on its button and destructive steps preview + confirm. "Preview temp cleanup" lists your OS temp folder (read-only); "Apply cleanup" deletes exactly what was previewed, nothing else. "Refresh" returns to the metrics view.',

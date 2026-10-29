@@ -6,6 +6,7 @@ import type { ComponentType } from "react";
 import type { WebConfig } from "./manifestChecks.ts";
 import type { CustomizeDef, Ring } from "./customizeChecks.ts";
 import { validateManifest } from "./manifestValidate.ts";
+import type { Category } from "./categories.ts";
 export { validateManifest, ManifestError } from "./manifestValidate.ts";
 export type { CustomizeDef, OptionDef, Ring } from "./customizeChecks.ts";
 
@@ -60,6 +61,7 @@ export interface ModuleManifest {
   accent?: string; // #rrggbb default accent for this module's panel and planet
   ring?: Ring; // star-map orbit ring; default "system" (see ringOf)
   icon?: string; // glyph key in src/shell/icons.ts ICONS, drawn on the planet
+  category?: Category; // panel-bot category (skills, knowledge, data sources); default via categoryOf
   customize?: CustomizeDef; // user-tunable sections/options (generic customize pane)
   // Required for panel === "custom": lazy-loaded panel body.
   ui?: () => Promise<{ default: ComponentType<{ module: ModuleManifest }> }>;

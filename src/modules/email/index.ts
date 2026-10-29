@@ -17,6 +17,7 @@ export const emailModule: ModuleManifest = {
   name: "Email",
   accent: "#06d8d9",
   ring: "daily",
+  category: "mail",
   icon: "email",
   description: "IMAP/SMTP mail client. Passwords live only in the OS keychain. Nothing is fetched or sent unless you press a button (auto-refresh is opt-in).",
   panel: "custom",

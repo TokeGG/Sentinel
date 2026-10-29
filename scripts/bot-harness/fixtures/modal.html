@@ -1,0 +1,6 @@
+<!doctype html><html><head><title>Shop news</title>
+<style>#m{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center}#m div{background:#fff;padding:20px}</style></head><body>
+<h1>Shop news</h1><p id="p">Loading offer...</p>
+<div id="m" role="dialog" aria-modal="true"><div>Subscribe to our newsletter! <input aria-label="Your email"> <button id="x" aria-label="Close dialog">×</button></div></div>
+<script>document.getElementById("x").onclick = () => { document.getElementById("m").remove(); document.getElementById("p").textContent = "Spring offer: 20% off garden tools until May 31"; };</script>
+</body></html>
