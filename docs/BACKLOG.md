@@ -62,3 +62,13 @@ Lab/Bot: engagement templates; scope CIDR calculator; CVSS fields; screenshot ev
 
 ## Style decisions (owner interview)
 Flat Pro base; each module may have its own style; balanced density; tinted surfaces per-module accent; strip shows name + status dot + hover-only controls; media panels mimic real-site layout in Sentinel colours; Lab/Pentest/Bot = full terminal with hacker-movie flair; 3D map = realistic shaded planets (later).
+
+## Ideas round 5: 100 new features (owner: "add them all")
+Bot/learning: voice + read-aloud; explain-this-panel tour; study plan from cert dates; mistake journal; weekly skill radar; pair-programming editor tab; timed mock exams; concept map; Socratic teach-me; spaced review reminders (opt-in); import course notes/PDFs to KB; learning streak moon; summarize current page; Ollama model manager/benchmark; VRAM-aware model picker + unload on game launch.
+Lab: home lab builder guide; VirtualBox/Hyper-V launcher; CTF notes templates; writeup exporter; glossary quiz; cheat-sheet library; pcap viewer (loaded files, read-only); wordlist manager; engagement calendar; CVSS calculator; scope network diagram; guided missions on own VMs; badges; report review checklist; legal/safe-practice primer.
+Desktop: map widgets; planet folders; custom planets; drag file onto planet; global file+content search; clipboard-to-panel routing; per-monitor layouts; keyboard-only mode; accessibility (large/high contrast); sound themes; wallpaper mode; crash session restore; multi-profile; stable/beta update channel; in-app changelog.
+Media: Spotify/Apple Music control; local music player; podcast queue + speed; Twitch VOD/clips; combined live list; watch party sync; local subtitles/translation; download manager; screen recorder/clipper; game clips organizer; movie/TV watchlist; book tracker; AniList anime/manga.
+Productivity: kanban; pomodoro stats; timestamped meeting notes; email→task; smart reminders; template library; personal wiki graph; journal + mood; goals; time tracking; TOTP viewer (keychain); document scanner; OCR screenshots; quick translate.
+Finance: bank CSV import + categories; net worth; subscription cancel reminders; cross-store price drops; receipt OCR; tax folder checklist; watch-only crypto; dividend calendar; shopping list ↔ deals; gift list.
+PC/network: driver info; startup boost profiles; per-app bandwidth; game-server ping graph; router links + firmware check; opt-in blocklists; SMART disk health; backup to chosen cloud folders; restore point (confirm); per-app power.
+Social/chat: Discord voice status; unified DMs (where APIs allow); scheduled posts; chat translation; opt-in go-live alerts; emote favorites; saved posts library; morning social digest.
