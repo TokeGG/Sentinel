@@ -2645,6 +2645,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4050469837a6ff301cd14c1f8f24f88549e6d548f24f64e2148eb0f72cebc51f"
 
 [[package]]
+name = "mail-parser"
+version = "0.9.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "93c3b9e5d8b17faf573330bbc43b37d6e918c0a3bf8a88e7d0a220ebc84af9fc"
+dependencies = [
+ "encoding_rs",
+]
+
+[[package]]
 name = "markup5ever"
 version = "0.39.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4300,6 +4309,7 @@ dependencies = [
  "imap",
  "keyring",
  "lettre",
+ "mail-parser",
  "native-tls",
  "regex-lite",
  "serde",

@@ -5,14 +5,19 @@ import { readdirSync } from "node:fs";
 import { SCHEMA_STATEMENTS, ensureSchema, describeDb, redactPaths } from "./schema.ts";
 
 const norm = (s: string) => s.replace(/IF NOT EXISTS/gi, "").replace(/\s+/g, "").replace(/;$/, "");
-const files = ["17_panel_layout", "18_game_mode_auto", "19_panel_prefs", "20_youtube_channels", "21_youtube_watched", "22_chat_rooms", "23_social_feed"];
+const files = ["17_panel_layout", "18_game_mode_auto", "19_panel_prefs", "20_youtube_channels", "21_youtube_watched", "22_chat_rooms", "23_social_feed", "24_mail"];
 
-test("SCHEMA_STATEMENTS match migrations 17-23 exactly", () => {
-  assert.equal(SCHEMA_STATEMENTS.length, files.length);
-  files.forEach((f, i) => {
+test("SCHEMA_STATEMENTS match migrations 17-24 exactly", () => {
+  // A migration file may hold several statements; they map to consecutive entries.
+  const expected = files.flatMap((f) => {
     const sql = readFileSync(new URL(`../../src-tauri/migrations/${f}.sql`, import.meta.url), "utf8");
-    assert.equal(norm(SCHEMA_STATEMENTS[i]), norm(sql), f);
-    assert.match(sql, /CREATE TABLE IF NOT EXISTS/, `${f} must be idempotent`);
+    const parts = sql.split(/;\s*\n/).filter((x) => x.trim());
+    parts.forEach((p) => assert.match(p, /CREATE TABLE IF NOT EXISTS/, `${f} must be idempotent`));
+    return parts;
+  });
+  assert.equal(SCHEMA_STATEMENTS.length, expected.length);
+  expected.forEach((sql, i) => {
+    assert.equal(norm(SCHEMA_STATEMENTS[i]), norm(sql), `statement ${i}`);
     assert.match(SCHEMA_STATEMENTS[i], /CREATE TABLE IF NOT EXISTS/);
   });
 });
@@ -61,10 +66,10 @@ test("every migration >= 17 has a bootstrap entry and vice versa", () => {
   const dir = new URL("../../src-tauri/migrations/", import.meta.url);
   const tables = readdirSync(dir)
     .filter((f) => f.endsWith(".sql") && parseInt(f, 10) >= 17)
-    .map((f) => {
-      const t = tableOf(readFileSync(new URL(f, dir), "utf8"));
-      assert.ok(t, `${f} must be a CREATE TABLE (add a guarded bootstrap entry for other DDL)`);
-      return t;
+    .flatMap((f) => {
+      const ts = [...readFileSync(new URL(f, dir), "utf8").matchAll(/CREATE TABLE(?: IF NOT EXISTS)?\s+(\w+)/gi)].map((m) => m[1]);
+      assert.ok(ts.length, `${f} must be a CREATE TABLE (add a guarded bootstrap entry for other DDL)`);
+      return ts;
     });
   const boot = SCHEMA_STATEMENTS.map((s) => tableOf(s));
   assert.deepEqual([...tables].sort(), [...boot].sort());

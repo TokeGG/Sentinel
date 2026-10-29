@@ -70,14 +70,14 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..23 strictly ascending
-                        (23 = social_feed; 17-23 idempotent `IF NOT EXISTS`); loaded by
+  migrations/NN_<module>.sql — numbered SQL, versions 1..24 strictly ascending
+                        (24 = mail; 17-24 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
                         webviews can hand keyboard focus to each other (moves focus only)
   src/commands/       — Rust commands by area (backup, credentials, files,
-                        mail, network, oauth, pentest, repo, system)
+                        mail + mail_fetch/body/ops/send, network, oauth, pentest, repo, system)
   src/panels/         — panel manager: every panel = a content webview + a
                         ~28px chrome webview (move/resize/close/focus),
                         moved/raised together; manager, restore, webview, geometry,
@@ -130,8 +130,8 @@ reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
 **Custom panels** exist for notes, news, deals, pccare, weather, homenet,
-github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social. email, pentest
-still use the generic panel (redesigns planned). To add one:
+github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email. pentest
+still uses the generic panel (redesigns planned). To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
 3. Wrap each user-hideable part in `<Section id="...">` inside `<Sections>`.
@@ -184,7 +184,7 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-364 TS tests + 4 size-guard tests + 48 Rust tests as of this commit. Run the
+446 TS tests + 4 size-guard tests + 60 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
@@ -221,7 +221,8 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Rust `restore_database` copies only the files present in the backup, leaves
   stale `-wal`/`-shm` next to the restored db, copies over an open DB, and does
   no validation; needs its own fix.
-- email, pentest are not yet redesigned (generic panel).
+- pentest is not yet redesigned (generic panel).
+- Email (`modules/email`): custom panel, multi-account IMAP/SMTP, passwords only in keychain (`pw:<accountId>`), cache in SQLite (`mail_*`, migration 24), HTML sanitized by `sanitize.ts` into a `sandbox=""` iframe. No OAuth (Gmail/iCloud need app passwords). No attachment download, drafts saving or threading. The Rust mail code (mail*.rs, `mail-parser` crate) compiles and its pure parts are unit-tested, but has never run against a live mail server.
 - Discord panel is built (modules/discord) but media permissions, the screen-share
   picker/Go Live and the unread moon are unverified on Windows; checklist in
   `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.
