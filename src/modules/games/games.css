@@ -1,0 +1,9 @@
+.gm { display: flex; flex-direction: column; gap: var(--gap); }
+.gm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 160px), 1fr)); gap: var(--gap); }
+.gm-card { display: flex; flex-direction: column; gap: 4px; padding: var(--pad); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
+.gm-card h3 { margin: 0; font-size: 1em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gm-store { font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-text); }
+.gm-dim { margin: 0; font-size: 0.85em; color: var(--text-dim); }
+.gm-news { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.gm-news li { padding: 4px 0; border-bottom: 1px solid var(--line); }
+.gm-news li.new a { font-weight: 600; color: var(--accent-text); }
