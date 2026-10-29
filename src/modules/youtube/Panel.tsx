@@ -9,6 +9,7 @@ import { ChannelsView } from "./ChannelsView";
 import { HistoryTools } from "./HistoryTools";
 import { ContinueRow, LaterTray } from "./HomeExtras";
 import { MiniPlayer } from "./MiniPlayer";
+import { LiveView } from "./LiveView";
 import { PlaylistsView } from "./PlaylistsView";
 import { Side } from "./Side";
 import { total } from "./extras";
@@ -33,11 +34,11 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       </header>
       {(y.error || y.note) && <ErrorLine message={y.error ?? y.note ?? ""} />}
       <div className="yt-body">
-        <Side view={view} counts={{ later: d.later.length, playlists: x.playlists.length, history: d.watched.length, subs: total(x.uploads) || d.channels.length }} onGo={y.go} />
+        <Side view={view} counts={{ live: y.live.hits.filter((h) => h.status === "live").length, later: d.later.length, playlists: x.playlists.length, history: d.watched.length, subs: total(x.uploads) || d.channels.length }} onGo={y.go} />
         <main className="yt-main">
           {watching ? (
             <WatchView playing={y.playing!} next={y.next} queue={queue} rating={y.rating} busy={busy} act={act} onRate={y.rate} onChat={() => void y.chat()} x={x}
-              onClose={() => y.go("home")} onMini={() => { y.setMini(true); y.go("home"); }} />
+              onClose={() => y.go("home")} onPop={() => y.pop(y.playing!)} onMini={() => { y.setMini(true); y.go("home"); }} />
           ) : (
             <Sections className="yt-sections">
               <Section id="chips">
@@ -46,6 +47,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                     {chips.map((c) => { const n = c.id.startsWith("ch:") ? x.uploads.get(c.id.slice(3)) : 0; return <Chip key={c.id} on={y.chip === c.id} onClick={() => y.setChip(c.id)}>{c.label}{n ? ` • ${n}` : ""}</Chip>; })}
                   </div>
                 )}
+              </Section>
+              <Section id="live">
+                {(view === "live" || (home && y.chip === "all" && !q)) && <LiveView live={y.live} row={home} busy={busy} named={y.named} onPlay={act.play} onChat={(c) => void y.chat(c)} />}
               </Section>
               <Section id="continue">
                 {home && y.chip === "all" && !q && <ContinueRow items={x.cont} act={act} named={y.named} onDrop={x.dropProgress} />}
@@ -87,7 +91,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           )}
         </main>
       </div>
-      {y.mini && y.playing && !watching && <MiniPlayer c={y.playing} x={x} onExpand={() => { y.setMini(false); y.go("watch"); }} onClose={() => y.setMini(false)} />}
+      {y.mini && y.playing && !watching && <MiniPlayer c={y.playing} x={x} onExpand={() => { y.setMini(false); y.go("watch"); }} onClose={() => y.setMini(false)} onPop={() => y.pop(y.playing!)} />}
     </div>
   );
 }

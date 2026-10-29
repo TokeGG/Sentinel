@@ -81,3 +81,11 @@ test("bookmarks: normalise, title, filter", () => {
   assert.deepEqual(filterBookmarks(l, { unreadOnly: true }).map((b) => b.id), [1]);
   assert.deepEqual(filterBookmarks(l, { q: "DEV" }).map((b) => b.id), [1]);
 });
+
+import { extractLinks } from "./links.ts";
+test("extractLinks: http(s) + www., trims punctuation, dedupes, skips junk", () => {
+  assert.deepEqual(extractLinks("Join https://meet.example.com/abc. or (www.zoom.us/j/1), again https://meet.example.com/abc", null, "https://x.org/a?b=1"),
+    ["https://meet.example.com/abc", "https://www.zoom.us/j/1", "https://x.org/a?b=1"]);
+  assert.deepEqual(extractLinks("ftp://a.b http://nodot javascript:alert(1)"), []);
+  assert.deepEqual(extractLinks(undefined, 5), []);
+});

@@ -13,7 +13,7 @@ import { PanelContext, useCustomize } from "../ui/useCustomize";
 import type { PanelStatus } from "../ui/Section";
 import { errorText } from "../ui/moduleRun";
 import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
-import { MASTER_ID, SETTINGS_ID } from "./panelApi";
+import { MASTER_ID, SETTINGS_ID, YTPLAYER_ID } from "./panelApi";
 import { MasterHub } from "./MasterHub";
 import { SettingsPanel } from "./SettingsPanel";
 import { BRIEFING_ID, CAPTURE_ID, HELP_ID, PALETTE_ID, SNAP_ID } from "./desk/ids";
@@ -24,7 +24,10 @@ import { HelpPanel } from "./desk/HelpPanel";
 import { CaptureBox } from "./desk/CaptureBox";
 import { useAppKeys } from "./desk/useAppKeys";
 
+const YtPlayer = lazy(() => import("../modules/youtube/PopPlayer"));
+const PopPlayer = () => <Suspense fallback={null}><YtPlayer /></Suspense>;
 const SPECIAL: Record<string, ComponentType> = {
+  [YTPLAYER_ID]: PopPlayer,
   [SETTINGS_ID]: SettingsPanel, [MASTER_ID]: MasterHub, [PALETTE_ID]: Palette,
   [BRIEFING_ID]: Briefing, [HELP_ID]: HelpPanel, [CAPTURE_ID]: CaptureBox, [SNAP_ID]: SnapLayouts,
 };

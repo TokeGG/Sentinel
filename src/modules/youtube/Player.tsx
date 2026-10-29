@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useRef } from "react";
 import { listenMsg, parsePlayerMsg, playerUrl, rateMsg } from "./extras";
+import { isEnded } from "./queue";
 
 const YT = "https://www.youtube-nocookie.com";
 
 // In-app playback via the privacy-enhanced embed with the IFrame JS API on, so the
 // remembered speed can be applied (setPlaybackRate) and progress read (infoDelivery).
 // Both depend on YouTube honouring postMessage in this webview: unverified on Windows.
-export function Player({ videoId, title, rate = 1, start = 0, onProgress }: {
-  videoId: string; title: string; rate?: number; start?: number; onProgress?: (time: number, duration: number) => void;
+export function Player({ videoId, title, rate = 1, start = 0, onProgress, onEnded }: {
+  videoId: string; title: string; rate?: number; start?: number; onProgress?: (time: number, duration: number) => void; onEnded?: () => void;
 }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const cb = useRef(onProgress);
   cb.current = onProgress;
+  const end = useRef(onEnded);
+  end.current = onEnded;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const src = useMemo(() => playerUrl(videoId, { start, origin: location.origin }), [videoId]);
   const post = (m: string) => ref.current?.contentWindow?.postMessage(m, YT);
@@ -21,6 +24,7 @@ export function Player({ videoId, title, rate = 1, start = 0, onProgress }: {
     let saved = Date.now();
     const on = (e: MessageEvent) => {
       if (e.source !== ref.current?.contentWindow) return;
+      if (isEnded(e.data)) { if (last.time) cb.current?.(last.time, last.duration); last.time = 0; end.current?.(); return; }
       const p = parsePlayerMsg(e.data);
       if (!p) return;
       if (p.duration) last.duration = p.duration;

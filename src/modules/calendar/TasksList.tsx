@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { CardCtx } from "./ItemCard";
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import { EmptyState } from "../../ui/kit";
 import type { ModuleRow } from "../../ui/useModule";
@@ -7,13 +8,14 @@ import { taskTree, whenText } from "./taskLogic";
 type Run = (skill: string, args?: Record<string, unknown>) => Promise<unknown>;
 
 function Task({ r, now, busy, run, onEdit, sub }: { r: ModuleRow; now: Date; busy: boolean; run: Run; onEdit(r: ModuleRow): void; sub?: boolean }) {
+  const open = useContext(CardCtx);
   return (
     <li className={`cal-item${r.done ? " done" : ""}${sub ? " sub" : ""}`}>
       <input type="checkbox" className="cal-check" aria-label="Done" checked={r.done === true} disabled={busy} onChange={() => void run("toggle_done", { id: r.itemId })} />
-      <span className="cal-text">
+      <button type="button" className="cal-text cal-open" onClick={() => open({ r })}>
         {String(r.text)}
         <small>{whenText(r, now)}{r.notes ? ` · ${String(r.notes)}` : ""}</small>
-      </span>
+      </button>
       <span className="cal-acts">
         <button type="button" className="ui-btn ui-sm" disabled={busy} onClick={() => onEdit(r)}>Edit</button>
         <ConfirmButton label="Delete" className="ui-btn ui-sm" disabled={busy} title={sub ? undefined : "Also deletes its subtasks"} onConfirm={() => void run("delete_item", { id: r.itemId })} />

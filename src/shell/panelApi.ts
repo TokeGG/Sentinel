@@ -60,13 +60,13 @@ export async function openAt(id: string, size: { w: number; h: number }, web?: W
 export const openWebPanel = (id: string, url: string, profile: string): Promise<void> =>
   openAt(id, { w: 460, h: 640 }, { url, profile }, undefined, { w: 320, h: 240 });
 
-// Settings is NOT a module (not in the registry, never a planet); the HUD
-// opens it explicitly. restore() ignores its saved row (unknown id).
+// Settings / Master Hub / YouTube pop-out player (hub.ytplayer) are NOT modules (never planets);
+// opened explicitly. restore() ignores their saved rows (unknown id).
 export const SETTINGS_ID = "hub.settings";
 export const openSettings = (): Promise<void> => openAt(SETTINGS_ID, { w: 560, h: 520 });
-// The Master Hub (missed notifications) is the same kind of non-module panel; the sun opens it.
 export const MASTER_ID = "hub.master";
 export const openMaster = (): Promise<void> => openAt(MASTER_ID, { w: 540, h: 600 });
+export const YTPLAYER_ID = "hub.ytplayer"; export const openYtPlayer = (): Promise<void> => openAt(YTPLAYER_ID, { w: 480, h: 300 }, undefined, undefined, { w: 280, h: 180 });
 
 // Row first: called from a chrome webview, close_panel destroys the caller
 // before its reply arrives, so nothing after the invoke would run.
@@ -135,7 +135,7 @@ async function doRestore(): Promise<void> {
 /** After maximise/restore/resize: pull every open panel back inside the usable area. */
 export async function reclampPanels(): Promise<void> {
   const screen = await mainClientRect();
-  const ids = [...registry.map((m) => [m.id, m.web?.min ?? MIN] as const), [SETTINGS_ID, MIN] as const, [MASTER_ID, MIN] as const,
+  const ids = [...registry.map((m) => [m.id, m.web?.min ?? MIN] as const), [SETTINGS_ID, MIN] as const, [MASTER_ID, MIN] as const, [YTPLAYER_ID, MIN] as const,
     ...Object.keys(DESK_SIZES).map((id) => [id, MIN] as const)];
   const open: { id: string; rect: Rect; min: { w: number; h: number } }[] = [];
   for (const [id, min] of ids) {

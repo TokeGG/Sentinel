@@ -45,3 +45,52 @@ test("suggested channels: >= 25 unique @handles, followed ones hidden", () => {
   for (const s of SUGGESTED) assert.match(s.handle, /^@[\w.-]+$/);
   assert.equal(notFollowed(["@MKBHD", null]).length, SUGGESTED.length - 1);
 });
+
+// --- pop-out queue + live parser ---
+import { buildQueue, clampWidth, current, hasNext, heightFor, isEnded, lockedPanelH, sanitizeQueue, step } from "./queue.ts";
+import { liveUrl, parseLivePage, sanitizeLive } from "./live.ts";
+const qi = (n: number) => ({ videoId: `vid${String(n).padStart(8, "0")}`, channelId: null, title: `V${n}` });
+
+test("queue: build from the containing list, step, sanitize", () => {
+  const q = buildQueue(qi(2), [[qi(9)], [qi(1), qi(2), qi(3), qi(4)]], [qi(7)]);
+  assert.deepEqual(q.items.map((i) => i.title), ["V2", "V3", "V4"]);
+  const f = buildQueue(qi(5), [[qi(1)]], [qi(5), qi(6)]);
+  assert.deepEqual(f.items.map((i) => i.title), ["V5", "V6"]);
+  const n = step(q, 1);
+  assert.equal(current(n)?.title, "V3");
+  assert.equal(step(step(n, 1), 1).index, 2); // stays at end
+  assert.equal(step(q, -1), q);
+  assert.equal(hasNext(step(n, 1)), false);
+  assert.deepEqual(sanitizeQueue("nope"), { items: [], index: 0, at: 0 });
+  const s = sanitizeQueue({ items: [qi(1), { videoId: "bad" }], index: 9, at: 12 });
+  assert.equal(s.items.length, 1); assert.equal(s.index, 0); assert.equal(s.at, 12);
+});
+
+test("isEnded: state 0 only", () => {
+  assert.equal(isEnded('{"event":"onStateChange","info":0}'), true);
+  assert.equal(isEnded({ event: "infoDelivery", info: { playerState: 0 } }), true);
+  assert.equal(isEnded('{"event":"onStateChange","info":1}'), false);
+  assert.equal(isEnded("x"), false);
+});
+
+test("16:9 sizing", () => {
+  assert.equal(heightFor(640), 360);
+  assert.equal(clampWidth(100, 800), 320);
+  assert.equal(clampWidth(5000, 800), 800);
+  assert.equal(clampWidth(NaN, 800), 800);
+  assert.equal(lockedPanelH(400, 640, 380, 30), 410);
+});
+
+test("live page parser", () => {
+  const live = `<link rel="canonical" href="https://www.youtube.com/watch?v=abcdefghijk"><meta name="title" content="Big &amp; Live">{"isLiveNow":true}`;
+  assert.deepEqual(parseLivePage(live), { videoId: "abcdefghijk", status: "live", title: "Big & Live", startsAt: null });
+  const up = `<link rel="canonical" href="https://www.youtube.com/watch?v=abcdefghijk">"upcomingEventData":{"scheduledStartTime":"1730000000"}`;
+  assert.equal(parseLivePage(up)?.status, "upcoming");
+  assert.equal(parseLivePage(up)?.startsAt, 1730000000);
+  assert.equal(parseLivePage(`<link rel="canonical" href="https://www.youtube.com/channel/UCx">"isLive":true`), null);
+  assert.equal(parseLivePage(`<link rel="canonical" href="https://www.youtube.com/watch?v=abcdefghijk">replay`), null);
+  assert.match(liveUrl("UC1"), /channel\/UC1\/live$/);
+  const s = sanitizeLive(JSON.stringify([{ channelId: "a", videoId: "abcdefghijk", status: "upcoming", startsAt: 5 }, { channelId: "b", videoId: "bbcdefghijk", status: "live" }, { videoId: "x" }]));
+  assert.deepEqual(s.map((h) => h.status), ["live", "upcoming"]);
+  assert.deepEqual(sanitizeLive("{"), []);
+});

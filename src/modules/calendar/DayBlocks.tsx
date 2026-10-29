@@ -1,5 +1,6 @@
 // Time-blocking for one day: add HH:MM-HH:MM blocks (no overlaps), list, delete.
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { CardCtx } from "./ItemCard";
 import { ErrorLine, Row } from "../../ui/kit";
 import { useStore } from "../../ui/useStore";
 import { addBlock, deleteBlock, listBlocks } from "./extraStore";
@@ -11,6 +12,7 @@ export function DayBlocks({ day }: { day: string }) {
   const [to, setTo] = useState("10:00");
   const [title, setTitle] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const open = useContext(CardCtx);
   const mine = s.data.filter((b) => b.day === day);
   const add = () => {
     const b = { day, start_min: toMin(from) ?? -1, end_min: toMin(to) ?? -1, title: title.trim() };
@@ -30,7 +32,8 @@ export function DayBlocks({ day }: { day: string }) {
       {(err || s.error) && <ErrorLine message={err ?? s.error!} onDismiss={() => setErr(null)} />}
       {mine.map((b) => (
         <Row key={b.id} end={<button type="button" className="ui-btn ui-sm" onClick={() => void s.act(() => deleteBlock(b.id))}>Remove</button>}>
-          <span className="cal-time">{fmtMin(b.start_min)}</span> <span className="cal-time">{fmtMin(b.end_min)}</span> {b.title}
+          <span className="cal-time">{fmtMin(b.start_min)}</span> <span className="cal-time">{fmtMin(b.end_min)}</span>{" "}
+          <button type="button" className="cal-open" onClick={() => open({ r: { id: `blk-${b.id}`, text: b.title || "Time block", source: "Time block" }, when: `${day} ${fmtMin(b.start_min)}–${fmtMin(b.end_min)}`, onDelete: () => s.act(() => deleteBlock(b.id)) })}>{b.title || "Time block"}</button>
         </Row>
       ))}
     </div>
