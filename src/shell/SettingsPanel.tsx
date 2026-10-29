@@ -9,6 +9,7 @@ import { DiagnosticsSection } from "./settings/DiagnosticsSection";
 import { DataSection } from "./settings/DataSection";
 import { GeneralSection } from "./settings/GeneralSection";
 import { JobsSection } from "./settings/JobsSection";
+import { UpdatesSection } from "./settings/UpdatesSection";
 import "./settings/settings.css";
 
 export function SettingsPanel() {
@@ -22,6 +23,7 @@ export function SettingsPanel() {
       <JobsSection onError={onError} />
       <DataSection onError={onError} />
       <DiagnosticsSection onError={onError} />
+      <UpdatesSection onError={onError} />
       <AboutSection onError={onError} />
     </div>
   );

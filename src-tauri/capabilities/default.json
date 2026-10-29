@@ -10,6 +10,8 @@
     "opener:default",
     "dialog:default",
     "clipboard-manager:default",
+    "updater:default",
+    "process:allow-restart",
     "sql:default",
     "sql:allow-load",
     "sql:allow-execute",

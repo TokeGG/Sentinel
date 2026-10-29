@@ -193,6 +193,11 @@ code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
 `scripts/check-file-size.mjs` has an ALLOW list of files awaiting their own
 split (finance, pentest, social connectors, youtube). Never add to it; shrink it.
 
+**Updates:** Settings > Updates (`shell/updater.ts`) checks GitHub releases
+only on a button press (no background call). Releases are tag-driven (`v*`):
+CI stamps the version from the tag, signs with secret `TAURI_SIGNING_PRIVATE_KEY`
+and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json.mjs`).
+
 ## What's known-incomplete (check before assuming a gap is a bug)
 
 - On some existing databases the plugin migration fails at the first load
