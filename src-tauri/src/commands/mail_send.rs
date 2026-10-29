@@ -1,6 +1,6 @@
 use super::mail::{blocking, connect, MailAcct};
 use lettre::message::{Mailbox, Message};
-use lettre::transport::smtp::authentication::Credentials;
+use lettre::transport::smtp::authentication::{Credentials, Mechanism};
 use lettre::{SmtpTransport, Transport};
 use serde::Deserialize;
 
@@ -13,6 +13,8 @@ pub struct SmtpCfg {
     tls: String,
     username: String,
     password: String,
+    #[serde(default)]
+    auth: String,
 }
 
 #[derive(Deserialize)]
@@ -57,8 +59,9 @@ pub async fn mail_send(smtp: SmtpCfg, msg: Outgoing, sent: Option<(MailAcct, Str
     blocking(move || {
         let email = build(&msg)?;
         let creds = Credentials::new(smtp.username, smtp.password);
+        let creds_mech = if smtp.auth == "xoauth2" { vec![Mechanism::Xoauth2] } else { vec![Mechanism::Plain, Mechanism::Login] };
         let relay = if smtp.tls == "starttls" { SmtpTransport::starttls_relay(&smtp.host) } else { SmtpTransport::relay(&smtp.host) };
-        let mailer = relay.map_err(|e| e.to_string())?.port(smtp.port).credentials(creds).build();
+        let mailer = relay.map_err(|e| e.to_string())?.port(smtp.port).credentials(creds).authentication(creds_mech).build();
         mailer.send(&email).map_err(|e| e.to_string())?;
         let Some((acct, folder)) = sent else { return Ok(false) };
         let filed = (|| -> Result<(), String> {
