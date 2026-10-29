@@ -23,6 +23,7 @@ export const ICONS: Record<string, string> = {
   x: "M4 4l16 16 M20 4L4 20",
   facebook: "M14 21v-8h3l.5-4H14V7c0-1 .5-2 2-2h1.5V2H15a4 4 0 0 0-4 4v3H8v4h3v8",
   instagram: "M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4z M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z M17.5 6.5h.01",
+  skills: "M12 3l2.5 5.5L20 9.3l-4 4 1 5.7-5-2.8-5 2.8 1-5.7-4-4 5.5-.8z",
   bot: "M5 8h14v11H5z M12 8V4 M10 4h4 M9 12v2 M15 12v2 M2 12v4 M22 12v4",
 };
 

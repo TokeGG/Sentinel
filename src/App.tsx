@@ -33,6 +33,7 @@ import "./modules/x";
 import "./modules/facebook";
 import "./modules/instagram";
 import "./modules/chat";
+import "./modules/skills";
 import "./App.css";
 
 // Child panel webviews load this same bundle at #/panel/<id>; they render only

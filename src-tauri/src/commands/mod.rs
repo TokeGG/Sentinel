@@ -15,6 +15,10 @@ pub mod pentest_rule;
 pub mod pentest_time;
 pub mod backup;
 pub mod credentials;
+pub mod skills_fs;
+pub mod mcp_rpc;
+pub mod mcp_proc;
+pub mod mcp;
 
 pub use system::*;
 pub use network::*;
@@ -29,3 +33,5 @@ pub use files::*;
 pub use pentest::*;
 pub use backup::*;
 pub use credentials::*;
+pub use skills_fs::{skills_read_file, skills_remove, skills_write};
+pub use mcp::{mcp_call, mcp_running, mcp_start, mcp_stop, mcp_tools, Mcp};

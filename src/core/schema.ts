@@ -112,7 +112,7 @@ export const SCHEMA_STATEMENTS: string[] = [
     json TEXT NOT NULL,
     PRIMARY KEY (account_id, folder, uid)
 )`,
-  ...LATER_STATEMENTS, // migrations 25 (pentest), 26 (social)
+  ...LATER_STATEMENTS, // migrations 25 (pentest), 26 (social), 27 (skills/mcp)
 ];
 
 export async function ensureSchema(exec: (sql: string) => Promise<unknown>): Promise<void> {

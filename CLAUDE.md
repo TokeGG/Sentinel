@@ -70,14 +70,15 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..26 strictly ascending
-                        (26 = social_post_meta; 17-26 idempotent `IF NOT EXISTS`); loaded by
+  migrations/NN_<module>.sql — numbered SQL, versions 1..27 strictly ascending
+                        (26 = social_post_meta, 27 = skills/mcp; 17-27 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
                         webviews can hand keyboard focus to each other (moves focus only)
   src/commands/       — Rust commands by area (backup, credentials, files,
-                        mail + mail_fetch/body/ops/send, network, oauth, pentest, repo, system)
+                        mail + mail_fetch/body/ops/send, mcp + mcp_proc/rpc (stdio MCP client), network,
+                        oauth, pentest, repo, skills_fs (app-owned skills dir), system)
   src/panels/         — panel manager: every panel = a content webview + a
                         ~28px chrome webview (move/resize/close/focus),
                         moved/raised together; manager, restore, webview, geometry,
@@ -130,7 +131,7 @@ reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
 **Custom panels** exist for notes, news, deals, pccare, weather, homenet,
-github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email, pentest. To add one:
+github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email, skills, pentest. To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
 3. Wrap each user-hideable part in `<Section id="...">` inside `<Sections>`.
@@ -183,7 +184,7 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-645 TS tests + 4 size-guard tests + 67 Rust tests as of this commit. Run the
+674 TS tests + 4 size-guard tests + 74 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
@@ -235,7 +236,8 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
   `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.
 - Chat (`modules/chat`, `hub.chat`): sockets run in the panel webview only while it is open. Twitch read (anon IRC) + send (pasted OAuth token in keychain); Kick read via Pusher (channel lookup may be Cloudflare-blocked), read-only; destiny.gg read-only; any other site (incl. iCanHazChat) = `embed` iframe / "Open as its own panel". 7TV/BTTV/FFZ via `emoteSets.ts`. NONE of the live protocols/endpoints have been run against the real sites (sandbox had no outbound access). Add a site = one file in `chat/connectors/` + list it in `connectors/index.ts` (+ parser in `rooms.ts`).
 - x, facebook, instagram: web panels (core/webSite.ts), real site + persistent login; no API (no feed merge, like or comment from our UI). Unverified on Windows.
-- Specified in `docs/superpowers/specs/` but not built: skills/MCP hub, browser bot.
+- Skills & MCP hub (`modules/skills`, `hub.skills`): GitHub install (pinned SHA, confirm screen, files under app data `skills/<skill|mcp>/<id>`), `registry.ts` (`listSkills`/`getSkill`), `mcp.ts` (`listMcpTools`/`callMcpTool`, Rust stdio client; flagged pentest/scan/exploit tools need an in-scope engagement target via `pentest/api` `previewGate`; no Rust-side re-check), Ollama model pick (`local_model`). MCP needs the user's own Node/Python (npx/uvx); servers start only when flipped on, stop on disable/exit/game mode. Bundled skills: `resources/skills/*/SKILL.md`. NEVER run against real GitHub or a real MCP server (only unit tests and a fake stdio server); GUI unverified.
+- Specified in `docs/superpowers/specs/` but not built: browser bot.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
   price); Home Network "new" means new this session; Calendar "overdue" means
   unfiled notes.

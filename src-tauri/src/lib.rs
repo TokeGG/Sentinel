@@ -10,6 +10,7 @@ pub fn run() {
     tauri::Builder::default()
         .manage(std::sync::Mutex::new(panels::state::Panels::new()))
         .manage(Specs::default())
+        .manage(Mcp::default())
         .manage(gamemode::GameMode::default())
         .setup(|app| {
             gamemode::start_poll(app.handle().clone());
@@ -48,6 +49,14 @@ pub fn run() {
             set_credential,
             get_credential,
             delete_credential,
+            skills_write,
+            skills_remove,
+            skills_read_file,
+            mcp_start,
+            mcp_stop,
+            mcp_running,
+            mcp_tools,
+            mcp_call,
             open_panel,
             close_panel,
             move_panel,
@@ -59,6 +68,11 @@ pub fn run() {
             gamemode::set_game_mode,
             gamemode::set_game_mode_auto
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                commands::mcp::stop_all(app);
+            }
+        });
 }
