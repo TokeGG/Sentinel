@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS lab_lessons (
+    lesson_id TEXT PRIMARY KEY,
+    score INTEGER NOT NULL DEFAULT 0,
+    total INTEGER NOT NULL DEFAULT 0,
+    done_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS lab_certs (
+    cert_id TEXT PRIMARY KEY,
+    target_date TEXT NOT NULL DEFAULT '',
+    hours REAL NOT NULL DEFAULT 0,
+    checked TEXT NOT NULL DEFAULT '[]'
+);
+CREATE TABLE IF NOT EXISTS lab_cards (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cert_id TEXT NOT NULL,
+    q TEXT NOT NULL,
+    a TEXT NOT NULL,
+    ease REAL NOT NULL DEFAULT 2.5,
+    interval INTEGER NOT NULL DEFAULT 0,
+    reps INTEGER NOT NULL DEFAULT 0,
+    due TEXT NOT NULL,
+    UNIQUE (cert_id, q)
+);
