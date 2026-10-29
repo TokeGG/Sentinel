@@ -5,7 +5,9 @@ import { addCoupon, addWish, markWishesSeen, onNewOffer, removeCoupon, removeWis
 import { addSource, listDealSources, loadDeals, setSource } from "./store";
 import { feedOps } from "../news/feedOps";
 import { feedSections } from "../news/panelLogic";
-import { parseFeed } from "../news/rss"; // deals sources are RSS/Atom too — same parser, no duplication
+import { parseFeed } from "../news/rss";
+import { pool } from "../news/sources/logic";
+import { timeout } from "../news/sources/store"; // deals sources are RSS/Atom too — same parser, no duplication
 
 async function fetchDeals() {
   const d = await getDb();
@@ -13,9 +15,9 @@ async function fetchDeals() {
 
   let added = 0;
   let failed = 0;
-  for (const source of sources) {
+  await pool(sources, 6, async (source) => {
     try {
-      const res = await fetch(source.url);
+      const res = await timeout(fetch(source.url), 20000);
       const xml = await res.text();
       const items = parseFeed(xml);
       for (const item of items) {
@@ -31,7 +33,7 @@ async function fetchDeals() {
     } catch {
       failed++;
     }
-  }
+  });
 
   await logActivity(
     "deals",

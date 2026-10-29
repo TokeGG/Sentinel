@@ -31,3 +31,4 @@
 .cg-pos { font-weight: 700; font-size: 0.8em; }
 .cg-pos.yea, .cg-pos.aye { color: var(--ok); }
 .cg-pos.nay, .cg-pos.no { color: var(--bad, inherit); }
+.cg-note { white-space: pre-wrap; word-break: break-word; user-select: text; }

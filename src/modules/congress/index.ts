@@ -1,4 +1,4 @@
-import { registerModule, type ModuleManifest } from "../../core/module";
+import type { ModuleManifest } from "../../core/module";
 import { congressSections } from "./panelLogic";
 import { clearCache, follow, loadRows, markSeen, unfollow, unseenCount } from "./store";
 import { syncCongress } from "./sync";
@@ -20,7 +20,7 @@ export const congressModule: ModuleManifest = {
   ring: "daily",
   icon: "congress",
   description:
-    "Recent bills with a status timeline, roll-call votes and current members, from the free GovTrack API (no key). Syncs only when you press Sync; follow bills to get a moon when their status changes.",
+    "News > Congress tab: recent bills with a status timeline, roll-call votes and current members, from the free GovTrack API (no key). Syncs only when you press Sync; follow bills to get a moon when their status changes.",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: { sections: congressSections, options: [{ key: "taste", label: "For you ordering", type: "toggle", default: true }] },
@@ -40,4 +40,5 @@ export const congressModule: ModuleManifest = {
   schedule: { skill: "sync_congress", intervalMinutes: 360 },
 };
 
-registerModule(congressModule);
+// Not registered as its own planet any more: Congress lives in the News panel's "Congress" tab
+// (news/CongressTab.tsx); News carries its moon and sync skills.

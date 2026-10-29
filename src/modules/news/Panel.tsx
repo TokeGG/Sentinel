@@ -8,6 +8,11 @@ import { groupStories, viewRows, type NewsView } from "./extras";
 import { NewsCard } from "./NewsCard";
 import { NewsTools, useTopics } from "./NewsTools";
 import { newsTaste } from "./taste";
+import { Tabs } from "../../ui/kit";
+import { CongressTab } from "./CongressTab";
+import { NewsSources } from "./NewsSources";
+
+const TOP = [{ id: "headlines", label: "Headlines" }, { id: "sources", label: "Sources" }, { id: "congress", label: "Congress" }];
 
 // Headlines open via the opener plugin (a real button, never an <a href>).
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -15,7 +20,13 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const grouped = useOption("grouped", true);
   const { topics, reload } = useTopics();
   const [view, setView] = useState<NewsView>("all");
+  const [top, setTop] = useState("headlines");
+  const tabs = <Tabs tabs={TOP} active={top} onChange={setTop} />;
+  if (top === "sources") return <div className="nw-top">{tabs}<NewsSources /></div>;
+  if (top === "congress") return <div className="nw-top">{tabs}<CongressTab /></div>;
   return (
+    <div className="nw-top">
+    {tabs}
     <FeedPanel
       module={module}
       listId="headlines"
@@ -39,5 +50,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         );
       }}
     />
+    </div>
   );
 }

@@ -34,7 +34,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             <Chip on={cat === null} onClick={() => setCat(null)}>All</Chip>
             {CATEGORIES.map((c) => <Chip key={c.id} on={cat === c.id} onClick={() => setCat(cat === c.id ? null : c.id)}>{c.label}</Chip>)}
           </div>
-          <DealSources module={module} run={run} busy={busy} version={rows} />
+          <DealSources module={module} busy={busy} version={rows} />
           <DealExtras run={run} busy={busy} version={rows} />
         </>
       )}

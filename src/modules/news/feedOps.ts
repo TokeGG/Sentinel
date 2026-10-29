@@ -2,6 +2,7 @@
 import { getDb, logActivity } from "../../core/db";
 import type { SkillDef } from "../../core/module";
 import { daysArg, numericId } from "../../ui/rowId";
+import { patchState } from "./sources/store";
 
 export function feedOps(act: string, sources: "news_sources" | "deal_sources", items: "news_items" | "deal_offers"): SkillDef[] {
   return [
@@ -17,6 +18,8 @@ export function feedOps(act: string, sources: "news_sources" | "deal_sources", i
       run: async (args) => {
         const id = numericId(args?.id);
         const d = await getDb();
+        const url = (await d.select<{ url: string }[]>(`SELECT url FROM ${sources} WHERE id = $1`, [id]))[0]?.url;
+        if (url) await patchState(act, url, { removed: true }); // seeding never re-adds it
         await d.execute(`DELETE FROM ${items} WHERE source_id = $1`, [id]);
         await d.execute(`DELETE FROM ${sources} WHERE id = $1`, [id]);
         await logActivity(act, "remove_source", `removed feed #${id} and its items`, "ok");

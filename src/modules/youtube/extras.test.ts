@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { SUGGESTED, notFollowed } from "./suggested.ts";
 import { byGroup, continueList, groupMap, newUploads, parsePlayerMsg, playerUrl, rateMsg, total, type Progress } from "./extras.ts";
 
 test("playerUrl enables the JS API and resume point; rejects bad ids", () => {
@@ -36,4 +37,11 @@ test("groups filter by chip", () => {
   const xs = [{ channelId: "A" }, { channelId: "C" }, { channelId: null }];
   assert.equal(byGroup(xs, "grp:Tech", g).length, 1);
   assert.equal(byGroup(xs, "all", g).length, 3);
+});
+
+test("suggested channels: >= 25 unique @handles, followed ones hidden", () => {
+  assert.ok(SUGGESTED.length >= 25);
+  assert.equal(new Set(SUGGESTED.map((s) => s.handle.toLowerCase())).size, SUGGESTED.length);
+  for (const s of SUGGESTED) assert.match(s.handle, /^@[\w.-]+$/);
+  assert.equal(notFollowed(["@MKBHD", null]).length, SUGGESTED.length - 1);
 });
