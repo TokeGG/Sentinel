@@ -1,9 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { fetch } from "@tauri-apps/plugin-http";
-import { getDb, logActivity } from "../../core/db";
+import { logActivity } from "../../core/db";
 import { getCredential } from "../../core/credentials";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { clonedUrls, recordClone } from "./clones";
 import { githubSections } from "./panelLogic";
 
 const MODULE_ID = "hub.github";
@@ -56,7 +57,7 @@ async function fetchStarred() {
   return { ok: true, count: lastResults.length };
 }
 
-// "Install" = clone to a folder you pick. Never executed automatically —
+// "Install" = clone into a folder you pick (git creates <folder>/<repo>). Never executed automatically —
 // see the plan doc's GitHub Discovery section for why that line is firm.
 async function cloneRepo(args?: Record<string, unknown>) {
   const url = String(args?.url ?? "");
@@ -66,8 +67,7 @@ async function cloneRepo(args?: Record<string, unknown>) {
   if (!dir || Array.isArray(dir)) return { ok: false, cancelled: true };
 
   const destDir = await invoke<string>("clone_repo", { url, destDir: dir });
-  const d = await getDb();
-  await d.execute("INSERT INTO cloned_repos (repo, dest_dir) VALUES ($1, $2)", [url, destDir]);
+  await recordClone(url, destDir);
   await logActivity("github", "clone_repo", url, `cloned to ${destDir}`);
   return { ok: true, destDir };
 }
@@ -78,8 +78,7 @@ async function cloneRepo(args?: Record<string, unknown>) {
 async function loadRows(): Promise<Record<string, unknown>[]> {
   let cloned = new Set<string>();
   try {
-    const d = await getDb();
-    cloned = new Set((await d.select<{ repo: string }[]>("SELECT repo FROM cloned_repos")).map((r) => r.repo));
+    cloned = await clonedUrls();
   } catch {
     // the list still works without the "cloned" marker
   }

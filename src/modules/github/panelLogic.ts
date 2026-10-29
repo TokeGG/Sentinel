@@ -8,6 +8,7 @@ export const githubSections = [
   { id: "credentials", label: "GitHub token" },
   { id: "tabs", label: "Trending / Starred tabs" },
   { id: "repos", label: "Repositories" },
+  { id: "cloned", label: "Cloned repos" },
   { id: "actions", label: "Fetch repos" },
 ];
 

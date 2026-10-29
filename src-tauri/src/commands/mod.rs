@@ -1,6 +1,7 @@
 pub mod system;
 pub mod network;
 pub mod repo;
+pub mod cloned;
 pub mod oauth;
 pub mod mail;
 pub mod mail_fetch;
@@ -23,6 +24,7 @@ pub mod mcp;
 pub use system::*;
 pub use network::*;
 pub use repo::*;
+pub use cloned::{delete_cloned_dir, open_cloned, project_info};
 pub use oauth::*;
 pub use mail::*;
 pub use mail_fetch::*;

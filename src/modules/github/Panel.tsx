@@ -5,6 +5,7 @@ import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { EmptyState, ErrorLine, Tabs } from "../../ui/kit";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
+import { ClonedSection } from "./ClonedSection";
 import { TokenField } from "./TokenField";
 import { activeTab, repoView, rowsForTab, skillForTab, tabForSkill, type Tab } from "./panelLogic";
 
@@ -88,6 +89,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           ) : (
             <EmptyState title={tab === "starred" ? "No starred repos loaded" : "No repositories yet"} hint={hint} />
           )}
+        </Section>
+        <Section id="cloned">
+          <ClonedSection refresh={busy} />
         </Section>
         <Section id="actions">
           <div className="ui-controls">

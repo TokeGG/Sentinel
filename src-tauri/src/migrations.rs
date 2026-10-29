@@ -143,6 +143,7 @@ pub fn all() -> Vec<Migration> {
         Migration { version: 26, description: "social post meta", sql: include_str!("../migrations/26_social_post_meta.sql"), kind: MigrationKind::Up },
         Migration { version: 27, description: "skills and mcp servers", sql: include_str!("../migrations/27_skills_mcp.sql"), kind: MigrationKind::Up },
         Migration { version: 28, description: "browser bot notes, episodes, brain", sql: include_str!("../migrations/28_bot.sql"), kind: MigrationKind::Up },
+        Migration { version: 29, description: "cloned projects", sql: include_str!("../migrations/29_cloned_projects.sql"), kind: MigrationKind::Up },
     ]
 }
 
@@ -153,7 +154,7 @@ mod tests {
     #[test]
     fn versions_are_ascending_and_match_position() {
         let m = all();
-        assert_eq!(m.len(), 28);
+        assert_eq!(m.len(), 29);
         for (i, mig) in m.iter().enumerate() {
             assert_eq!(mig.version, (i as i64) + 1);
         }

@@ -74,8 +74,8 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..27 strictly ascending
-                        (26 = social_post_meta, 27 = skills/mcp, 28 = bot; 17-28 idempotent `IF NOT EXISTS`); loaded by
+  migrations/NN_<module>.sql — numbered SQL, versions 1..29 strictly ascending
+                        (26 = social_post_meta, 27 = skills/mcp, 28 = bot, 29 = cloned_projects; 17-29 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
@@ -86,7 +86,7 @@ src-tauri/
                         (nav allow/deny), script.rs + driver.js (injected `window.__sb`)
   src/commands/       — Rust commands by area (backup, credentials, files,
                         mail + mail_fetch/body/ops/send, mcp + mcp_proc/rpc (stdio MCP client), network,
-                        oauth, pentest, repo, skills_fs (app-owned skills dir), system)
+                        oauth, pentest, repo (async git clone, timeout+kill), cloned (project_info/open_cloned/delete_cloned_dir, git-clone-only guard), skills_fs (app-owned skills dir), system)
   src/panels/         — panel manager: every panel = a content webview + a
                         ~28px chrome webview (move/resize/close/focus),
                         moved/raised together; manager, restore, webview, geometry,
@@ -192,7 +192,7 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-674 TS tests + 4 size-guard tests + 74 Rust tests as of this commit. Run the
+753 TS tests + 4 size-guard tests + 102 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
@@ -240,6 +240,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Email (`modules/email`): custom panel, multi-account IMAP/SMTP, passwords only in keychain (`pw:<accountId>`), cache in SQLite (`mail_*`, migration 24), HTML sanitized by `sanitize.ts` into a `sandbox=""` iframe. No OAuth (Gmail/iCloud need app passwords). No attachment download, drafts saving or threading. The Rust mail code (mail*.rs, `mail-parser` crate) compiles and its pure parts are unit-tested, but has never run against a live mail server.
 - Social per-post actions (like / boost-repost / inline reply; optional `like`/`unlike`/`share`/`unshare`/`reply` on `SocialConnector`, absent = button hidden; request builders in `social/connectors/actions.ts`, optimistic UI in `useActions.ts`, ids/state in `social_post_meta`): Bluesky, Mastodon (scopes now incl. write:favourites) and Reddit (scopes now incl. vote submit; no repost). Older sign-ins must "Connect" again. X stays a stub. Never run against the live APIs.
 - Browser bot (`modules/bot`): only the pure kernel, agent loop, prompt/parser, notes retrieval and store exist (tested with fakes). No `BrowserDriver` (Rust), no manifest/UI, no URL-note fetching, nothing wires `store.ts` or `toolGate` yet; never run against a real Ollama.
+- GitHub "Cloned repos" section (`github/ClonedSection.tsx`, `clones.ts`, `clonedLogic.ts`; table `cloned_projects`, migration 29; old `cloned_repos` only read for the marker). Open folder = Explorer, VS Code via `code.cmd` on PATH; Delete files needs a path preview + confirm. Rust clone/open/delete are unit-tested for pure parts only; never run against real git/Explorer on Windows.
 - Discord panel is built (modules/discord) but media permissions, the screen-share
   picker/Go Live and the unread moon are unverified on Windows; checklist in
   `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.
