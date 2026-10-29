@@ -90,3 +90,8 @@
 .ui-launch-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85em; }
 .ui-reveal.open { white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; }
 .ui-note { display: block; }
+.ui-del { color: var(--text-dim); }
+.ui-del:hover:not(:disabled) { color: var(--bad); border-color: var(--bad); background: var(--bad-soft); }
+.ui-confirm { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; color: var(--bad); }
+.ui-btn.ui-danger { background: var(--bad); border-color: var(--bad); color: var(--on-accent); }
+.ui-btn.ui-sm { padding: 1px 8px; font-size: 0.8em; }

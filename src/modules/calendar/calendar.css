@@ -33,3 +33,18 @@
 .cal-text small { display: block; font-size: 0.75em; color: var(--text-dim); }
 .cal-item.overdue .cal-text { white-space: normal; }
 .cal-src { flex: none; font-size: 0.7em; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-text); background: var(--accent-soft); border-radius: 999px; padding: 1px 8px; }
+
+/* Add / edit form, own-item controls, tasks, ICS tools. */
+.cal-form, .cal-ics { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.cal-fields { display: flex; flex-wrap: wrap; gap: var(--gap); align-items: center; }
+.cal-fields input:not([type="checkbox"]), .cal-paste { background: var(--base); color: var(--text); border: 1px solid var(--line); border-radius: calc(var(--radius) - 2px); padding: calc(5px * var(--density)); font: inherit; min-width: 0; }
+.cal-fields .cal-notes { flex: 1 1 160px; }
+.cal-paste { width: 100%; resize: vertical; font-family: var(--font-mono); font-size: 0.8em; box-sizing: border-box; }
+.cal-more { align-self: flex-start; }
+.cal-acts { display: inline-flex; gap: 4px; flex: none; }
+.cal-check { accent-color: var(--accent); flex: none; width: 44px; }
+.cal-item.done .cal-text { text-decoration: line-through; color: var(--text-faint); }
+.cal-item.sub { margin-left: 22px; }
+.cal-task { list-style: none; display: flex; flex-direction: column; gap: 3px; }
+.cal-sub { margin-left: 22px; }
+.cal-prev { margin: 4px 0 8px; padding-left: 18px; font-size: 0.85em; }

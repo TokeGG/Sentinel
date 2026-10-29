@@ -1,6 +1,7 @@
 import type { ModuleManifest } from "../../core/module";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { EmptyState, ErrorLine } from "../../ui/kit";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useOption } from "../../ui/useOption";
@@ -41,6 +42,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                     <div className="wx-temp">{v.temp}</div>
                     <p className="wx-cond">{v.condition}{v.severe ? " ⚠" : ""}</p>
                     {v.range && <span className="wx-range">{v.range}</span>}
+                    <ConfirmButton label="Remove" className="ui-btn ui-sm" disabled={busy} onConfirm={() => void run("remove_location", { id: r.id })} />
                   </article>
                 );
               })}

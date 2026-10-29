@@ -84,6 +84,15 @@ async function addSymbol(args?: Record<string, unknown>) {
   return { ok: true };
 }
 
+async function removeSymbol(args?: Record<string, unknown>) {
+  const id = Number(args?.id);
+  if (!Number.isFinite(id)) throw new Error("symbol id missing");
+  const d = await getDb();
+  await d.execute("DELETE FROM watchlist WHERE id = $1", [id]);
+  await logActivity("finance", "remove_symbol", `removed watchlist #${id}`, "ok");
+  return { ok: true };
+}
+
 async function fetchStockQuote(symbol: string): Promise<number | null> {
   const res = await fetch(`${STOOQ_URL}?s=${encodeURIComponent(symbol)}.us&f=sd2t2ohlcv&h&e=csv`);
   const csv = await res.text();
@@ -171,6 +180,7 @@ export const financeModule: ModuleManifest = {
   skills: [
     { name: "add_symbol", run: addSymbol },
     { name: "refresh_quotes", run: refreshQuotes },
+    { name: "remove_symbol", run: removeSymbol },
     { name: "sync_congress_trades", run: syncCongressTrades },
   ],
   load: loadRows,

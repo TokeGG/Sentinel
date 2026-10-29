@@ -2,6 +2,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { parseFeed } from "./rss";
+import { feedOps } from "./feedOps";
 import { feedSections } from "./panelLogic";
 
 interface NewsItem extends Record<string, unknown> {
@@ -86,6 +87,7 @@ export const newsModule: ModuleManifest = {
   skills: [
     { name: "add_source", run: addSource },
     { name: "fetch_feeds", run: fetchFeeds },
+    ...feedOps("news", "news_sources", "news_items"),
   ],
   load: loadItems,
   quickAdd: { skill: "add_source", argName: "url", placeholder: "Add an RSS/Atom feed URL…" },

@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Chip, EmptyState, ErrorLine } from "../../ui/kit";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
@@ -51,7 +52,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                     <i className="hn-dot" title={st} />
                     <span className="hn-name">{d.name}{d.isNew && <em className="hn-new">NEW</em>}</span>
                     <span className="hn-ip">{String(d.ip)}</span>
-                    <span className="hn-mac">{String(d.mac)}</span>
+                    <span className="hn-mac">{String(d.mac)} <ConfirmButton label="Forget" className="ui-btn ui-sm" disabled={busy} title="Remove from the saved list (comes back if a scan sees it again)" onConfirm={() => void run("forget_device", { mac: d.mac })} /></span>
                   </li>
                 );
               })}

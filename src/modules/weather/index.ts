@@ -2,6 +2,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { weatherSections } from "./panelLogic";
+import { numericId } from "../../ui/rowId";
 
 // Open-Meteo: free, no API key, no account. Geocoding + forecast + alerts
 // all from the same provider — this is why Weather has zero setup cost.
@@ -32,6 +33,14 @@ async function addLocation(args?: Record<string, unknown>) {
     hit.latitude,
     hit.longitude,
   ]);
+  return { ok: true };
+}
+
+async function removeLocation(args?: Record<string, unknown>) {
+  const id = numericId(args?.id);
+  const d = await getDb();
+  await d.execute("DELETE FROM weather_locations WHERE id = $1", [id]);
+  cache = cache.filter((r) => r.id !== `loc-${id}`);
   return { ok: true };
 }
 
@@ -98,6 +107,7 @@ export const weatherModule: ModuleManifest = {
   skills: [
     { name: "add_location", run: addLocation },
     { name: "refresh", run: refreshWeather },
+    { name: "remove_location", run: removeLocation },
   ],
   load: loadRows,
   quickAdd: { skill: "add_location", argName: "place", placeholder: "Add a city or place…" },

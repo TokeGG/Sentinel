@@ -1,0 +1,27 @@
+/* Congress: bill cards with a status timeline, votes, members. Tokens only. */
+.cg-root { container-type: inline-size; display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.cg-root .ui-head .ui-count { background: var(--accent-soft); color: var(--accent-text); border-radius: 999px; padding: 1px 9px; }
+.cg-filters { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cg-list, .cg-members { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--gap); }
+.cg-card { display: flex; flex-direction: column; gap: 6px; padding: var(--pad); background: var(--surface-2); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--radius); min-width: 0; }
+.cg-card.updated { border-left-color: var(--warn); background: color-mix(in srgb, var(--warn-soft) 40%, var(--surface-2)); }
+.cg-top, .cg-foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); justify-content: space-between; }
+.cg-top .ui-meta:last-child { margin-left: auto; }
+.cg-num { font: 700 0.8em var(--font-mono); color: var(--accent-text); }
+.cg-status { font-size: 0.75em; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); }
+.cg-status.ok { background: var(--ok-soft, var(--accent-soft)); }
+.cg-status.no { color: var(--bad); background: var(--bad-soft); }
+.cg-new { font-size: 0.7em; font-weight: 700; letter-spacing: 0.06em; color: var(--warn); }
+.cg-title { white-space: normal; text-align: left; line-height: 1.35; }
+.cg-steps { list-style: none; margin: 0; padding: 0; display: flex; gap: 3px; }
+.cg-steps li { flex: 1; text-align: center; font-size: 0.65em; padding: 3px 2px; border-radius: var(--r-sm); background: var(--base); color: var(--text-faint); border-bottom: 2px solid var(--line); }
+.cg-steps li.done { color: var(--text-dim); border-bottom-color: var(--accent-line); }
+.cg-steps li.current { color: var(--accent-text); background: var(--accent-soft); border-bottom-color: var(--accent); font-weight: 700; }
+.cg-steps li.failed { color: var(--bad); background: var(--bad-soft); border-bottom-color: var(--bad); font-weight: 700; }
+.cg-hist { list-style: none; margin: 0; padding: 0; font-size: 0.8em; color: var(--text-dim); }
+.cg-acts { display: inline-flex; gap: 6px; margin-left: auto; }
+.cg-member { display: grid; grid-template-columns: 24px 1fr auto auto; align-items: center; gap: var(--gap); padding: 4px var(--pad); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.cg-party { text-align: center; font: 700 0.75em var(--font-mono); border-radius: 4px; padding: 1px 0; background: var(--base); }
+.cg-party.p-D { color: #6ab0ff; }
+.cg-party.p-R { color: #ff7b7b; }
+.cg-party.p-I { color: #c8c8c8; }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ModuleManifest } from "../../core/module";
 import { EmptyState, ErrorLine, Tile } from "../../ui/kit";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import "./backup.css";
@@ -105,6 +106,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                     <button type="button" className="ui-btn sm" disabled={busy} onClick={() => setPending({ dir: s.path, from: "snapshots" })}>
                       Restore…
                     </button>
+                    <ConfirmButton label="Delete" className="ui-btn sm" disabled={busy} title="Deletes this snapshot's files" onConfirm={() => void run("delete_backup", { dir: s.path })} />
                   </li>
                 ))}
               </ol>

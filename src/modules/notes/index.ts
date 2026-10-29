@@ -31,6 +31,15 @@ async function fileNote(args?: Record<string, unknown>) {
   return { ok: true };
 }
 
+async function deleteNote(args?: Record<string, unknown>) {
+  const id = Number(args?.id);
+  if (!Number.isFinite(id)) throw new Error("note id missing");
+  const d = await getDb();
+  await d.execute("DELETE FROM notes WHERE id = $1", [id]);
+  await logActivity("notes", "delete_note", `deleted note #${id}`, "ok");
+  return { ok: true };
+}
+
 async function loadNotes(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   return await d.select<Note[]>(
@@ -63,6 +72,7 @@ export const notesModule: ModuleManifest = {
   skills: [
     { name: "capture_note", run: captureNote },
     { name: "file_note", run: fileNote },
+    { name: "delete_note", run: deleteNote },
   ],
   load: loadNotes,
   quickAdd: { skill: "capture_note", argName: "body", placeholder: "Capture a note…" },

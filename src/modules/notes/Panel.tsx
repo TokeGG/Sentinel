@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ModuleManifest } from "../../core/module";
 import { Chip, EmptyState, ErrorLine, Row } from "../../ui/kit";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections } from "../../ui/useCustomize";
 import { useModule, type ModuleState } from "../../ui/useModule";
@@ -30,6 +31,7 @@ function NoteTile({ note, busy, run }: { note: Record<string, unknown>; busy: bo
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && file(text)}
         />
+        <ConfirmButton label="Delete" disabled={busy} onConfirm={() => void run("delete_note", { id: note.id })} />
       </div>
     </article>
   );
@@ -61,7 +63,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           <div className="ui-chips"><Chip on>{filed.length} filed</Chip></div>
           <div className="nt-filed">
             {filed.map((n) => (
-              <Row key={String(n.id)} end={<span className="nt-tag">{String(n.filed_to)}</span>}>
+              <Row key={String(n.id)} end={<><span className="nt-tag">{String(n.filed_to)}</span><ConfirmButton label="Delete" className="ui-btn ui-sm" disabled={busy} onConfirm={() => void run("delete_note", { id: n.id })} /></>}>
                 <span className="ui-link">{String(n.body)}</span>
               </Row>
             ))}

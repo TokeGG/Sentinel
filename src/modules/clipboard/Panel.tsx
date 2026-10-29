@@ -3,6 +3,7 @@ import type { ModuleManifest } from "../../core/module";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { EmptyState, ErrorLine, Tile, ago } from "../../ui/kit";
 import { utcDate } from "../../ui/kit/format";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
@@ -41,6 +42,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         Check now
       </button>
       {checked && <span className="ui-meta" role="status">{checked}</span>}
+      {history.length > 0 && <ConfirmButton label="Clear all" className="ui-btn sm" disabled={busy} onConfirm={() => void run("clear_clips")} />}
     </div>
   );
   return (
@@ -55,10 +57,13 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="launcher">
           <div className="clip-launch">
             {launch.map((l) => (
-              <button key={l.id} type="button" className="clip-tile" disabled={busy} onClick={() => void run("launch_item", { path: l.path })}>
-                <span className="clip-glyph" aria-hidden="true">{l.glyph}</span>
-                <span className="clip-name">{l.label}</span>
-              </button>
+              <span key={l.id} className="clip-tilewrap">
+                <button type="button" className="clip-tile" disabled={busy} onClick={() => void run("launch_item", { path: l.path })}>
+                  <span className="clip-glyph" aria-hidden="true">{l.glyph}</span>
+                  <span className="clip-name">{l.label}</span>
+                </button>
+                <ConfirmButton label="Remove" className="ui-btn ui-sm" disabled={busy} onConfirm={() => void run("remove_launch", { id: l.id })} />
+              </span>
             ))}
             {launch.length === 0 && <EmptyState title="No shortcuts yet" hint={'Add one as "Label|C:\\path\\to\\app.exe".'} />}
           </div>
@@ -95,6 +100,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                     >
                       {pins.has(c.id) ? "★" : "☆"}
                     </button>
+                    <ConfirmButton label="Delete" className="ui-btn ui-sm" disabled={busy} onConfirm={() => void run("delete_clip", { id: c.id })} />
                     {open.has(c.id) && <span className="clip-note">Shows at most the first 140 characters stored.</span>}
                   </li>
                 ))}

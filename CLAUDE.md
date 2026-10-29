@@ -74,7 +74,7 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..30 strictly ascending
+  migrations/NN_<module>.sql — numbered SQL, versions 1..32 strictly ascending (31 = congress, 32 = calendar_items)
                         (26 = social_post_meta, 27 = skills/mcp, 28 = bot, 29 = cloned_projects, 30 = youtube_seen/later/signal; 17-30 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
@@ -138,7 +138,7 @@ right move before writing bespoke UI**:
 reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
-**Custom panels** exist for bot, notes, news, deals, pccare, weather, homenet,
+**Custom panels** exist for bot, congress, notes, news, deals, pccare, weather, homenet,
 github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email, skills, pentest. To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
@@ -192,7 +192,7 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-783 TS tests + 4 size-guard tests + 102 Rust tests as of this commit. Run the
+864 TS tests + 4 size-guard tests + 106 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
@@ -255,10 +255,12 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Discord panel is built (modules/discord) but media permissions, the screen-share
   picker/Go Live and the unread moon are unverified on Windows; checklist in
   `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.
-- Chat (`modules/chat`, `hub.chat`): sockets run in the panel webview only while it is open. Twitch read (anon IRC) + send (pasted OAuth token in keychain); Kick read via Pusher (channel lookup may be Cloudflare-blocked), read-only; destiny.gg read-only; any other site (incl. iCanHazChat) = `embed` iframe / "Open as its own panel". 7TV/BTTV/FFZ via `emoteSets.ts`. NONE of the live protocols/endpoints have been run against the real sites (sandbox had no outbound access). Add a site = one file in `chat/connectors/` + list it in `connectors/index.ts` (+ parser in `rooms.ts`).
-- x, facebook, instagram: web panels (core/webSite.ts), real site + persistent login; no API (no feed merge, like or comment from our UI). Unverified on Windows.
+- Chat (`modules/chat`, `hub.chat`): sockets run in the panel webview only while it is open. Twitch read (anon IRC) + send (pasted OAuth token in keychain); Kick read via Pusher (channel lookup may be Cloudflare-blocked), read-only; destiny.gg read-only; any other site (incl. iCanHazChat) = `embed` iframe / "Open as its own panel". 7TV/BTTV/FFZ via `emoteSets.ts`. NONE of the live protocols/endpoints have been run against the real sites (sandbox had no outbound access). Owner reported Kick and d.gg not connecting on Windows: each room now has a copyable Connection log (`connLog.ts`), a status dot, Retry, and a one-click embed fallback (`embedFallback`); Kick tries 3 endpoints with browser headers (`kickLookup.ts`) or a manual chatroom id (target `slug@id`); causes (Cloudflare 403, d.gg Origin check) remain unconfirmed until the log is read from a real run. Add a site = one file in `chat/connectors/` + list it in `connectors/index.ts` (+ parser in `rooms.ts`).
+- Social tabs `Feed | X | Facebook | Instagram` (`modules/social/embedSites.ts`, Rust `panels/embed.rs`): the three sites are embedded child webviews `embed-<panel>-<site>` (own profile, web-panel guards, NO IPC, only the active one shown; tab bar = `EMBED_TAB_H` shared TS/Rust). They replace the old x/facebook/instagram planets (saved layouts for them are skipped on restore). No API (no feed merge, like or comment from our UI). Embed alignment under the tab bar, DPI offsets, raise/game-mode recreation and z-order vs the grip are unverified on Windows.
 - Skills & MCP hub (`modules/skills`, `hub.skills`): GitHub install (pinned SHA, confirm screen, files under app data `skills/<skill|mcp>/<id>`), `registry.ts` (`listSkills`/`getSkill`), `mcp.ts` (`listMcpTools`/`callMcpTool`, Rust stdio client; flagged pentest/scan/exploit tools need an in-scope engagement target via `pentest/api` `previewGate`; no Rust-side re-check), Ollama model pick (`local_model`). MCP needs the user's own Node/Python (npx/uvx); servers start only when flipped on, stop on disable/exit/game mode. Bundled skills: `resources/skills/*/SKILL.md`. NEVER run against real GitHub or a real MCP server (only unit tests and a fake stdio server); GUI unverified.
 - Browser bot (`modules/bot`, `hub.bot`; Rust `src-tauri/src/bot/`): runs only on the panel Run button; local Ollama model only; closes on game mode, app exit and panel close. The Rust driver is compile-checked only: the WebView2 `document.title` result channel, hidden-webview behaviour (timer throttling), popups and downloads are unverified on Windows. No GPU or local-model unload yet. Tool (MCP) actions use the existing gate and the bot has no engagement, so pentest-flagged tools are always refused.
+- Congress (`modules/congress`, `hub.congress`): Sync button (and opt-in schedule) reads the GovTrack API v2 (bills, votes, current roles; no key). Parsers are tested only against hand-written fixtures; NEVER run against the live GovTrack API, so field names/limits are unverified. Follows + "UPDATED" moon (counts only) are local (`congress_follows`). Finance's own congress trades still use the separate STOCK Act S3 datasets (unverified, may be offline).
+- Calendar (`modules/calendar`): own events/tasks in `calendar_items` (migration 32), natural-language quick add (`quickParse.ts`), repeat daily/weekly/monthly (`recur.ts`), ICS import/export (`ics.ts`: VEVENT only, TZID read as local, no VTODO). Never run in a real window. Delete/remove with a two-step `ui/ConfirmButton` exists in notes, finance, news, deals, homenet, clipboard, filesearch, weather, backup (Rust `delete_backup`), github (dismiss); no undo toast.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
   price); Home Network "new" means new this session; Calendar "overdue" means
   unfiled notes.

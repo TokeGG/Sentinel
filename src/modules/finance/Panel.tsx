@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { EmptyState, ErrorLine, Spark, Table, Tabs } from "../../ui/kit";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
@@ -61,6 +62,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                         {caption && <small>{caption}</small>}
                         {r.asset === "crypto" && <span className="fin-kind">crypto</span>}
                       </div>
+                      <ConfirmButton label="Remove" className="ui-btn ui-sm" disabled={busy} onConfirm={() => void run("remove_symbol", { id: r.dbId })} />
                     </li>
                   );
                 })}

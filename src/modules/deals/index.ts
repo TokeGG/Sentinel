@@ -1,6 +1,7 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { feedOps } from "../news/feedOps";
 import { feedSections } from "../news/panelLogic";
 import { parseFeed } from "../news/rss"; // deals sources are RSS/Atom too — same parser, no duplication
 
@@ -85,6 +86,7 @@ export const dealsModule: ModuleManifest = {
   skills: [
     { name: "check_source", run: addSource },
     { name: "fetch_deals", run: fetchDeals },
+    ...feedOps("deals", "deal_sources", "deal_offers"),
   ],
   load: loadItems,
   quickAdd: { skill: "check_source", argName: "url", placeholder: "Add a deal feed URL…" },

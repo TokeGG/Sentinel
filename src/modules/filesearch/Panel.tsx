@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
 import { EmptyState, ErrorLine } from "../../ui/kit";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useDebounced } from "../../ui/useDebounced";
 import { useModule } from "../../ui/useModule";
@@ -71,11 +72,14 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="roots">
           <div className="fs-chips" aria-label="Search folders">
             {roots.map((r) => (
-              <span key={r} className="fs-chip" title={r}>{shortPath(r, 32)}</span>
+              <span key={r} className="fs-chip" title={r}>
+                {shortPath(r, 32)}{" "}
+                <ConfirmButton label="×" title="Stop searching this folder (files are untouched)" className="ui-btn ui-sm" disabled={busy} onConfirm={() => { searched.current = ""; void run("remove_root", { path: r }); }} />
+              </span>
             ))}
             {addFolder}
           </div>
-          <p className="fs-hint">Folders can be added but not removed from this panel.</p>
+          <p className="fs-hint">× stops searching a folder; your files are never touched.</p>
         </Section>
         <Section id="results">
           {boxInResults && searchBox}

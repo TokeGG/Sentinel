@@ -1,5 +1,7 @@
 import { getDb } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { addItem, deleteItem, exportIcs, importEvents, listItems, toggleDone, updateItem } from "./items";
+import { ownRows } from "./ownRows";
 import { calendarSections, overdueCount } from "./panelLogic";
 
 // Not a new data source — an aggregated view over dated rows other modules
@@ -57,7 +59,10 @@ async function loadAgenda(): Promise<Record<string, unknown>[]> {
     });
   }
 
-  rows.sort((a, b) => (a.due < b.due ? 1 : -1)); // newest/soonest first
+  // The calendar's own events and tasks (calendar_items), repeating ones expanded near today.
+  rows.push(...(ownRows(await listItems(), new Date()) as typeof rows));
+
+  rows.sort((a, b) => ((a.due ?? "") < (b.due ?? "") ? 1 : -1)); // newest/soonest first
   // title/label keep the generic list working; source/text/due/task feed the panel.
   return rows.map((r) => ({ ...r, label: r.due }));
 }
@@ -69,13 +74,20 @@ export const calendarModule: ModuleManifest = {
   ring: "daily",
   icon: "calendar",
   description:
-    "Aggregates dated items already tracked by other modules — not its own data source. Grows as more modules add dated rows.",
+    "Your own events and tasks (add, repeat, complete, ICS import/export) plus dated items other modules already track.",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: { sections: calendarSections },
   // Overdue items (unfiled notes dated before today): local rows only, no network.
   badge: async () => overdueCount(await loadAgenda(), new Date()),
-  skills: [],
+  skills: [
+    { name: "add_item", run: addItem },
+    { name: "update_item", run: updateItem },
+    { name: "toggle_done", run: toggleDone },
+    { name: "delete_item", run: deleteItem },
+    { name: "import_ics", run: importEvents },
+    { name: "export_ics", run: exportIcs },
+  ],
   load: loadAgenda,
 };
 

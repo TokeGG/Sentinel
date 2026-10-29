@@ -4,7 +4,7 @@ import { repoView } from "./panelLogic";
 
 type Row = Record<string, unknown>;
 
-export function RepoCard({ r, label, busy, onClone }: { r: Row; label: string; busy: boolean; onClone(): void }) {
+export function RepoCard({ r, label, busy, onClone, onDismiss }: { r: Row; label: string; busy: boolean; onClone(): void; onDismiss(): void }) {
   const v = repoView(r);
   const [owner, repo] = v.name.includes("/") ? v.name.split("/", 2) : ["", v.name];
   const name = (
@@ -36,6 +36,7 @@ export function RepoCard({ r, label, busy, onClone }: { r: Row; label: string; b
         <button type="button" className="ui-btn sm" disabled={busy} onClick={onClone}>
           {v.cloned ? "Clone again…" : label}
         </button>
+        <button type="button" className="ui-btn sm" disabled={busy} title="Hide from this list (nothing is deleted)" onClick={onDismiss}>Dismiss</button>
       </div>
     </li>
   );

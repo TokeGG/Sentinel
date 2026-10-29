@@ -18,7 +18,7 @@
 .clip-controls .schedule-toggle input { accent-color: var(--accent); }
 
 .clip-list { list-style: none; margin: var(--gap) 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
-.clip-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--gap); padding: 4px 4px 4px var(--pad); background: var(--surface); border: 1px solid transparent; border-left: 2px solid var(--line); border-radius: var(--r-sm); }
+.clip-item { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: var(--gap); padding: 4px 4px 4px var(--pad); background: var(--surface); border: 1px solid transparent; border-left: 2px solid var(--line); border-radius: var(--r-sm); }
 .clip-item:hover { background: var(--accent-soft); }
 .clip-item.pinned { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface)); }
 .clip-text { min-width: 0; background: none; border: 0; padding: 4px 0; color: var(--text); font: 0.88em var(--font-mono); text-align: left; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -30,3 +30,4 @@
 .clip-pin:hover { background: var(--hover); color: var(--accent-text); }
 .clip-pin:focus-visible { outline: none; box-shadow: var(--focus); }
 .clip-note { grid-column: 1 / -1; font-size: 0.75em; color: var(--text-dim); }
+.clip-tilewrap { display: flex; flex-direction: column; gap: 4px; align-items: stretch; min-width: 0; }

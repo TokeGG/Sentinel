@@ -72,6 +72,13 @@ async function cloneRepo(args?: Record<string, unknown>) {
   return { ok: true, destDir };
 }
 
+// Drops a repo from the current results list (they are not stored; the list returns on the next fetch).
+async function dismissRepo(args?: Record<string, unknown>) {
+  const name = String(args?.name ?? "");
+  lastResults = lastResults.filter((r) => r.full_name !== name);
+  return { ok: true };
+}
+
 // Extra fields beyond id/title/link/label (kept for the generic list) feed the
 // custom panel: name, stars, language and description come from the same API
 // response; `cloned` is a read-only lookup in cloned_repos (repo = html_url).
@@ -111,6 +118,7 @@ export const githubModule: ModuleManifest = {
     { name: "fetch_trending", run: fetchTrending },
     { name: "fetch_starred", run: fetchStarred },
     { name: "clone_repo", run: cloneRepo },
+    { name: "dismiss_repo", run: dismissRepo },
   ],
   load: loadRows,
   actions: [

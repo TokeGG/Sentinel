@@ -6,9 +6,12 @@ import { ago, utcDate } from "../../ui/kit/format.ts";
 type Row = Record<string, unknown>;
 
 export const calendarSections = [
+  { id: "add", label: "Add event or task" },
   { id: "overdue", label: "Overdue / unfiled" },
   { id: "today", label: "Today" },
   { id: "week", label: "This week" },
+  { id: "tasks", label: "Tasks" },
+  { id: "ics", label: "Import / export (.ics)" },
 ];
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -106,6 +109,7 @@ export function itemTitle(r: Row): string {
 
 /** Local "HH:MM" of the row's date; "" if unknown. */
 export function timeText(r: Row): string {
+  if (r.allDay === true) return "all day";
   const d = rowDate(r);
   return d ? `${p2(d.getHours())}:${p2(d.getMinutes())}` : "";
 }
@@ -113,6 +117,7 @@ export function timeText(r: Row): string {
 /** Honest wording for an overdue (unfiled) item: when it was created, not a missed deadline. */
 export function overdueText(r: Row, now: Date): string {
   const d = rowDate(r);
+  if (r.kind === "task" && d) return `task due ${dayLabel(d, now)}`;
   const a = d ? ago(d, now) : "";
   return a ? `unfiled · created ${a === "just now" ? a : `${a} ago`}` : "unfiled";
 }

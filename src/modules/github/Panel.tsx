@@ -51,7 +51,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           {shown.length ? (
             <ul className="gh-grid">
               {shown.map((r) => (
-                <RepoCard key={String(r.id)} r={r} label={ra.label} busy={busy} onClone={() => void run(ra.skill, { [ra.argName]: r[ra.fromField] })} />
+                <RepoCard key={String(r.id)} r={r} label={ra.label} busy={busy} onClone={() => void run(ra.skill, { [ra.argName]: r[ra.fromField] })} onDismiss={() => void run("dismiss_repo", { name: r.name })} />
               ))}
             </ul>
           ) : (

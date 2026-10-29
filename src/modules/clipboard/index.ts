@@ -3,6 +3,7 @@ import { openPath } from "@tauri-apps/plugin-opener";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { clipboardSections } from "./panelLogic";
+import { numericId } from "../../ui/rowId";
 
 interface ClipRow extends Record<string, unknown> {
   id: number;
@@ -54,6 +55,25 @@ async function launchItem(args?: Record<string, unknown>) {
   return { ok: true };
 }
 
+async function deleteClip(args?: Record<string, unknown>) {
+  const d = await getDb();
+  await d.execute("DELETE FROM clipboard_history WHERE id = $1", [numericId(args?.id)]);
+  return { ok: true };
+}
+
+async function clearClips() {
+  const d = await getDb();
+  await d.execute("DELETE FROM clipboard_history");
+  await logActivity("clipboard", "clear_clips", "cleared clipboard history", "ok");
+  return { ok: true };
+}
+
+async function removeLaunch(args?: Record<string, unknown>) {
+  const d = await getDb();
+  await d.execute("DELETE FROM quick_launch_items WHERE id = $1", [numericId(args?.id)]);
+  return { ok: true };
+}
+
 async function loadRows(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   const launches = await d.select<LaunchItem[]>(
@@ -83,6 +103,9 @@ export const clipboardModule: ModuleManifest = {
     { name: "check_clipboard", run: checkClipboard },
     { name: "add_launch_item", run: addLaunchItem },
     { name: "launch_item", run: launchItem },
+    { name: "delete_clip", run: deleteClip },
+    { name: "clear_clips", run: clearClips },
+    { name: "remove_launch", run: removeLaunch },
   ],
   load: loadRows,
   quickAdd: {

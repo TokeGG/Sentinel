@@ -29,6 +29,15 @@ async function restoreFrom(args?: Record<string, unknown>) {
   return { ok: true };
 }
 
+async function deleteBackup(args?: Record<string, unknown>) {
+  const dir = String(args?.dir ?? "");
+  if (!dir) throw new Error("snapshot folder missing");
+  await invoke("delete_backup", { backupDir: dir });
+  lastBackups = lastBackups.filter((b) => b.id !== dir);
+  await logActivity("backup", "delete_backup", dir, "deleted");
+  return { ok: true };
+}
+
 async function loadRows(): Promise<Record<string, unknown>[]> {
   return lastBackups;
 }
@@ -47,6 +56,7 @@ export const backupModule: ModuleManifest = {
   skills: [
     { name: "backup_now", run: backupNow },
     { name: "restore_from", run: restoreFrom },
+    { name: "delete_backup", run: deleteBackup },
   ],
   load: loadRows,
   actions: [

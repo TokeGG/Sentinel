@@ -7,6 +7,7 @@ import { Chip, EmptyState, ErrorLine } from "../../ui/kit";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule, type ModuleRow } from "../../ui/useModule";
+import { FeedManage } from "./FeedManage";
 import { filterBySource, sourcesOf } from "./panelLogic";
 import "./news.css";
 
@@ -58,6 +59,7 @@ export function FeedPanel({
             ))}
             <ScheduleToggle module={module} />
           </div>
+          <FeedManage module={module} busy={busy} run={run} version={rows} />
         </Section>
       </Sections>
     </div>

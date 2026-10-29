@@ -44,6 +44,15 @@ async function tagDevice(args?: Record<string, unknown>) {
   return { ok: true };
 }
 
+async function forgetDevice(args?: Record<string, unknown>) {
+  const mac = String(args?.mac ?? "");
+  if (!mac) throw new Error("device mac missing");
+  const d = await getDb();
+  await d.execute("DELETE FROM network_devices WHERE mac = $1", [mac]);
+  await logActivity("homenet", "forget_device", `forgot ${mac}`, "ok (reappears if the next scan sees it)");
+  return { ok: true };
+}
+
 async function loadDevices(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   const rows = await d.select<DeviceRow[]>(
@@ -74,6 +83,7 @@ export const homeNetModule: ModuleManifest = {
   skills: [
     { name: "scan_network", run: scanNetwork },
     { name: "tag_device", run: tagDevice },
+    { name: "forget_device", run: forgetDevice },
   ],
   load: loadDevices,
   actions: [{ label: "Scan now", skill: "scan_network" }],
