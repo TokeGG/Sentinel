@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { clampToScreen, tile, cascade, dragRect, resizeRect, type Rect } from "./layout.ts";
+import { clampToScreen, tile, cascade, dragRect, resizeRect, clientRect, type Rect } from "./layout.ts";
 
 const S: Rect = { x: 0, y: 0, w: 1000, h: 800 };
 const inside = (r: Rect, s: Rect) =>
@@ -119,5 +119,17 @@ describe("dragRect / resizeRect", () => {
     assert.deepEqual(resizeRect(near, -1000, -1000, S2, MIN), { x: 800, y: 100, w: 240, h: 160 });
     const tight = resizeRect({ x: 1200, y: 750, w: 80, h: 50 }, -10, -10, S2, MIN);
     assert.deepEqual(tight, { x: 1200, y: 750, w: 80, h: 50 });
+  });
+});
+
+describe("clientRect", () => {
+  const fb: Rect = { x: 0, y: 0, w: 1920, h: 1080 };
+  it("divides the physical size by the scale factor", () => {
+    assert.deepEqual(clientRect(2400, 1500, 1.5, fb), { x: 0, y: 0, w: 1600, h: 1000 });
+  });
+  it("falls back on zero, NaN or missing measurements", () => {
+    assert.deepEqual(clientRect(0, 800, 1, fb), fb);
+    assert.deepEqual(clientRect(800, 600, 0, fb), fb);
+    assert.deepEqual(clientRect(NaN, 600, 1, fb), fb);
   });
 });

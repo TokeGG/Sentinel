@@ -113,6 +113,12 @@ pub fn all() -> Vec<Migration> {
             sql: include_str!("../migrations/18_game_mode_auto.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 19,
+            description: "panel prefs",
+            sql: include_str!("../migrations/19_panel_prefs.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -123,7 +129,7 @@ mod tests {
     #[test]
     fn versions_are_ascending_and_match_position() {
         let m = all();
-        assert_eq!(m.len(), 18);
+        assert_eq!(m.len(), 19);
         for (i, mig) in m.iter().enumerate() {
             assert_eq!(mig.version, (i as i64) + 1);
         }

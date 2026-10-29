@@ -32,3 +32,9 @@ export function webError(m: ModuleManifest): string | null {
   }
   return null;
 }
+
+export function uiError(m: ModuleManifest): string | null {
+  return m.panel === "custom" && typeof m.ui !== "function"
+    ? `panel "custom" needs a ui() loader`
+    : null;
+}

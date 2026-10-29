@@ -32,6 +32,7 @@
 
 - `src/core/module.ts` + `src/core/manifestChecks.ts`: contract additions and checks.
 - `src/ui/types.ts`, `src/ui/prefs.ts`, `src/ui/prefsStore.ts`, `src/ui/tokens.css`, `src/ui/useModule.ts`, `src/ui/useCustomize.tsx`, `src/ui/CustomizeDrawer.tsx`, `src/ui/kit/*.tsx`.
+- `src/shell/SettingsPanel.tsx`, `src/shell/settingsStore.ts` (Task 10).
 - `src/shell/stars.ts` (pure) + `src/shell/Planet.tsx`/`StarMap.tsx` edits; `src/shell/GameHud.tsx` motion toggle.
 - `src/modules/<name>/Panel.tsx` for each migrated module.
 - `src-tauri/migrations/19_panel_prefs.sql`, `src-tauri/src/migrations.rs`.
@@ -69,7 +70,7 @@
 - Consumes: `CustomizeDef` (Task 1).
 - Produces in `prefs.ts`:
   - `type View = { name: string; accent: string; density: "compact" | "roomy"; fontScale: number; tint: number; refreshMinutes: number | null; sections: { id: string; visible: boolean }[]; options: Record<string, boolean | string | number> }`
-  - `defaultView(c?: CustomizeDef, name = "Default"): View` (accent `#396cd8`, density `"roomy"`, fontScale 1, tint 0.5, refreshMinutes null)
+  - `defaultView(c?: CustomizeDef, name = "Default", base?: Partial<View>): View` (accent `#396cd8`, density `"roomy"`, fontScale 1, tint 0.5, refreshMinutes null; `base` overrides the appearance fields, used for the user's global defaults from Settings)
   - `mergeView(raw: unknown, c?: CustomizeDef): View` — tolerant: unknown sections dropped, new manifest sections appended with their default visibility, accent validated, fontScale clamped to [0.8, 1.4], tint to [0, 1], refreshMinutes null or an integer in [1, 1440], options coerced to their declared type/clamped/choices, extra keys dropped; never throws
   - `cssVars(v: View): Record<string, string>` — keys `--accent`, `--density` ("0.75" or "1"), `--font-scale`, `--tint`
   - `reorderSections(v: View, from: number, to: number): View`; `setSectionVisible(v: View, id: string, visible: boolean): View`
@@ -204,3 +205,66 @@
 - **File Search:** sections `search` (box, results as you type with a 250 ms debounce), `roots` (removable chips + Add), `results` (name, folder, size, date).
 - Pure helpers + tests: `humanSize(bytes)`, `debounce`-free `shouldSearch(query)` (min 2 chars), `shortPath(path, max)`.
 - Same steps and verification as Task 6, then run the **whole** TS baseline, `cargo test --lib`, `npm run check:size`, `npm run build`.
+
+---
+
+### Task 10: Settings button and Settings panel
+
+**Files:**
+- Create: `src/shell/settingsStore.ts`, `src/shell/SettingsPanel.tsx`, `src/shell/settingsLogic.ts`
+- Modify: `src/shell/GameHud.tsx` (a ⚙ Settings button), `src/core/module.ts` registry usage only (no manifest change), `src/App.tsx` (route `#/panel/hub.settings` renders the Settings panel), `src/shell/panelApi.ts` (`openSettings()`)
+- Test: `src/shell/settingsLogic.test.ts`
+
+**Interfaces:**
+- Consumes: kit (Task 3), `getGameModeAuto`/`setGameModeAuto`/star motion (earlier tasks), scheduler `setScheduleEnabled`/`getScheduleEnabled`, `defaultView` base (Task 2).
+- Produces:
+  - `settingsStore.ts`: `type Appearance = { accent: string; density: "compact" | "roomy"; fontScale: number }`; `getAppearance(): Promise<Appearance>` / `setAppearance(a: Appearance): Promise<void>` (key `appearance_defaults` in `app_settings`, validated through `mergeView`-style sanitizing); `getRestorePanels(): Promise<boolean>` / `setRestorePanels(b: boolean)` (key `restore_panels`, default true; `restore()` in `panelApi.ts` skips reopening when false).
+  - `settingsLogic.ts` (pure): `scheduleRows(registry: ModuleManifest[], enabled: Record<string, boolean>): { id: string; name: string; everyMinutes: number; enabled: boolean }[]` (only modules with `schedule`, sorted by name); `sanitizeAppearance(raw: unknown): Appearance`.
+  - A "Settings" panel opened as a normal panel with id `hub.settings` through the same panel manager (button in the star map HUD, next to Game mode). Sections: **General** (auto game mode, star map motion, reopen panels at startup), **Appearance** (default accent, density, font size applied to every panel whose own view has not changed it), **Background jobs** (every module with a schedule, its interval, an on/off switch, with the note that nothing runs until switched on), **Data** (button that opens the Backup & Snapshot panel; the app's data folder path shown), **About** (version from `package.json`, a link to the Releases page).
+- The Settings panel is not a module: it must not appear as a planet and must not be in the registry.
+
+- [ ] **Step 1: Write failing tests** `settingsLogic.test.ts`: `scheduleRows lists only modules with a schedule, sorted by name`; `scheduleRows uses the enabled map and defaults to off`; `sanitizeAppearance rejects a bad accent and clamps font scale`; `sanitizeAppearance of garbage returns the defaults`.
+- [ ] **Step 2: Run.** Expected: FAIL.
+- [ ] **Step 3: Implement** logic, store, panel, HUD button, route, `restore()` honoring `restore_panels`.
+- [ ] **Step 4: Verify:** tsc, build, baseline, size guard; Chromium-with-stubs screenshot of the Settings panel; confirm the Settings panel never shows as a planet.
+
+---
+
+### Task 11: Solar-system map — orbits, rings, icons
+
+**Files:**
+- Create: `src/shell/orbit.ts` (pure), `src/shell/icons.ts` (glyph table), `src/shell/orbit.test.ts`, `src/shell/icons.test.ts`
+- Modify: `src/core/module.ts` + `customizeChecks.ts` (manifest `ring`, `icon`), every `src/modules/*/index.ts` (add `ring`, `icon`), `src/shell/StarMap.tsx` (split first: it is at the 150-line limit — move drawing/hit-test into `src/shell/mapDraw.ts` and `src/shell/mapHit.ts`), `src/shell/Planet.tsx`, `src/shell/planets.ts`, `src/shell/GameHud.tsx` (orbit toggle + speed), `src/shell/layoutStore.ts` (keys `orbit_motion` default on, `orbit_speed` default 1), `src/ui/prefs.ts` untouched.
+
+**Interfaces:**
+- Produces:
+  - `type Ring = "daily" | "media" | "system" | "security"`; manifest `ring?: Ring` (invalid → ManifestError; default `"system"`), `icon?: string` (key in `ICONS`; unknown key → ManifestError).
+  - `orbit.ts`: `RING_RADIUS: Record<Ring, number>` (world units, inner to outer: daily 190, media 300, system 410, security 520) and `RING_PERIOD_S: Record<Ring, number>` (daily 600, media 780, system 960, security 1200 seconds per turn); `orbitPos(ring: Ring, index: number, count: number, tSec: number, speed: number, center: {x:number;y:number}): {x:number;y:number}` (even spacing `2π·index/count`, angle advances `2π·speed·tSec/period`, `count` ≤ 0 or non-finite inputs return the center); `advance(elapsed: number, dtMs: number, paused: boolean): number` is reused from the stars helper (do not duplicate; import it).
+  - `icons.ts`: `ICONS: Record<string, string>` of SVG path data on a 24×24 grid (one per module: notes, news, pccare, weather, homenet, github, youtube, finance, deals, email, social, calendar, backup, pentest, clipboard, filesearch, plus `core`, `discord`, `chat`, `bot`) and `drawIcon(ctx, key, x, y, size, color)` using `Path2D`; unknown key draws nothing.
+- Behavior: the sun at the center draws the core icon and opens Settings; each planet draws its icon in white over its accent gradient; a hovered planet eases to a stop (position held through a per-planet "slow factor" that moves toward 0 on hover and back to 1 over ~300 ms); while dragging the map or hovering, other planets keep orbiting unless motion is off; hit-testing uses the planet's CURRENT position; the motion policy (visible, not game mode, not reduced motion, motion on) governs the orbit exactly as it governs the stars, with the same single capped rAF chain; orbit speed multiplies the angle rate.
+
+- [ ] **Step 1: Write failing tests:** `orbitPos at t=0 spaces planets evenly on the ring`; `orbitPos advances one full turn after the ring period`; `inner ring completes a turn before the outer ring`; `orbitPos with count 0 returns the center`; `orbitPos speed 2 doubles the angular rate`; `every module's ring and icon are valid` (iterate the registry in a test that imports the manifests' static metadata only); `every ICONS entry parses as a non-empty path string and starts with M`; `unknown icon key is rejected by validateManifest`; `invalid ring is rejected`; manifest tests for `ring`/`icon` defaults.
+- [ ] **Step 2: Run.** Expected: FAIL.
+- [ ] **Step 3: Implement** the pure modules, manifest fields and checks, assign rings per the spec (Daily: notes, news, calendar, weather, deals, email, social; Media: youtube; System: pccare, homenet, backup, filesearch, clipboard; Security: pentest, github), then split `StarMap.tsx` and implement the orbiting draw, icons, sun, slow-on-hover and Settings opening (the sun click calls `openSettings()` from Task 10 if present; until then it does nothing).
+- [ ] **Step 4: Verify:** tsc, build, baseline, size guard; Chromium-with-stubs screenshots at t=0 and t=30 s showing rings and moved planets with icons; confirm hit-testing at the moved position (click opens the panel under the pointer) and that rAF counts are 0 in game-mode/hidden/reduced-motion/motion-off.
+
+---
+
+### Task 12: Notification moons and badge plumbing
+
+**Files:**
+- Create: `src/shell/badges.ts` (pure + store), `src/shell/badges.test.ts`, `src/shell/moons.ts` (pure moon positions)
+- Modify: `src/shell/StarMap.tsx`/`mapDraw.ts` (draw moons), `src/App.tsx` (refresh badges on mount, window focus and on `panel-closed`), `src/shell/GameHud.tsx` (moons toggle), `src/shell/layoutStore.ts` (key `notif_moons` default on), `src-tauri/src/panels/manager.rs` or `webview.rs` (emit `panel-closed` {id} on close) only if no existing event can be used.
+
+**Interfaces:**
+- Produces:
+  - `badges.ts`: `type Badges = Record<string, number>`; `mergeBadge(b: Badges, id: string, count: number): Badges` (negative/NaN/non-integer counts become 0, cap 999); `totalBadges(b: Badges): number`; `async function refreshBadges(registry: ModuleManifest[]): Promise<Badges>` (calls each module's `badge()` once, in parallel, one failure never blocks the others, result for a failing module is 0); event name `PLANET_BADGE = "planet-badge"` with payload `{ id: string; count: number }` (also accepted from Rust for web panels).
+  - `moons.ts`: `moonCount(count: number): number` (min(count, 5)); `moonPositions(count: number, radius: number, tSec: number, id: string): {x:number;y:number}[]` (orbit around the planet, deterministic phase from the id); `badgeText(count: number): string` (`""` for 0, number up to 99, `"99+"` above).
+- Behavior: moons orbit their planet, pulse once when a count increases, a number bubble shows when count > 5; hover shows "N unread"; the sun's glow scales with `totalBadges`; refresh happens only on mount, window `focus` and `panel-closed` — never on a timer; moons are not drawn when the setting is off.
+
+- [ ] **Step 1: Write failing tests** `badges.test.ts`: `mergeBadge sanitizes negative NaN and fractional counts`; `mergeBadge caps at 999`; `totalBadges sums`; `refreshBadges survives one failing badge()`; `refreshBadges skips modules without badge`; `moonCount caps at 5`; `moonPositions are deterministic per id and on the radius`; `moonPositions of 0 is empty`; `badgeText formats 0, 7, 99, 100`.
+- [ ] **Step 2: Run.** Expected: FAIL.
+- [ ] **Step 3: Implement** pure parts, the store/refresh wiring, drawing, and the HUD toggle.
+- [ ] **Step 4: Verify:** tsc, build, baseline, size guard; Chromium-with-stubs screenshot with sample counts (Notes 3, a fake module 12) showing moons, bubble and hover text; confirm no timers are started by badge refresh (grep + rAF/interval counts).
+
+(The Rust `on_document_title_changed` handler that turns Discord's "(3) Discord" title into a `planet-badge` event belongs to the Discord panel plan; Task 12 only consumes the event.)

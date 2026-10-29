@@ -76,6 +76,9 @@ const credentialFields = connectors.flatMap((c) =>
 export const socialModule: ModuleManifest = {
   id: "hub.social",
   name: "Social Media",
+  accent: "#ff7ab8",
+  ring: "daily",
+  icon: "social",
   description:
     'Multi-platform feed. Mastodon/Reddit: fill the one prerequisite field, click "Connect" — real OAuth, no password stored. Bluesky: handle + app password (no public OAuth exists yet for desktop apps). X not built yet (API is paywalled).',
   panel: "list",

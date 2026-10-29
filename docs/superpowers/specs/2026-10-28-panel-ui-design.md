@@ -25,6 +25,13 @@ Follows the core shell (`2026-10-28-core-shell-design.md`). Source of the visual
 - **Customize UI:** a gear button in the chrome strip sends an event to its panel, which opens a Customize drawer (kit component, same for every module).
 - **Star map:** more stars in parallax layers, slow rotation around the center; animation runs only while the map is visible and pauses in game mode (no idle frame loop when hidden).
 
+## Solar-system map (user request, late)
+- Planets **orbit** like a solar system. Center = the Sentinel core (the "sun"): click opens Settings; its glow reflects the total unread count. Modules sit on rings by group: **Daily** (Notes, News, Calendar, Weather, Deals, Email, Social), **Media & chat** (YouTube, Discord, Chat), **System** (PC Care, Home Network, Backup, File Search, Clipboard), **Security** (Pentest Lab, GitHub Discovery). Inner rings are faster; one full turn takes roughly 10 to 20 minutes.
+- Positions are a pure function of time: `orbitPos(ring, index, count, t, speed)`. A planet under the pointer eases to a stop so it can be clicked; orbits keep moving while dragging or panning (only a hovered planet eases to a stop), and obey the same motion policy as the stars (no loop when hidden, in game mode, with reduced motion, or with motion off).
+- **Icons:** every module has its own icon (manifest `icon` key into a table of vector glyphs drawn on the planet in white) plus its accent color. Manifest also gets `ring`.
+- **Notifications** appear as small moons orbiting a planet (up to 5, then a number bubble), with a brief pulse when the count goes up and "3 unread" on hover. Sources: a module's `badge()` count (read on startup, on window focus and when a panel closes, never on a timer), and for embedded web apps the page title: Discord's web app puts the unread count in its title like "(3) Discord", and the Rust side (`on_document_title_changed`) turns a leading "(N)" into a `planet-badge` event for the main window. **Only counts are shown, not message text** (reading messages would mean scraping the page, which is out of scope). Counts are cleared while the web panel is suspended in game mode.
+- Settings (Task 10 section "General"): orbit motion on/off, orbit speed 0.25 to 2x, notification moons on/off.
+
 ## Per-module designs
 As in the gallery, with these specifics:
 - **Pentest Lab command center:** engagement banner (active engagement, in-scope targets), tool cards grouped by category, a results dock, a session log, and a report button. Tools are a registry: `{id, name, category, params, run}`; **every tool runs through the existing `scope.ts` gate, unchanged**. Initial tools are recon only: port scan, host discovery, DNS lookup, whois, HTTP headers, TLS certificate details, technology fingerprint, traceroute. Anything beyond recon (exploitation or autonomous scanning) is outside the module's standing principle and needs an explicit decision before it is designed.
@@ -32,9 +39,16 @@ As in the gallery, with these specifics:
 - **Email app:** needs new Rust commands (list folders, fetch message body, mark read, delete/archive, search) and a compose window; sending stays an explicit user action. This is the largest module change and is staged last.
 - **YouTube home:** widgets (subscriptions, watch later, pinned channel, continue watching) with drag layout and views; depends on the YouTube/Discord webview sub-project for the player.
 
+## Pentest scope and the bot (user decisions, late)
+- The user asked for the widest freedom possible and for their bot to run the tools. Decision: widen what an **engagement** can declare, keep the gate itself.
+- An engagement declares: targets as single hosts, CIDR ranges and wildcard domains (multiple per engagement), an optional time window, allowed tool categories, and its authorization reference. Several engagements can be active at once.
+- The gate (`src/modules/pentest/scope.ts`) still decides every run: a target must match an active engagement (or be the user's own Home Network device). Matching logic grows to cover CIDR and wildcard; its tests grow with it. No bypass flag, no "allow all" engagement.
+- **The bot** (browser/agent bot, sub-project 4) calls pentest tools only through the same registry and gate. Inside an active engagement it runs without a per-step prompt (creating the engagement is the approval); every tool call is written to the session log with target, tool, parameters and result; a **Stop** button halts the bot immediately; the bot cannot create or edit an engagement by itself.
+- The module's standing "no autonomous scanning" wording is updated to "bot-run scans only inside an active engagement, always logged, always stoppable".
+
 ## Build order
 1. UI kit + prefs persistence + Customize drawer + chrome gear.
-2. Star map night sky + rotation.
+2. Star map night sky + rotation (done), then the solar-system map with icons and notification moons (Tasks 11 and 12 of the foundation plan).
 3. Migrate the list-shaped modules in batches (Notes, News, PC Care, Weather, Home Network, GitHub, Finance, Deals, Calendar & Tasks, Backup, Clipboard, File Search).
 4. Pentest command center.
 5. Social feed.

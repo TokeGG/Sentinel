@@ -1,104 +1,114 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ModuleManifest } from "../core/module";
-import { planetsFor, type PlanetPos } from "./planets";
-import { drawPlanet, drawStars } from "./Planet";
-import { openPanel } from "./panelApi";
+import { ensureSky, drawSky, prepCanvas, type Sky } from "./Sky";
+import { buildSlots, fitView, makeScene, placeScene, stepScene, type Layers, type Scene, type View } from "./mapLayout";
+import { hitTest, SUN } from "./mapHit";
+import { backdrop, drawScene, type Sprites } from "./mapDraw";
+import { getMotion, subscribeMotion } from "./motionStore";
+import { subscribeBadges } from "./badgeStore";
+import { noteFrame } from "./moonDraw";
+import { useMapLoop } from "./useMapLoop";
+import { openPanel, openSettings } from "./panelApi";
 
-type View = { tx: number; ty: number; scale: number };
-const WORLD = { w: 1600, h: 1000 };
+const LAYERS: Layers = { stars: true, orbit: true, speed: 1 }; // reused every frame
 
-// Canvas star map. Redraws are on demand (one rAF per input event), never a
-// continuous frame loop, so an idle hub costs nothing while gaming.
+// Canvas solar-system map: night sky + orbiting planets, drawn by useMapLoop.
+// The sun opens Settings; a planet opens its panel; drag pans, wheel zooms.
 export function StarMap({ modules, onError }: { modules: ModuleManifest[]; onError: (m: string) => void }) {
   const canvas = useRef<HTMLCanvasElement>(null);
   const view = useRef<View>({ tx: 0, ty: 0, scale: 1 });
-  const hover = useRef<string | null>(null);
   const drag = useRef<{ x: number; y: number; moved: boolean } | null>(null);
-  const frame = useRef(0);
+  const pointer = useRef<{ x: number; y: number } | null>(null);
+  const sky = useRef<Sky | null>(null);
+  const prevScene = useRef<Scene | null>(null);
+  const sprites = useRef<Sprites>({ planets: [] });
   const [hovering, setHovering] = useState(false);
-  const planets = useMemo(() => planetsFor(modules, WORLD), [modules]);
-  const names = useMemo(() => new Map(modules.map((m) => [m.id, m.name])), [modules]);
+  const scene = useMemo(() => {
+    sprites.current.planets = [];
+    return (prevScene.current = makeScene(buildSlots(modules), prevScene.current));
+  }, [modules]);
 
-  const draw = () => {
-    frame.current = 0;
-    const c = canvas.current;
-    const ctx = c?.getContext("2d");
-    if (!c || !ctx) return;
-    const dpr = window.devicePixelRatio || 1;
-    const w = c.clientWidth, h = c.clientHeight;
-    if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
-      c.width = Math.round(w * dpr);
-      c.height = Math.round(h * dpr);
+  // Hover follows the pointer AND planets moving under a still pointer.
+  const setHover = (i: number) => {
+    if (i === scene.hover) return false;
+    scene.hover = i;
+    scene.hoverMs = 0; // the ~4 s hold (holdTarget) restarts per hover target
+    setHovering(i !== -1);
+    return true;
+  };
+  const hoverAt = (p: { x: number; y: number } | null) => setHover(p && !drag.current?.moved ? hitTest(scene, p.x, p.y, scene.r) : -1);
+
+  const redraw = useMapLoop((dtMs) => {
+    const prep = prepCanvas(canvas.current);
+    if (!prep) return;
+    const { ctx, w, h, dpr } = prep;
+    noteFrame(dtMs);
+    if (dtMs > 0) {
+      const m = getMotion();
+      LAYERS.stars = m.starMotion;
+      LAYERS.orbit = m.orbitMotion;
+      LAYERS.speed = m.orbitSpeed;
+      stepScene(scene, dtMs, LAYERS);
     }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    drawStars(ctx, w, h);
-    const v = view.current;
-    ctx.translate(v.tx, v.ty);
-    ctx.scale(v.scale, v.scale);
-    for (const p of planets) drawPlanet(ctx, p, names.get(p.id) ?? p.id, p.id === hover.current);
-  };
-  const redraw = () => {
-    if (!frame.current) frame.current = requestAnimationFrame(draw);
-  };
+    placeScene(scene, view.current);
+    if (dtMs > 0) hoverAt(pointer.current);
+    const sk = (sky.current = ensureSky(sky.current, w, h, dpr));
+    drawSky(ctx, sk, scene.starT, backdrop(sprites.current, sk, view.current));
+    drawScene(ctx, scene, dpr, sprites.current);
+  });
 
-  // Fit the world box into the canvas whenever it resizes.
+  // Badge changes and the Moons toggle repaint on demand (no timer).
+  useEffect(() => {
+    const a = subscribeBadges(redraw), b = subscribeMotion(redraw);
+    return () => { a(); b(); };
+  }, []);
+
+  // Default view fits the whole system (outer ring + labels) on every resize.
   useEffect(() => {
     const c = canvas.current;
     if (!c) return;
     const fit = () => {
-      // Margin keeps labels and the HUD clear of edge planets.
-      const s = Math.min((c.clientWidth - 80) / WORLD.w, (c.clientHeight - 150) / WORLD.h) || 1;
-      view.current = { scale: s, tx: (c.clientWidth - WORLD.w * s) / 2, ty: (c.clientHeight - WORLD.h * s) / 2 + 20 };
+      view.current = fitView(c.clientWidth, c.clientHeight);
       redraw();
     };
     const ro = new ResizeObserver(fit);
     ro.observe(c);
     fit();
-    return () => {
-      ro.disconnect();
-      cancelAnimationFrame(frame.current);
-      frame.current = 0;
-    };
-  }, [planets]);
+    return () => ro.disconnect();
+  }, [scene]);
 
-  const hit = (cx: number, cy: number): PlanetPos | undefined => {
-    const v = view.current;
-    const wx = (cx - v.tx) / v.scale, wy = (cy - v.ty) / v.scale;
-    return planets.find((p) => Math.hypot(p.x - wx, p.y - wy) <= p.r + 4 / v.scale);
-  };
   const local = (e: React.MouseEvent | React.WheelEvent) => {
     const b = canvas.current!.getBoundingClientRect();
     return { x: e.clientX - b.left, y: e.clientY - b.top };
   };
-
   const onMove = (e: React.MouseEvent) => {
-    const { x, y } = local(e);
-    if (drag.current) {
-      const dx = x - drag.current.x, dy = y - drag.current.y;
-      if (Math.abs(dx) + Math.abs(dy) > 2) drag.current.moved = true;
+    const p = (pointer.current = local(e));
+    scene.idleMs = 0;
+    const d = drag.current;
+    if (d) {
+      const dx = p.x - d.x, dy = p.y - d.y;
+      if (Math.abs(dx) + Math.abs(dy) > 2) d.moved = true;
+      if (d.moved) setHover(-1); // a real drag drops hover; a click keeps it
       view.current.tx += dx;
       view.current.ty += dy;
-      drag.current.x = x;
-      drag.current.y = y;
+      d.x = p.x;
+      d.y = p.y;
       redraw();
       return;
     }
-    const id = hit(x, y)?.id ?? null;
-    if (id !== hover.current) {
-      hover.current = id;
-      setHovering(id !== null);
-      redraw();
-    }
+    placeScene(scene, view.current);
+    if (hoverAt(p)) redraw();
   };
   const onUp = (e: React.MouseEvent) => {
     const d = drag.current;
     drag.current = null;
-    if (d && !d.moved) {
-      const p = hit(local(e).x, local(e).y);
-      const m = p && modules.find((x) => x.id === p.id);
-      if (m) openPanel(m).catch((err) => onError(`Open ${m.name}: ${String(err)}`));
-    }
+    if (!d || d.moved) return;
+    const p = local(e);
+    placeScene(scene, view.current); // hit-test the planets where they are NOW
+    const i = hitTest(scene, p.x, p.y, scene.r);
+    if (i === SUN) openSettings().catch((err) => onError(`Open Settings: ${String(err)}`));
+    const m = i >= 0 ? modules.find((x) => x.id === scene.slots[i].id) : undefined;
+    if (m) openPanel(m).catch((err) => onError(`Open ${m.name}: ${String(err)}`));
   };
   const onWheel = (e: React.WheelEvent) => {
     const { x, y } = local(e);
@@ -121,7 +131,8 @@ export function StarMap({ modules, onError }: { modules: ModuleManifest[]; onErr
         onMouseUp={onUp}
         onMouseLeave={() => {
           drag.current = null;
-          if (hover.current) { hover.current = null; setHovering(false); redraw(); }
+          pointer.current = null;
+          if (setHover(-1)) redraw();
         }}
         onWheel={onWheel}
       />

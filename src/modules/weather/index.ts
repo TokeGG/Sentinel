@@ -1,6 +1,7 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { weatherSections } from "./panelLogic";
 
 // Open-Meteo: free, no API key, no account. Geocoding + forecast + alerts
 // all from the same provider — this is why Weather has zero setup cost.
@@ -45,16 +46,23 @@ async function refreshWeather() {
   for (const loc of locations) {
     const url =
       `${FORECAST_URL}?latitude=${loc.lat}&longitude=${loc.lon}` +
-      `&current=temperature_2m,weather_code&timezone=auto`;
+      `&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto`;
     const res = await fetch(url);
     const data = (await res.json()) as {
       current?: { temperature_2m: number; weather_code: number };
+      daily?: { temperature_2m_max?: number[]; temperature_2m_min?: number[] };
     };
     const temp = data.current?.temperature_2m;
     const severe = (data.current?.weather_code ?? 0) >= 95; // thunderstorm+ in WMO codes
     if (severe) alerts++;
     results.push({
       id: `loc-${loc.id}`,
+      place: loc.label,
+      temp_c: temp ?? null,
+      code: data.current?.weather_code ?? null,
+      severe,
+      high_c: data.daily?.temperature_2m_max?.[0] ?? null,
+      low_c: data.daily?.temperature_2m_min?.[0] ?? null,
       title: `${loc.label}: ${temp != null ? `${temp.toFixed(0)}°C` : "—"}${severe ? " ⚠ severe" : ""}`,
     });
   }
@@ -77,8 +85,16 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const weatherModule: ModuleManifest = {
   id: "hub.weather",
   name: "Weather & Alerts",
+  accent: "#4fc3ff",
+  ring: "daily",
+  icon: "weather",
   description: "Current conditions for places you add. No API key needed.",
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: {
+    sections: weatherSections,
+    options: [{ key: "units", label: "Temperature units", type: "select", choices: ["°C", "°F"], default: "°C" }],
+  },
   skills: [
     { name: "add_location", run: addLocation },
     { name: "refresh", run: refreshWeather },

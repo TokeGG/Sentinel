@@ -1,3 +1,7 @@
+/* Panel design tokens + UI kit + dark generic-panel restyle (Task 3). */
+@import "./ui/tokens.css";
+@import "./ui/panels.css";
+
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -20,11 +24,6 @@
 
 body {
   margin: 0;
-}
-
-.panel-route {
-  padding: 1.5rem 2rem;
-  min-height: 100vh;
 }
 
 .starmap {
@@ -90,6 +89,22 @@ body {
 
 .hud button.on {
   background: var(--space-accent);
+}
+
+.hud-speed {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.hud-speed input {
+  width: 5.5rem;
+  accent-color: var(--space-accent);
+}
+
+.hud-speed output {
+  min-width: 2.6rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .hud-error {
@@ -306,6 +321,16 @@ body {
   color: var(--space-dim);
 }
 .panel-chrome-close:hover { color: #fff; background: #c0392b; }
+.panel-chrome-gear {
+  all: unset;
+  width: 28px;
+  height: 28px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--space-dim);
+}
+.panel-chrome-gear:hover { color: #fff; background: #23305e; }
+.panel-chrome-gear:focus-visible, .panel-chrome-close:focus-visible { outline: 2px solid var(--space-accent); outline-offset: -2px; }
 .panel-chrome-grip {
   width: 16px;
   height: 28px;

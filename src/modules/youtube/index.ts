@@ -239,6 +239,9 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const youtubeModule: ModuleManifest = {
   id: MODULE_ID,
   name: "YouTube",
+  accent: "#ff6b6b",
+  ring: "media",
+  icon: "youtube",
   description:
     "Subscribed channels + per-channel new uploads via the official API. OAuth, no API key stored in plaintext.",
   panel: "list",

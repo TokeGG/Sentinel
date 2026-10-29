@@ -64,3 +64,9 @@ export function resizeRect(start: Rect, dx: number, dy: number, screen: Rect, mi
   const h = Math.min(Math.max(num(start.h) + num(dy), nonNeg(min.h)), roomH);
   return { x, y, w, h };
 }
+
+/** Logical client rect from a measured physical size + scale; falls back when unusable. */
+export function clientRect(physW: number, physH: number, scale: number, fallback: Rect): Rect {
+  const ok = [physW, physH, scale].every((n) => Number.isFinite(n) && n > 0);
+  return ok ? { x: 0, y: 0, w: physW / scale, h: physH / scale } : fallback;
+}

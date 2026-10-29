@@ -1,0 +1,102 @@
+/* Token-based dark restyle of the generic ModulePanel markup (core/panel/*)
+   when it renders inside a PanelShell. CSS only: class names and markup are
+   untouched. Every selector starts with .panel-shell and carries the original
+   selector so it outranks the legacy light rules in App.css. */
+
+.panel-shell .module-panel h2 {
+  font-family: var(--font-display);
+  font-size: 1.35em;
+  font-weight: 600;
+  margin: 0 0 calc(var(--gap) / 2);
+  color: var(--text);
+}
+.panel-shell .module-desc { color: var(--text-dim); margin: 0 0 var(--pad); }
+
+/* Inputs: one look for every text field in a generic panel. */
+.panel-shell .module-panel input:not([type="checkbox"]),
+.panel-shell .module-panel textarea,
+.panel-shell .module-panel select {
+  background: var(--base);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) - 2px);
+  padding: calc(6px * var(--density)) calc(10px * var(--density));
+  font: inherit;
+}
+.panel-shell .module-panel ::placeholder { color: var(--text-dim); opacity: 0.85; }
+.panel-shell .module-panel input[type="checkbox"] { accent-color: var(--accent); flex: none; margin: 0; }
+
+/* Buttons: accent primary; actions bar / row actions are quieter. */
+.panel-shell .module-panel button,
+.panel-shell .module-form button,
+.panel-shell .module-credentials button {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: 1px solid var(--accent);
+  border-radius: calc(var(--radius) - 2px);
+  padding: calc(6px * var(--density)) calc(14px * var(--density));
+  font: inherit;
+  cursor: pointer;
+}
+.panel-shell .module-panel .module-actions button,
+.panel-shell .module-panel .row-action {
+  background: var(--surface-2);
+  color: var(--text);
+  border-color: var(--line);
+}
+.panel-shell .module-panel .module-actions button:hover:not(:disabled),
+.panel-shell .module-panel .row-action:hover:not(:disabled) { border-color: var(--accent-text); }
+.panel-shell .module-panel button:disabled { opacity: 0.5; cursor: default; }
+.panel-shell .module-panel .row-action { margin-left: var(--gap); padding: 2px calc(10px * var(--density)); }
+
+/* Cards: credentials and multi-field forms. */
+.panel-shell .module-credentials,
+.panel-shell .module-form {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--pad);
+  margin: var(--pad) 0;
+  color: var(--text);
+}
+.panel-shell .module-credentials { border-left: 3px solid var(--warn); }
+.panel-shell .credential-row { gap: var(--gap); }
+.panel-shell .credential-row label { color: var(--text); }
+.panel-shell .credential-note { color: var(--text-dim); }
+.panel-shell .module-form h4 { color: var(--text); font-family: var(--font-display); }
+
+.panel-shell .schedule-toggle { color: var(--text-dim); gap: var(--gap); }
+.panel-shell .module-actions { gap: var(--gap); margin: var(--pad) 0; flex-wrap: wrap; }
+.panel-shell .module-panel form { gap: var(--gap); margin: var(--pad) 0; }
+
+/* List rows. */
+.panel-shell .module-list { gap: calc(var(--gap) * 0.75); }
+.panel-shell .module-list li {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: calc(8px * var(--density)) var(--pad);
+  color: var(--text);
+}
+.panel-shell .module-list li em { color: var(--text-dim); }
+.panel-shell .module-list .row-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-text);
+  text-decoration: none;
+  text-align: left;
+}
+.panel-shell .module-list .row-link:hover { text-decoration: underline; }
+.panel-shell .module-list li.empty {
+  background: transparent;
+  border-style: dashed;
+  color: var(--text-dim);
+  text-align: center;
+}
+
+/* Visible focus for every interactive element inside a panel. */
+.panel-shell :is(button, input, textarea, select, a, [tabindex]):focus-visible {
+  outline: none;
+  box-shadow: var(--focus);
+}

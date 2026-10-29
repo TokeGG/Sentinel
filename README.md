@@ -91,6 +91,27 @@ on real Windows as of this commit (Foundation + Track A smoke-tested).
       `ModulePanel` split, table-driven manifest checks, `npm run check:size`
 - [ ] Windows webview spike, GPU-load trigger, local-model unload: not done
 
+**Panel UI foundation — not yet run on Windows:**
+- [x] Shared UI layer `src/ui/`: component kit, design tokens, per-module
+      accent colour, `useModule`, safe external links
+- [x] Customization: manifest `customize` sections/options, a customize drawer
+      (show/hide/reorder sections, options, appearance, saved views) persisted
+      in SQLite `panel_prefs` (migration 19)
+- [x] Custom panels (`panel: "custom"` + lazy `ui`) for Notes, News, Deals,
+      PC Care, Weather, Home Network, GitHub, Finance, Calendar, Backup,
+      Clipboard, File Search; Email, Pentest, Social, YouTube still use the
+      generic panel (redesigns planned)
+- [x] Solar-system map: orbiting planets on rings with icons and accents,
+      animated starfield, notification moons (counts only) from module `badge()`
+      and `planet-badge` events; one motion policy, stopped in game mode,
+      hidden window, or reduced motion
+- [x] Settings panel (`hub.settings`): general (motion, orbit speed, moons,
+      restore panels), appearance defaults with apply-to-all, jobs, data, about
+- [ ] Verified only in Chromium with Tauri stubbed plus unit tests; panels,
+      chrome strip, cross-webview events, moons and orbit feel need a Windows run
+- [ ] Specified, not built: Discord panel, multi-site chat, skills/MCP hub,
+      browser bot (`docs/superpowers/specs/`)
+
 ## Still needed from you
 
 - **Google Cloud**: register `http://127.0.0.1:53682` as an **Authorized
@@ -168,8 +189,8 @@ running it — that's what the keychain helper is for, never in chat.
       - Every scan attempt — allowed or refused — is logged to the shared
         activity log with its reason. A refusal is never silent.
 
-**The full module roadmap from the plan doc is now built: all 18 modules.**
-76 TS tests and 48 Rust tests passing, clean typecheck, clean build.
+**The full module roadmap from the plan doc is now built: all 16 modules.**
+326 TS tests and 48 Rust tests passing, clean typecheck.
 
 ## Untested on a real OS yet
 
@@ -180,7 +201,7 @@ command (`tcp_port_scan`, `backup_database`, `restore_database`,
 `search_files`) — is new since your last real `cargo build` and hasn't
 been compiled and run on Windows yet (it does compile and pass `cargo test
 --lib` on Linux). When you next run `npm run tauri dev`, expect a long
-rebuild (18 migrations plus many crates); send me any compiler error and I'll fix it fast.
+rebuild (19 migrations plus many crates); send me any compiler error and I'll fix it fast.
 
 Given the size of this pass, a few things worth testing deliberately once
 it's running, beyond the obvious click-around:
@@ -194,7 +215,7 @@ it's running, beyond the obvious click-around:
 ## Run the tests
 
 ```bash
-npm test                    # TS baseline: 76 tests
+npm test                    # TS baseline: 326 tests
 node --test scripts/check-file-size.test.mjs   # 4 tests
 npm run check:size          # no file over 150 lines (legacy allow-list)
 cd src-tauri && cargo test --lib   # 48 Rust tests
@@ -238,23 +259,20 @@ npm run tauri dev
 A `panel: "list"` module needs nothing else — the generic panel renders it,
 including multi-field forms (`forms`), a single-field add (`quickAdd`),
 zero-arg buttons (`actions`), a per-row action (`rowAction`), a secrets form
-(`credentialFields`), and an opt-in auto-refresh toggle (`schedule`). A
-`"chat"` or `"custom"` panel would get its own component — none exist yet;
-every module so far fits the generic `"list"` panel.
+(`credentialFields`), and an opt-in auto-refresh toggle (`schedule`). A `"custom"` panel (`ui: () => import("./Panel")`, built from `src/ui`) is used by 12 modules; a `"chat"` panel doesn't exist yet. See `CLAUDE.md` for the custom-panel recipe.
 
 ## What's left (the honest list)
 
-- **UI overhaul** — next up, by your request. Everything above is
-  functional-first, default Tauri styling.
+- **UI overhaul** — foundation and 12 custom panels done; Email, Pentest,
+  Social, YouTube still on the generic panel.
 - **Social's `authType: "manual"` connectors** (Bluesky, X) have no
   `connect()` skill wired to a button the way oauth connectors do — Bluesky
   works via its credential fields + "Fetch all feeds"; X is intentionally a
   stub.
 - No automated test coverage for anything added this pass beyond the
-  existing 15 (manifest validation, RSS parsing, PKCE) — the new modules'
-  logic (scope gating, scheduler, file search bounds) is reviewed-by-eye,
-  not unit-tested yet. Worth adding once the shape of each settles post-UI-
-  overhaul, rather than testing against UI that's about to change.
+  panelLogic tests, manifest validation, RSS parsing, PKCE, scope gating,
+  scheduler — the Rust-side commands and Tauri-coupled code are covered only
+  where they have pure helpers.
 - Full security review deferred until this is in a real repo, per your plan
   to have it audited there (`/code-review`, `/security-review`) — the
   credential/OAuth/IMAP code in particular deserves that pass.

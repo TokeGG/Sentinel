@@ -1,30 +1,14 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { financeSections } from "./panelLogic";
+import { toTradeRow, toWatchRow, type TradeRow, type WatchRow } from "./rows";
 
 // Both free, no API key, no account:
 // - Stooq: plain CSV quotes for stocks/ETFs.
 // - CoinGecko: public simple-price endpoint for crypto.
 const STOOQ_URL = "https://stooq.com/q/l/";
 const COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price";
-
-interface WatchRow extends Record<string, unknown> {
-  id: number;
-  symbol: string;
-  kind: "stock" | "crypto";
-  last_price: number | null;
-  last_checked: string | null;
-}
-
-interface TradeRow extends Record<string, unknown> {
-  id: number;
-  chamber: "senate" | "house";
-  politician: string;
-  ticker: string | null;
-  transaction_type: string | null;
-  trade_date: string | null;
-  amount_range: string | null;
-}
 
 // Public STOCK Act disclosure datasets, free, no key — the same data
 // senatestockwatcher.com / housestockwatcher.com publish. Field names below
@@ -152,10 +136,7 @@ async function refreshQuotes() {
 async function loadRows(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   const watched = await d.select<WatchRow[]>("SELECT * FROM watchlist ORDER BY symbol ASC");
-  const watchRows = watched.map((r) => ({
-    id: `w-${r.id}`,
-    title: `${r.symbol.toUpperCase()} (${r.kind}): ${r.last_price != null ? `$${r.last_price.toFixed(2)}` : "—"}`,
-  }));
+  const watchRows = watched.map(toWatchRow);
 
   // Trades on tickers you're watching surface first; otherwise just the
   // most recent disclosures overall, capped so the panel stays readable.
@@ -171,11 +152,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
           "SELECT * FROM congress_trades ORDER BY trade_date DESC LIMIT 30"
         );
 
-  const tradeRows = trades.map((t) => ({
-    id: `t-${t.id}`,
-    title: `${t.politician} (${t.chamber}) ${t.transaction_type ?? "traded"} ${t.ticker ?? "?"}${t.amount_range ? ` — ${t.amount_range}` : ""}`,
-    label: t.trade_date ?? undefined,
-  }));
+  const tradeRows = trades.map(toTradeRow);
 
   return [...watchRows, ...tradeRows];
 }
@@ -183,9 +160,14 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const financeModule: ModuleManifest = {
   id: "hub.finance",
   name: "Finance",
+  accent: "#e6c04f",
+  ring: "daily",
+  icon: "finance",
   description:
     "Stock/ETF (Stooq) and crypto (CoinGecko) watchlist, plus Senate/House trade disclosures. All free, no key, no account linking.",
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: { sections: financeSections },
   skills: [
     { name: "add_symbol", run: addSymbol },
     { name: "refresh_quotes", run: refreshQuotes },

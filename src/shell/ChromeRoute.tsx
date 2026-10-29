@@ -1,10 +1,11 @@
 // 28px chrome strip, a child webview stacked above every panel's content
 // (Task 9b). Stateless: every rect comes from Rust (get/focus_panel).
 import { useEffect, useRef, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
+import { emitTo } from "@tauri-apps/api/event";
 import { registry } from "../core/module";
 import { dragRect, resizeRect, type Rect } from "./layout";
-import { closePanel, commit, dragMove, dragResize, focusPanel, getPanel, MIN } from "./panelApi";
+import { closePanel, commit, dragMove, dragResize, focusPanel, getPanel, mainClientRect, MIN, SETTINGS_ID } from "./panelApi";
+import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
 
 const PREFIX = "#/chrome/";
 /** Never throws: malformed %-escapes yield "" (renders "Module not found"). */
@@ -14,18 +15,6 @@ export function chromeIdFromHash(hash: string): string | null {
     return decodeURIComponent(hash.slice(PREFIX.length));
   } catch {
     return "";
-  }
-}
-
-// Panel rects are relative to the MAIN window's client area, so clamp to its
-// logical inner size (this webview's own window.inner* is only the strip).
-async function mainClientRect(): Promise<Rect> {
-  try {
-    const w = getCurrentWindow();
-    const s = (await w.innerSize()).toLogical(await w.scaleFactor());
-    return { x: 0, y: 0, w: s.width, h: s.height };
-  } catch {
-    return { x: 0, y: 0, w: window.screen.availWidth, h: window.screen.availHeight };
   }
 }
 
@@ -102,7 +91,11 @@ export function ChromeRoute({ id }: { id: string }) {
 
   return (
     <div className="panel-chrome" {...handlers("move")}>
-      <span className="panel-chrome-title" style={err ? { color: "#ff7b7b" } : undefined} title={err ?? undefined}>{err ?? (m ? m.name : id ? id : "Module not found")}</span>
+      <span className="panel-chrome-title" style={err ? { color: "#ff7b7b" } : undefined} title={err ?? undefined}>{err ?? (m ? m.name : id === SETTINGS_ID ? "Settings" : id ? id : "Module not found")}</span>
+      {m && m.panel !== "web" && (
+        <button className="panel-chrome-gear" title="Customize" aria-label="Customize panel"
+          onClick={() => emitTo(panelLabel(id), PANEL_CUSTOMIZE, { id }).catch(fail("customize"))}>⚙</button>
+      )}
       <button className="panel-chrome-close" title="Close" aria-label="Close panel"
         onClick={() => closePanel(id).catch(fail("close"))}>×</button>
       <span className="panel-chrome-grip" title="Resize" {...handlers("resize")} />

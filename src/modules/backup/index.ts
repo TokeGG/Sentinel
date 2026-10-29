@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { backupSections } from "./panelLogic";
 
 let lastBackups: { id: string; title: string }[] = [];
 
@@ -35,9 +36,14 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const backupModule: ModuleManifest = {
   id: "hub.backup",
   name: "Backup & Snapshot",
+  accent: "#9aa8c4",
+  ring: "system",
+  icon: "backup",
   description:
     "One-click backup/restore of Sentinel's own database — not your whole PC. Restart the app after a restore.",
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: { sections: backupSections },
   skills: [
     { name: "backup_now", run: backupNow },
     { name: "restore_from", run: restoreFrom },
