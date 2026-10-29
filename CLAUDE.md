@@ -202,14 +202,14 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-1058 TS tests + 4 size-guard tests + 121 Rust tests as of this commit. Run the
+1103 TS tests + 4 size-guard tests + 139 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
 **File-size rule:** no .ts/.tsx/.rs file over ~150 lines (`*.test.ts` and Rust
 code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
 `scripts/check-file-size.mjs` has an ALLOW list of files awaiting their own
-split (finance). Never add to it; shrink it.
+split. Never add to it; shrink it.
 
 **Design system v2** (details: `docs/STYLE.md`). Tokens live only in `src/ui/tokens.css`
 (layers base/raised/overlay, 8px spacing, radii, type scale, elevation). A panel's colour
@@ -279,6 +279,8 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Browser bot (`modules/bot`, `hub.bot`; Rust `src-tauri/src/bot/`): runs only on the panel Run button; local Ollama model only; closes on game mode, app exit and panel close. The Rust driver is compile-checked only: the WebView2 `document.title` result channel, hidden-webview behaviour (timer throttling), popups and downloads are unverified on Windows. No GPU or local-model unload yet. Tool (MCP) actions use the existing gate and the bot has no engagement, so pentest-flagged tools are always refused.
 - Congress (`modules/congress`, `hub.congress`): Sync button (and opt-in schedule) reads the GovTrack API v2 (bills, votes, current roles; no key). Parsers are tested only against hand-written fixtures; NEVER run against the live GovTrack API, so field names/limits are unverified. Follows + "UPDATED" moon (counts only) are local (`congress_follows`). Finance's own congress trades still use the separate STOCK Act S3 datasets (unverified, may be offline).
 - Calendar (`modules/calendar`): own events/tasks in `calendar_items` (migration 32), natural-language quick add (`quickParse.ts`), repeat daily/weekly/monthly (`recur.ts`), ICS import/export (`ics.ts`: VEVENT only, TZID read as local, no VTODO). Never run in a real window. Delete/remove with a two-step `ui/ConfirmButton` exists in notes, finance, news, deals, homenet, clipboard, filesearch, weather, backup (Rust `delete_backup`), github (dismiss); no undo toast.
+- Feeds/money extras (migration 39 `39_feeds_finance.sql`, mirror `core/schemaFeeds.ts`): News topics (feed taste as likes), source tag/reliability, read later + highlights, duplicate grouping, opt-in preset feeds (games/patch notes/ESPN sports ticker), podcast `<audio>` from enclosures (`news/extras.ts`, `store.ts`); Deals price history + fair badge, promo-code collector, wishlist hits moon, coupons (`deals/extras.ts`, `extraStore.ts`); Finance groups, alerts moon (checked after refresh), lots/crypto, budgets (spend from Calendar `expenses`), bills (also Calendar `add_item` task), vault (data URL <= 2 MB in SQLite) (`finance/money.ts`, `extraStore.ts`, `Tools*.tsx`); Congress My reps (`app_settings` `congress_my_seat`, GovTrack `vote_voter`) + followed-bill "what changed" (`congress/reps.ts`, `repStore.ts`). Preset/ESPN/Steam URLs, vote_voter fields and all GUI unverified live.
+- PC/Network/Dev batch (migration 40 `40_pc_net_dev.sql`, mirror `core/schemaPcNet.ts`; Rust `commands/pc_*.rs`, `net_tools.rs`, `git_tools.rs`, all shell-outs via `pc_cmd::run_fixed` with fixed args): PC Care Tools tabs (`pccare/tools/*`): startup manager (StartupApproved flag via `reg`, reversible), disk treemap/largest files (`treemap.ts` squarified), duplicates (size+SHA-256, Recycle Bin via `trash`), processes (confirm kill, name re-checked) + sensors ("not available" if none), power plans (`powercfg`), pending updates/problem devices (PowerShell Update COM + `pnputil`, best effort), mic/camera/location consent audit, download/screenshot sorter (`sorter.ts` plan, Rust `apply_moves` re-checks), manual speed test (Cloudflare 25 MB, `pc_speed_tests`), listening ports (`netstat`), Wi-Fi (`netsh`, keys never read), browser cache clear (known dirs by id), hash checker, Pwned Passwords range check (5-char SHA-1 prefix only). Home Network: icons (`net_device_style`), pings (`net_uptime`, manual + opt-in schedule), WOL, port changes between scans, SVG map + router link (`default_gateway`), change events (`net_events`, new-device moon). GitHub: inbox, CI moon (in memory, manual), git status, terminal, gists, commit stats, README draft (Ollama 127.0.0.1), secret scanner (redacted). ALL Windows commands/registry/netsh/powercfg/WOL/trash and the live APIs are unverified; only parsers/pure logic are tested.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
   price); Home Network "new" means new this session; Calendar "overdue" means
   unfiled notes.

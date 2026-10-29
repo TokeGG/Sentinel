@@ -36,7 +36,7 @@ export async function clonedUrls(): Promise<Set<string>> {
 
 export const projectInfo = (path: string) => invoke<ProjectInfo>("project_info", { path });
 
-export async function openClone(c: Clone, how: "folder" | "editor"): Promise<void> {
+export async function openClone(c: Clone, how: "folder" | "editor" | "terminal"): Promise<void> {
   await invoke("open_cloned", { path: c.local_path, with: how });
   const d = await getDb();
   await d.execute("UPDATE cloned_projects SET last_opened = CURRENT_TIMESTAMP WHERE id = $1", [c.id]);

@@ -22,3 +22,15 @@
   .pc-meter.ring { flex-direction: row; text-align: left; justify-content: flex-start; }
 }
 @container (max-width: 340px) { .pc-rings { grid-template-columns: minmax(0, 1fr); } }
+
+.pc-tools { display: grid; gap: var(--sp-2); }
+.pc-tool { display: grid; gap: var(--sp-2); }
+.pc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-1); max-height: 320px; overflow: auto; }
+.pc-list li { padding: var(--sp-1) var(--sp-2); border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface-2); }
+.pc-path { font-family: ui-monospace, monospace; font-size: var(--fs-xs); overflow-wrap: anywhere; display: block; }
+.pc-group { border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-1) var(--sp-2); }
+.pc-treemap { width: 100%; height: auto; }
+.pc-treemap rect { stroke: var(--base); stroke-width: 1; }
+.pc-treemap rect.dir { fill: var(--accent-soft); }
+.pc-treemap rect.file { fill: var(--surface-2); }
+.pc-treemap text { fill: var(--accent-text); font-size: 11px; pointer-events: none; }

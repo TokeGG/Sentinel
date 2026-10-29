@@ -1,0 +1,28 @@
+// Bootstrap mirror of src-tauri/migrations/40_pc_net_dev.sql (see schema.ts).
+export const PCNET_STATEMENTS: string[] = [
+  `CREATE TABLE IF NOT EXISTS pc_speed_tests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    at TEXT NOT NULL DEFAULT (datetime('now')),
+    mbps REAL NOT NULL,
+    bytes INTEGER NOT NULL,
+    ms INTEGER NOT NULL
+)`,
+  `CREATE TABLE IF NOT EXISTS net_device_style (
+    mac TEXT PRIMARY KEY,
+    icon TEXT NOT NULL DEFAULT ''
+)`,
+  `CREATE TABLE IF NOT EXISTS net_uptime (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    mac TEXT NOT NULL,
+    up INTEGER NOT NULL,
+    at TEXT NOT NULL DEFAULT (datetime('now'))
+)`,
+  `CREATE TABLE IF NOT EXISTS net_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    kind TEXT NOT NULL,
+    mac TEXT NOT NULL,
+    detail TEXT NOT NULL DEFAULT '',
+    at TEXT NOT NULL DEFAULT (datetime('now')),
+    seen INTEGER NOT NULL DEFAULT 0
+)`,
+];

@@ -29,7 +29,7 @@ describe("homenet panelLogic", () => {
     assert.equal(deviceName({}), null);
   });
   it("section ids", () => {
-    assert.deepEqual(homenetSections.map((s) => s.id), ["summary", "devices", "scan", "tag"]);
+    assert.deepEqual(homenetSections.map((s) => s.id), ["summary", "devices", "scan", "tag", "map", "events"]);
   });
   it("every <Section id> in Panel.tsx is declared, and vice versa", () => {
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");

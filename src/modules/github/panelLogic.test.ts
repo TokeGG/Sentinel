@@ -68,7 +68,7 @@ describe("github panelLogic", () => {
     assert.equal(skillForTab("trending"), "fetch_trending");
   });
   it("section ids", () => {
-    assert.deepEqual(githubSections.map((s) => s.id), ["credentials", "tabs", "repos", "cloned", "actions"]);
+    assert.deepEqual(githubSections.map((s) => s.id), ["credentials", "tabs", "repos", "cloned", "actions", "inbox", "projects", "gists"]);
   });
   it("every <Section id> in Panel.tsx is declared, and vice versa", () => {
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");

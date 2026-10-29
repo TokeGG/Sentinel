@@ -54,3 +54,11 @@
 .gh-acts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
 .gh-confirm { display: flex; flex-direction: column; gap: 6px; border-top: 1px solid var(--bad); padding-top: 6px; }
 .gh-confirm .gh-desc { color: var(--text); display: block; }
+.gh-dev { display: grid; gap: var(--sp-2); }
+.gh-inbox { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-1); max-height: 300px; overflow: auto; }
+.gh-inbox li { padding: var(--sp-1) var(--sp-2); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.gh-ci { font-size: var(--fs-xs); padding: 2px 8px; border-radius: 999px; border: 1px solid var(--line); }
+.gh-ci.failure { border-color: var(--bad); color: var(--bad); }
+.gh-ci.success { border-color: var(--ok); color: var(--ok); }
+.gh-gistform { display: grid; gap: var(--sp-1); }
+.gh-readme { width: 100%; font-family: ui-monospace, monospace; font-size: var(--fs-xs); }

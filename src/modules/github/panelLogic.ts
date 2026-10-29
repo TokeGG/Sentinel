@@ -10,6 +10,9 @@ export const githubSections = [
   { id: "repos", label: "Repositories" },
   { id: "cloned", label: "Cloned repos" },
   { id: "actions", label: "Fetch repos" },
+  { id: "inbox", label: "PR/issue inbox + CI" },
+  { id: "projects", label: "Project tools" },
+  { id: "gists", label: "Gists" },
 ];
 
 /** 999 -> "999", 1234 -> "1.2k", 98150 -> "98.2k", 1.2M -> "1.2M"; bad input -> "0". */

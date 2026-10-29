@@ -3,11 +3,13 @@ import { invoke } from "@tauri-apps/api/core";
 import { getDb, logActivity } from "../../core/db";
 import { addScopeEntry } from "../pentest/api";
 import { ipOf, noteSeen, saveInfo } from "./netStore";
+import { recordScanEvents } from "./netOps";
 
 type Args = Record<string, unknown> | undefined;
 
 export async function scanNetwork() {
   const devices = await invoke<{ ip: string; mac: string }[]>("get_network_devices");
+  await recordScanEvents(devices);
   const d = await getDb();
   for (const dev of devices) {
     await d.execute(`INSERT INTO network_devices (ip, mac) VALUES ($1, $2) ON CONFLICT(mac) DO UPDATE SET ip = $1, last_seen = datetime('now')`, [dev.ip, dev.mac]);

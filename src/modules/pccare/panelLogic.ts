@@ -9,6 +9,13 @@ export const pccareSections = [
   { id: "disks", label: "Disks" },
   { id: "cleanup", label: "Temp cleanup" },
   { id: "actions", label: "Refresh" },
+  { id: "tools", label: "Tools" },
+];
+
+export const PC_TOOL_TABS = [
+  { id: "startup", label: "Startup" }, { id: "disk", label: "Disk" }, { id: "dupes", label: "Duplicates" },
+  { id: "procs", label: "Processes" }, { id: "system", label: "System" }, { id: "files", label: "Sort files" },
+  { id: "net", label: "Network" }, { id: "security", label: "Security" },
 ];
 
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);

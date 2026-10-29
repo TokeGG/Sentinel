@@ -5,6 +5,7 @@ import { Section, Sections } from "../../ui/useCustomize";
 import { useOption } from "../../ui/useOption";
 import { useModule } from "../../ui/useModule";
 import { pctOf, previewSummary, splitRows, usageText } from "./panelLogic";
+import { ToolsSection } from "./tools/ToolsSection";
 import "./pccare.css";
 
 // Ring (CPU/RAM) or bar (disk) with the tone from the shared gauge thresholds.
@@ -85,6 +86,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
               </div>
             )}
           </Tile>
+        </Section>
+        <Section id="tools">
+          <ToolsSection />
         </Section>
         <Section id="actions">
           <div className="ui-actions">

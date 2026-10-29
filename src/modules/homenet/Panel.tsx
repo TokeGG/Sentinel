@@ -5,6 +5,9 @@ import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import { DeviceRow, type Dev } from "./DeviceRow";
 import { deviceName, deviceState, newDevices, sortDevices } from "./panelLogic";
+import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
+import { EventsList } from "./EventsList";
+import { NetMap } from "./NetMap";
 import "./homenet.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -51,6 +54,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             <button type="button" className="ui-btn primary" disabled={busy} onClick={() => void run("scan_network")}>
               {busy ? "Working…" : "Scan network"}
             </button>
+            <button type="button" className="ui-btn" disabled={busy} onClick={() => void run("ping_all")}>Ping all (uptime)</button>
+            <ScheduleToggle module={module} />
             <span className="ui-meta">Reads the OS ARP cache — passive.</span>
           </div>
         </Section>
@@ -75,6 +80,12 @@ export default function Panel({ module }: { module: ModuleManifest }) {
               <button type="submit" className="ui-btn primary" disabled={busy || !selected}>Save tag</button>
             </form>
           )}
+        </Section>
+        <Section id="map">
+          <NetMap devices={devices.map((x) => ({ mac: String(x.mac), ip: String(x.ip), label: x.name }))} />
+        </Section>
+        <Section id="events">
+          <EventsList busy={busy} run={run} />
         </Section>
       </Sections>
     </div>

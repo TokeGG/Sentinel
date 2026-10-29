@@ -105,7 +105,7 @@ export const pcCareModule: ModuleManifest = {
   ring: "system",
   icon: "pccare",
   description:
-    'Live CPU/RAM/disk metrics. "Preview temp cleanup" lists your OS temp folder (read-only); "Apply cleanup" deletes exactly what was previewed, nothing else. "Refresh" returns to the metrics view.',
+    'Live CPU/RAM/disk metrics plus tools (startup manager, disk treemap, duplicates, processes, power plans, file sorter, speed test, ports, Wi-Fi, caches, hashes); every tool runs only on its button and destructive steps preview + confirm. "Preview temp cleanup" lists your OS temp folder (read-only); "Apply cleanup" deletes exactly what was previewed, nothing else. "Refresh" returns to the metrics view.',
   panel: "custom",
   ui: () => import("./Panel"),
   customize: {

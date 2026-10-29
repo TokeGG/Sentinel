@@ -2,6 +2,7 @@ import { registerModule, type ModuleManifest } from "../../core/module";
 import { loadDevices } from "./netStore";
 import { deviceInfoSave, forgetDevice, scanNetwork, sendToLab, tagDevice } from "./ops";
 import { homenetSections } from "./panelLogic";
+import { markEventsSeen, newDeviceCount, pingAll, setIcon, wakeDevice } from "./netOps";
 
 export const homeNetModule: ModuleManifest = {
   id: "hub.homenet",
@@ -20,8 +21,15 @@ export const homeNetModule: ModuleManifest = {
     { name: "forget_device", run: forgetDevice },
     { name: "device_info", run: deviceInfoSave },
     { name: "send_to_lab", run: sendToLab },
+    { name: "ping_all", run: pingAll },
+    { name: "wake_device", run: wakeDevice },
+    { name: "set_icon", run: setIcon },
+    { name: "mark_events_seen", run: markEventsSeen },
   ],
   load: loadDevices,
+  // Opt-in only: the scheduler starts nothing until the user flips "Auto-refresh" (pings for uptime history).
+  schedule: { skill: "ping_all", intervalMinutes: 15 },
+  badge: newDeviceCount,
   actions: [{ label: "Scan now", skill: "scan_network" }],
 };
 

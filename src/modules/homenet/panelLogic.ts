@@ -6,6 +6,8 @@ export const homenetSections = [
   { id: "devices", label: "Devices" },
   { id: "scan", label: "Scan network" },
   { id: "tag", label: "Tag editor" },
+  { id: "map", label: "Network map" },
+  { id: "events", label: "Changes" },
 ];
 
 /** IPv4 as a sortable number; Infinity for anything that is not a dotted quad. */

@@ -63,16 +63,20 @@ pub async fn project_info(path: String) -> Result<ProjectInfo, String> {
         .map_err(|e| e.to_string())
 }
 
-/// with = "folder" (Explorer) or "editor" (VS Code `code`, if installed).
+/// with = "folder" (Explorer), "editor" (VS Code `code`, if installed) or "terminal".
 #[tauri::command]
 pub fn open_cloned(path: String, with: String) -> Result<(), String> {
     let p = check_clone_dir(&path)?;
     let mut cmd = match with.as_str() {
         "folder" => Command::new(if cfg!(windows) { "explorer" } else { "xdg-open" }),
         "editor" => Command::new(if cfg!(windows) { "code.cmd" } else { "code" }),
+        // Terminal: the folder is the working directory, never part of a command string.
+        "terminal" if cfg!(windows) => { let mut c = Command::new("cmd"); c.args(["/c", "start", "cmd", "/K"]).current_dir(p); c }
+        "terminal" => { let mut c = Command::new("x-terminal-emulator"); c.current_dir(p); c }
         _ => return Err("unknown open target".into()),
     };
-    cmd.arg(p).stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
+    if with != "terminal" { cmd.arg(p); }
+    cmd.stdin(Stdio::null()).stdout(Stdio::null()).stderr(Stdio::null());
     #[cfg(windows)]
     std::os::windows::process::CommandExt::creation_flags(&mut cmd, 0x0800_0000);
     let mut child = cmd.spawn().map_err(|e| match e.kind() {

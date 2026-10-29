@@ -2,11 +2,12 @@ import { invoke } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { fetch } from "@tauri-apps/plugin-http";
 import { logActivity } from "../../core/db";
-import { getCredential } from "../../core/credentials";
-import { getAccessToken, primaryAccount } from "../../core/connect";
+import { authHeaders } from "./auth";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { clonedUrls, recordClone } from "./clones";
 import { githubSections } from "./panelLogic";
+import { failingCount } from "./devLogic";
+import { lastCi } from "./ghApi";
 
 const MODULE_ID = "hub.github";
 const API = "https://api.github.com";
@@ -19,12 +20,6 @@ interface RepoHit extends Record<string, unknown> {
   language?: string | null;
 }
 
-async function authHeaders(): Promise<Record<string, string>> {
-  // Device-flow sign-in (Settings > Accounts) first; the pasted PAT is the fallback.
-  const signedIn = (await primaryAccount("github").catch(() => null)) ? await getAccessToken("github").catch(() => "") : "";
-  const token = signedIn || (await getCredential(MODULE_ID, "pat"));
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
 
 let lastResults: RepoHit[] = [];
 let lastSource: "trending" | "starred" = "trending"; // which fetch filled lastResults (panel tabs)
@@ -124,6 +119,8 @@ export const githubModule: ModuleManifest = {
     { name: "dismiss_repo", run: dismissRepo },
   ],
   load: loadRows,
+  // Failing CI runs from the last manual "Check CI" (in memory; no background calls).
+  badge: async () => failingCount(lastCi()),
   actions: [
     { label: "Trending", skill: "fetch_trending" },
     { label: "My Starred", skill: "fetch_starred" },

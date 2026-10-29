@@ -6,6 +6,9 @@ import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import { ClonedSection } from "./ClonedSection";
 import { TokenField } from "./TokenField";
+import { GistSection } from "./GistSection";
+import { InboxSection } from "./InboxSection";
+import { ProjectTools } from "./ProjectTools";
 import "./github.css";
 import { TasteBar } from "../../ui/TasteBar";
 import { useOption } from "../../ui/useOption";
@@ -66,6 +69,15 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         </Section>
         <Section id="cloned">
           <ClonedSection refresh={busy} />
+        </Section>
+        <Section id="inbox">
+          <InboxSection />
+        </Section>
+        <Section id="projects">
+          <ProjectTools />
+        </Section>
+        <Section id="gists">
+          <GistSection />
         </Section>
         <Section id="actions">
           <div className="ui-controls">
