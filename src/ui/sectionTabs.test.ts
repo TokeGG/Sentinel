@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pickTab, visibleTabs } from "./sectionTabs.ts";
+import { pickTab, visibleTabs } from "./sectionTabsLogic.ts";
 
 const tabs = [{ id: "a", label: "A", sections: ["a1", "a2"] }, { id: "b", label: "B", sections: ["b1"] }];
 test("no view shows all tabs", () => assert.equal(visibleTabs(tabs, null).length, 2));

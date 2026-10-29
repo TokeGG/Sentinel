@@ -3,7 +3,7 @@ import { useState, type DragEvent } from "react";
 import { Tabs } from "../../ui/kit";
 import type { ModuleRow, ModuleState } from "../../ui/useModule";
 import { DayBlocks } from "./DayBlocks";
-import { monthGrid } from "./monthGrid";
+import { monthGrid } from "./monthGridLogic";
 import { dayKey, dayLabel, groupByDay, itemTitle, rowDate, timeText } from "./panelLogic";
 import { rowsOn, shiftAnchor, VIEW_MODES, weekOf, type ViewMode } from "./views";
 

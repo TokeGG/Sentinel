@@ -1,6 +1,6 @@
 // Compact month view: today ringed, a dot per day with items (red when overdue).
 import type { ModuleRow } from "../../ui/useModule";
-import { monthGrid } from "./monthGrid";
+import { monthGrid } from "./monthGridLogic";
 
 const WEEK = ["M", "T", "W", "T", "F", "S", "S"];
 

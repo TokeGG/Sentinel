@@ -1,5 +1,5 @@
 // Calendar panel tabs: each groups customize section ids (panelLogic.calendarSections).
-import type { TabDef } from "../../ui/sectionTabs.ts";
+import type { TabDef } from "../../ui/sectionTabsLogic.ts";
 
 export const EXTRA_SECTIONS = [
   { id: "views", label: "Month / week / day / agenda views" },

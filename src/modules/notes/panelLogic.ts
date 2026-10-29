@@ -1,5 +1,5 @@
 // Pure helpers for the Notes panel.
-import type { TabDef } from "../../ui/sectionTabs.ts";
+import type { TabDef } from "../../ui/sectionTabsLogic.ts";
 type Row = Record<string, unknown>;
 
 /** Unfiled = no (or blank) filed_to; order is preserved. */

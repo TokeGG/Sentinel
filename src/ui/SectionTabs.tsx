@@ -2,7 +2,7 @@
 import { useContext, useState, type ReactElement } from "react";
 import { Tabs } from "./kit";
 import { PanelContext, useSections } from "./Section";
-import { pickTab, visibleTabs, type TabDef } from "./sectionTabs";
+import { pickTab, visibleTabs, type TabDef } from "./sectionTabsLogic";
 
 export function useSectionTabs(defs: TabDef[], first = defs[0].id): [string, ReactElement, (id: string) => void] {
   const { view } = useContext(PanelContext);

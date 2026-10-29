@@ -1,7 +1,7 @@
 process.env.TZ = "America/New_York";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { monthGrid } from "./monthGrid.ts";
+import { monthGrid } from "./monthGridLogic.ts";
 
 const L = (y: number, m: number, d: number, h = 0) => new Date(y, m - 1, d, h);
 
