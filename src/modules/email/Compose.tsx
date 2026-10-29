@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Draft } from "./compose";
+import type { Draft } from "./composeLogic";
 
 export function Compose({ from, draft, busy, onChange, onSend, onClose }: {
   from: string; draft: Draft; busy: boolean; onChange: (d: Draft) => void; onSend: () => void; onClose: () => void;

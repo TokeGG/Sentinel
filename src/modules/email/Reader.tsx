@@ -6,7 +6,7 @@ import { safeLink } from "../../ui/safeLink";
 import { formatList } from "./addresses";
 import { buildSrcdoc, sanitizeHtml } from "./sanitize";
 import { fullDate, sizeLabel, subjectLabel, urlsIn } from "./panelLogic";
-import type { Mode } from "./compose";
+import type { Mode } from "./composeLogic";
 import type { Body, Msg } from "./types";
 
 export function Reader({ msg, body, busy, inTrash, onCompose, onFlag, onDelete }: {
