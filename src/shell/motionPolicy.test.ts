@@ -16,7 +16,7 @@ test("motion store notifies only on change and unsubscribes", () => {
   const un = subscribeMotion(() => n++);
   setGameMode(true); setGameMode(true); setStarMotion(false);
   assert.equal(n, 2);
-  assert.deepEqual(getMotion(), { gameMode: true, starMotion: false, orbitMotion: true, orbitSpeed: 1, notifMoons: true });
+  assert.deepEqual(getMotion(), { gameMode: true, starMotion: false, orbitMotion: true, orbitSpeed: 1, notifMoons: true, ignoreReduced: true });
   un(); setGameMode(false);
   assert.equal(n, 2);
 });

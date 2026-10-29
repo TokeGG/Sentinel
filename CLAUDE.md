@@ -96,7 +96,7 @@ Star and orbit motion obey one motion policy (`motionPolicy.ts`): both stop in
 game mode, when the window is hidden, or with reduced motion. Settings is a
 panel with id `hub.settings` (`SettingsPanel`, opened from the HUD), not a
 module. `app_settings` keys: `game_mode_auto`, `star_motion`, `orbit_motion`,
-`orbit_speed`, `notif_moons`, `restore_panels`, `appearance_defaults`. Layout
+`orbit_speed`, `notif_moons`, `ignore_reduced_motion`, `restore_panels`, `appearance_defaults`. Layout
 is persisted from the TS side in SQLite `panel_layout` / `app_settings` (Rust
 returns `SavedPanel`, the frontend writes; call `clampToScreen` before
 move/resize). **Game mode** (manual button or auto detection) pauses the

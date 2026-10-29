@@ -2,13 +2,13 @@
 // and in the Settings panel (a different webview): one implementation each.
 import { invoke } from "@tauri-apps/api/core";
 import { emit } from "@tauri-apps/api/event";
-import { setGameModeAuto, setNotifMoons, setOrbitMotion, setOrbitSpeed, setStarMotion } from "./layoutStore";
+import { setGameModeAuto, setIgnoreReduced, setNotifMoons, setOrbitMotion, setOrbitSpeed, setStarMotion } from "./layoutStore";
 import * as share from "./motionStore";
 import { clampSpeed } from "./orbit";
 
 /** Emitted by the Settings panel after saving; the main window re-reads. */
 export const SETTINGS_CHANGED = "settings-changed";
-export type SettingKey = "game_mode_auto" | "star_motion" | "orbit_motion" | "orbit_speed" | "notif_moons";
+export type SettingKey = "game_mode_auto" | "star_motion" | "orbit_motion" | "orbit_speed" | "notif_moons" | "ignore_reduced_motion";
 export const notifySettingsChanged = (key: SettingKey) => emit(SETTINGS_CHANGED, { key });
 
 export async function saveGameModeAuto(enabled: boolean): Promise<void> {
@@ -34,4 +34,9 @@ export async function saveOrbitSpeed(speed: number): Promise<void> {
 export async function saveNotifMoons(enabled: boolean): Promise<void> {
   await setNotifMoons(enabled);
   share.setNotifMoons(enabled);
+}
+
+export async function saveIgnoreReduced(enabled: boolean): Promise<void> {
+  await setIgnoreReduced(enabled);
+  share.setIgnoreReduced(enabled);
 }

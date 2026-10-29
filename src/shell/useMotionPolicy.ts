@@ -15,7 +15,7 @@ export function useMotionPolicy(onChange: (on: boolean) => void) {
       const on = shouldAnimate({
         visible: document.visibilityState === "visible",
         gameMode: getMotion().gameMode,
-        reducedMotion: mq.matches,
+        reducedMotion: mq.matches && !getMotion().ignoreReduced,
         motionOn: anyMotion(),
       });
       if (on === cur) return;
