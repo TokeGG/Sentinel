@@ -119,6 +119,18 @@ pub fn all() -> Vec<Migration> {
             sql: include_str!("../migrations/19_panel_prefs.sql"),
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 20,
+            description: "youtube channels",
+            sql: include_str!("../migrations/20_youtube_channels.sql"),
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 21,
+            description: "youtube watched",
+            sql: include_str!("../migrations/21_youtube_watched.sql"),
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
@@ -129,7 +141,7 @@ mod tests {
     #[test]
     fn versions_are_ascending_and_match_position() {
         let m = all();
-        assert_eq!(m.len(), 19);
+        assert_eq!(m.len(), 21);
         for (i, mig) in m.iter().enumerate() {
             assert_eq!(mig.version, (i as i64) + 1);
         }

@@ -1,10 +1,10 @@
 // Pure (no Tauri imports): a TS-side safety net for the tables of migrations
-// 17-19. tauri-plugin-sql runs its migration list only inside the first
+// 17-21. tauri-plugin-sql runs its migration list only inside the first
 // `Database.load` per process; if that migrate throws (e.g. a checksum
 // mismatch on an old database) later loads succeed WITHOUT migrating and the
 // newer tables never appear. db.ts therefore calls ensureSchema() after every
 // load. The statements must stay identical to the migration files (schema.test.ts
-// enforces it). Migrations 17-19 use CREATE TABLE IF NOT EXISTS so a plugin run
+// enforces it). Migrations 17-21 use CREATE TABLE IF NOT EXISTS so a plugin run
 // after this bootstrap does not fail on "already exists"; no database has applied
 // 17-19 yet, so editing their text cannot cause a stored-checksum mismatch.
 export const SCHEMA_STATEMENTS: string[] = [
@@ -27,6 +27,22 @@ export const SCHEMA_STATEMENTS: string[] = [
     json TEXT NOT NULL,
     active INTEGER NOT NULL DEFAULT 0,
     PRIMARY KEY (module_id, view)
+)`,
+  `CREATE TABLE IF NOT EXISTS youtube_channels (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    channel_id TEXT NOT NULL UNIQUE,
+    title TEXT NOT NULL,
+    handle TEXT,
+    added_at TEXT NOT NULL DEFAULT (datetime('now'))
+)`,
+  `CREATE TABLE IF NOT EXISTS youtube_watched (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    video_id TEXT NOT NULL,
+    channel_id TEXT,
+    title TEXT NOT NULL,
+    watched_at TEXT NOT NULL DEFAULT (datetime('now')),
+    secs INTEGER,
+    UNIQUE (video_id, watched_at)
 )`,
 ];
 

@@ -9,7 +9,7 @@ export interface FeedItem {
   publishedAt: string | null;
 }
 
-function tag(block: string, name: string): string | null {
+export function tag(block: string, name: string): string | null {
   const m = block.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)<\\/${name}>`, "i"));
   if (!m) return null;
   return m[1]
@@ -17,6 +17,8 @@ function tag(block: string, name: string): string | null {
     .replace(/&amp;/g, "&")
     .replace(/&lt;/g, "<")
     .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
     .trim();
 }
 
@@ -25,7 +27,7 @@ function attr(block: string, name: string, attrName: string): string | null {
   return m ? m[1] : null;
 }
 
-function blocks(xml: string, tagName: string): string[] {
+export function blocks(xml: string, tagName: string): string[] {
   const re = new RegExp(`<${tagName}[\\s>][\\s\\S]*?<\\/${tagName}>`, "gi");
   return xml.match(re) ?? [];
 }
