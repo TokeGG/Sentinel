@@ -93,7 +93,7 @@ src/
 
 src-tauri/
   migrations/NN_<module>.sql — numbered SQL, versions 1..43 strictly ascending (43 = browser) (31 = congress, 32 = calendar_items, 36 = accounts, 37 = notes/calendar extras + clip_pins)
-                        (38 = mail/youtube/chat/social extras; 45 = kb_entries (44 reserved by a concurrent branch); 41 = bot workflows/jobs/site notes; 26 = social_post_meta, 27 = skills/mcp, 28 = bot, 29 = cloned_projects, 30 = youtube_seen/later/signal; 17-30 idempotent `IF NOT EXISTS`); loaded by
+                        (38 = mail/youtube/chat/social extras; 44 = kb_entries; 45 = lab_lessons/lab_certs/lab_cards (mirror core/schemaLearn.ts); 41 = bot workflows/jobs/site notes; 26 = social_post_meta, 27 = skills/mcp, 28 = bot, 29 = cloned_projects, 30 = youtube_seen/later/signal; 17-30 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
@@ -270,6 +270,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
   `tcp_port_scan` re-checks with a mirror (`commands/pentest_gate.rs`, `pentest_rule.rs`);
   both sides are tested against `gateVectors.json`, so change the gate in both. Tables: migration 25.
   Never run in a real window or against a real network yet.
+  Beginner layer: `guide.ts` (5-step setup, app_settings `lab_guide`, simple/advanced `lab_mode`; simple hides bot/notebook/timeline/intel/replay), `next.ts` (What next card + "My home lab" template from Home Network IPs, still draft until Activate), `explain.ts`/`portInfo.ts`/`glossary.ts` (plain-English run explainers, tooltips). Learn tab = `learn/` (lessons are `learn/lessons/*.md` with a `## Quiz`, cert trackers `certs.ts` = high-level domains only, flashcards reuse notes/sm2.ts, practice links). Harness Lab scenarios: `scripts/bot-harness/lab.mjs`. GUI unverified.
   Lab extras (migration 34): registered tools `port-scan` (profiles quick/common/full, paced), `fingerprint`, `web-check`, `dns`,
   each with a Rust command re-checking the gate (`tcp_port_scan`, `tcp_banner_grab`, `web_check`, `dns_lookup`); runs keep their options
   (`pentest_run_args`) so `replay`/retest re-run them through the gate again. Tabs Terminal|Bot|Notebook|Checklist|Timeline; Bot tab = Lab mode

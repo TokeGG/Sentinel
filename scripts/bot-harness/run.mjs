@@ -13,6 +13,7 @@ import { makeBridge } from "./bridge.mjs";
 import { SCENARIOS } from "./scenarios.mjs";
 import { SCENARIOS_2 } from "./scenarios2.mjs";
 import { serve } from "./server.mjs";
+import { runLab } from "./lab.mjs";
 
 const { chromium } = createRequire(execSync("npm root -g").toString().trim() + "/")("playwright");
 const brain = { ...DEFAULT_BROWSER_BRAIN, waitAfterAction: 250, timeoutSec: 8, retryLimit: 0 };
@@ -69,6 +70,8 @@ for (const sc of [...SCENARIOS, ...SCENARIOS_2]) {
   report("teach-by-demo record + replay", !leaked && wf.steps.length === 3 && wf.steps[2].action.type === "submit" && ctx.confirms === 1 && ep.outcome === "done" && thanks === "Thanks Grace (grace@example.test)", ep, `; recorded ${wf.steps.length} steps, password recorded: ${leaked}, confirms: ${ctx.confirms}`);
   await page.close();
 }
+
+await runLab(session, base, deps, report);
 
 await browser.close();
 close();

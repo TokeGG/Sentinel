@@ -49,6 +49,7 @@ pub fn all() -> Vec<Migration> {
         Migration { version: 42, description: "games library, game news, show tracker", sql: include_str!("../migrations/42_games_media.sql"), kind: MigrationKind::Up },
         Migration { version: 43, description: "in-app browser bookmarks, history, sidebar apps", sql: include_str!("../migrations/43_browser.sql"), kind: MigrationKind::Up },
         Migration { version: 44, description: "panel-bot knowledge base", sql: include_str!("../migrations/44_knowledge.sql"), kind: MigrationKind::Up },
+        Migration { version: 45, description: "lab learning: lessons, cert trackers, flashcards", sql: include_str!("../migrations/45_lab_learn.sql"), kind: MigrationKind::Up },
     ]
 }
 
