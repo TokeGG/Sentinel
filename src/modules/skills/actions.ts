@@ -1,5 +1,5 @@
 // The panel's write operations, exposed to it as manifest skills (so busy/error handling is shared).
-import { fetch } from "@tauri-apps/plugin-http";
+import { ollamaFetch } from "../bot/ollamaFetch";
 import { applyPlan, planInstall, planUpdate, removeItem, type Plan } from "./install";
 import { parseSource } from "./githubUrl";
 import { invalidateSkills } from "./registry";
@@ -50,8 +50,8 @@ export async function saveEnvSecret(a?: A) {
 
 export async function listModels(): Promise<{ models: LocalModel[]; current: string }> {
   if (!isLocalUrl(OLLAMA_TAGS_URL)) throw new Error("local models only");
-  const r = await fetch(OLLAMA_TAGS_URL).catch(() => { throw new Error("Ollama is not reachable on 127.0.0.1:11434 - is it running?"); });
-  if (!r.ok) throw new Error(`Ollama answered HTTP ${r.status}`);
+  const r = await ollamaFetch(OLLAMA_TAGS_URL).catch(() => { throw new Error("Ollama is not reachable on 127.0.0.1:11434. Install it from https://ollama.com/download or start it, then retry."); });
+  if (!r.ok) throw new Error(r.status === 403 ? "Ollama refused the app (HTTP 403 origin check). Set OLLAMA_ORIGINS=http://tauri.localhost,https://tauri.localhost and restart Ollama." : `Ollama answered HTTP ${r.status}`);
   return { models: parseTags(await r.json()), current: (await getSetting(LOCAL_MODEL_KEY)) ?? "" };
 }
 export async function saveModel(a?: A) {

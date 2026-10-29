@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ConnectButton } from "../../core/connect/ConnectButton";
 import { ClientIdStep } from "../../core/connect/ClientIdStep";
+import { TestButton } from "../../core/connect/TestButton";
 import { connectLabel, firstError, statusText } from "../../core/connect/accountsLogic";
 import { clientGroups, PROVIDERS } from "../../core/connect/providers";
 import { disconnect, listAccounts, onAccountsChanged, type AccountRow } from "../../core/connect";
@@ -41,6 +42,7 @@ export function AccountsSection({ onError }: { onError(e: unknown): void }) {
             {err && <div className="ui-meta st-acct-err">Last refresh error: {err}</div>}
             {mine.map((r) => <Disconnect key={r.account} row={r} onError={onError} />)}
             <ConnectButton providerId={p.id} label={connectLabel(p, mine)} className="ui-btn" />
+            <TestButton providerId={p.id} />
           </div>
         );
       })}

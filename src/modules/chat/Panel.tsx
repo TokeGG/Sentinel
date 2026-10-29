@@ -86,7 +86,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="login">
           <Tile title="Twitch login (to send)">
             <p className="chat-help">{twitch.auth!.help}</p>
-            <p className="chat-help">Kick and destiny.gg are read-only here (destiny.gg sending needs a site login; use its embed); embedded sites handle their own login and sending.</p>
+            <p className="chat-help">Kick and destiny.gg open as their own embedded chat (log in and send there); "Try native" uses the read-only live socket. Other embedded sites handle their own login and sending.</p>
             <CredentialFields module={module} onSaved={() => setEpoch((e) => e + 1)} />
           </Tile>
         </Section>

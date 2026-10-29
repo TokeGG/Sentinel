@@ -1,4 +1,5 @@
 import { connectorOf } from "./connectors";
+import { showsEmbed } from "./panelLogic";
 import type { Room, RoomState } from "./types";
 
 type Props = {
@@ -21,7 +22,7 @@ export function RoomTabs({ rooms, shown, unread, busy, states, fallback, onSelec
     <>
       {rooms.map((r) => {
         const on = shown.has(r.id);
-        const st: RoomState | undefined = !connectorOf(r.site).connect || fallback.has(r.id) ? { status: "embed" } : states[r.id];
+        const st: RoomState | undefined = showsEmbed(connectorOf(r.site), fallback.has(r.id)) ? { status: "embed" } : states[r.id];
         return (
           <span key={r.id} className={`chat-tab${on ? " on" : ""}`}>
             <button type="button" className="chat-tab-main" onClick={() => onSelect(r.id)} title={`${connectorOf(r.site).label}: ${r.target}`}>

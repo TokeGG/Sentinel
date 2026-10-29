@@ -1,6 +1,7 @@
 // GitHub API calls for the dev tools (inbox, CI, gists, commit stats) + the local-model README draft.
 // Every call runs only from a button press; the token comes from Connect or the keychain PAT.
 import { fetch } from "@tauri-apps/plugin-http";
+import { ollamaFetch } from "../bot/ollamaFetch";
 import { logActivity } from "../../core/db";
 import { ollamaJson } from "../bot/llm";
 import { getSetting, LOCAL_MODEL_KEY } from "../skills/store";
@@ -56,7 +57,7 @@ export async function commitStats(fullName: string): Promise<number[]> {
 /** Draft only: shown for review/copy, never written to the repo. Local Ollama (127.0.0.1) only. */
 export async function draftReadme(prompt: string): Promise<string> {
   const model = (await getSetting(LOCAL_MODEL_KEY)) ?? "";
-  const raw = await ollamaJson({ fetch: window.fetch.bind(window), model }, [
+  const raw = await ollamaJson({ fetch: ollamaFetch, model }, [
     { role: "system", content: 'Reply as JSON {"readme": "<markdown>"}.' }, { role: "user", content: prompt }]);
   try { return String((JSON.parse(raw) as { readme?: unknown }).readme ?? raw); } catch { return raw; }
 }

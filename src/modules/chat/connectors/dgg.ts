@@ -42,5 +42,6 @@ export const dgg: Connector = {
   placeholder: "destiny.gg",
   parseRoom: parseDgg,
   connect,
+  defaultEmbed: true,
   embedFallback: () => "https://www.destiny.gg/embed/chat",
 };

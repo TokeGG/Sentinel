@@ -8,7 +8,7 @@ import type { SocialConnector } from "./types";
 // AT Protocol has no public-client OAuth a desktop app can use without
 // hosting client metadata at a public HTTPS URL, so: handle + app password
 // (never your real password), re-authenticated per call, no cached session.
-async function session(): Promise<{ accessJwt: string; did: string }> {
+export async function session(): Promise<{ accessJwt: string; did: string }> {
   const identifier = await cred("bluesky", "handle");
   const password = await cred("bluesky", "app_password");
   const res = await fetch("https://bsky.social/xrpc/com.atproto.server.createSession", {

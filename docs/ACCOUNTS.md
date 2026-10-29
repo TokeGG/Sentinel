@@ -60,6 +60,11 @@ your own in Settings > Accounts > Client IDs (stored in `app_settings` as
 1. https://www.reddit.com/prefs/apps > **create another app…**.
 2. Type: **installed app**. Redirect uri: `http://127.0.0.1:53684`. Create app.
 3. The client ID is the string under the app name. Paste it into Settings > Accounts > Client IDs > Reddit (or the Social panel's field).
+4. Following & Likes needs the `mysubreddits` and `history` permissions: sign-ins made before they were added must press Connect again.
+
+## Troubleshooting
+
+Every failed Connect shows the cause and the next step. Press **Test** next to a service to check its client ID format and endpoints without signing in. "Port N is busy" = an earlier sign-in is still waiting (press Cancel) or another program uses the port.
 
 ## Mastodon
 

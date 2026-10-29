@@ -42,5 +42,6 @@ export const kick: Connector = {
   placeholder: "channel slug or kick.com URL",
   parseRoom: parseKick,
   connect,
+  defaultEmbed: true,
   embedFallback: (r) => `https://kick.com/popout/${encodeURIComponent(splitKickTarget(r.target).slug)}/chat`,
 };
