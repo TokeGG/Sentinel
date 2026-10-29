@@ -63,6 +63,10 @@ src/
                         (#/chrome/<id> strip), GameHud, layout.ts (pure clamp/tile/
                         cascade), layoutStore.ts (panel_layout + app_settings via
                         db.ts), settingsStore.ts, panelApi.ts
+  modules/bot/        — browser-bot learning kernel + agent loop (no manifest/driver/UI yet): kernel/
+                        (brain, nudge, variants, brainFile: generic mirror of mmoarena's botbrain/
+                        outplay learning; JSON shape = its botbrain.json), brainSpecs.ts, mistakes.ts,
+                        llm.ts (Ollama 127.0.0.1:11434 only), agent.ts, knowledge.ts, learn.ts, sql.ts/store.ts
   modules/<name>/
     index.ts          — the module's ModuleManifest + its skills
     Panel.tsx, panelLogic.ts (+ .test.ts) — custom panel and its pure logic
@@ -71,7 +75,7 @@ src/
 
 src-tauri/
   migrations/NN_<module>.sql — numbered SQL, versions 1..27 strictly ascending
-                        (26 = social_post_meta, 27 = skills/mcp; 17-27 idempotent `IF NOT EXISTS`); loaded by
+                        (26 = social_post_meta, 27 = skills/mcp, 28 = bot; 17-28 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
@@ -231,6 +235,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
   Never run in a real window or against a real network yet.
 - Email (`modules/email`): custom panel, multi-account IMAP/SMTP, passwords only in keychain (`pw:<accountId>`), cache in SQLite (`mail_*`, migration 24), HTML sanitized by `sanitize.ts` into a `sandbox=""` iframe. No OAuth (Gmail/iCloud need app passwords). No attachment download, drafts saving or threading. The Rust mail code (mail*.rs, `mail-parser` crate) compiles and its pure parts are unit-tested, but has never run against a live mail server.
 - Social per-post actions (like / boost-repost / inline reply; optional `like`/`unlike`/`share`/`unshare`/`reply` on `SocialConnector`, absent = button hidden; request builders in `social/connectors/actions.ts`, optimistic UI in `useActions.ts`, ids/state in `social_post_meta`): Bluesky, Mastodon (scopes now incl. write:favourites) and Reddit (scopes now incl. vote submit; no repost). Older sign-ins must "Connect" again. X stays a stub. Never run against the live APIs.
+- Browser bot (`modules/bot`): only the pure kernel, agent loop, prompt/parser, notes retrieval and store exist (tested with fakes). No `BrowserDriver` (Rust), no manifest/UI, no URL-note fetching, nothing wires `store.ts` or `toolGate` yet; never run against a real Ollama.
 - Discord panel is built (modules/discord) but media permissions, the screen-share
   picker/Go Live and the unread moon are unverified on Windows; checklist in
   `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.

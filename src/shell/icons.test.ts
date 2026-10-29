@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { ICONS, isPathData, drawIcon } from "./icons.ts";
 import { RINGS } from "../core/customizeChecks.ts";
 
@@ -26,7 +26,8 @@ test("every ICONS entry parses as a non-empty path string and starts with M", ()
 // Manifests are the single source of truth; read their static ring/icon
 // literals (the index files import Tauri, so they cannot load under node).
 const dir = new URL("../modules/", import.meta.url);
-const meta = readdirSync(dir).map((name) => {
+// (a folder without index.ts, e.g. modules/bot before its manifest exists, is not a module yet)
+const meta = readdirSync(dir).filter((name) => existsSync(new URL(`${name}/index.ts`, dir))).map((name) => {
   const src = readFileSync(new URL(`${name}/index.ts`, dir), "utf8");
   return { name, ring: src.match(/^\s*ring: "([^"]*)",/m)?.[1], icon: src.match(/^\s*icon: "([^"]*)",/m)?.[1] };
 });
