@@ -10,6 +10,8 @@ import { cascade, clampToScreen, clientRect, reclamp, TITLEBAR_H, type Rect } fr
 import { deleteLayout, loadLayout, saveLayout } from "./layoutStore";
 import { keepKnown } from "./restoreLogic";
 import { getRestorePanels } from "./settingsStore";
+import { DESK_SIZES, PANEL_CLOSED, PANEL_FOCUSED } from "./desk/ids";
+import { launchRows } from "./desk/launch";
 
 export type SavedPanel = { id: string; rect: Rect; state: string; z: number };
 
@@ -46,7 +48,7 @@ export function openPanel(m: ModuleManifest, rect?: Rect): Promise<void> {
   return openAt(m.id, web?.size ?? DEFAULT_SIZE, web, rect, web?.min);
 }
 
-async function openAt(id: string, size: { w: number; h: number }, web?: WebConfig, rect?: Rect, min = MIN) {
+export async function openAt(id: string, size: { w: number; h: number }, web?: WebConfig, rect?: Rect, min = MIN) {
   const cur = rect ?? (await getPanel(id).then((p) => p.rect, () => undefined));
   const screen = await mainClientRect();
   const r = clampToScreen(cur ?? cascade(opened++, screen, size), screen, min);
@@ -69,14 +71,17 @@ export const openMaster = (): Promise<void> => openAt(MASTER_ID, { w: 540, h: 60
 // Row first: called from a chrome webview, close_panel destroys the caller
 // before its reply arrives, so nothing after the invoke would run.
 export async function closePanel(id: string): Promise<void> {
+  const rect = await getPanel(id).then((p) => p.rect, () => undefined);
+  await emit(PANEL_CLOSED, { id, rect }).catch(() => {});
   if (inChrome()) await emit(LAYOUT_DELETE, { id });
   else await deleteLayout(id);
   await invoke("close_panel", { id });
 }
 
 /** Raise (no-op in Rust if already top) and persist the authoritative z. */
-export async function focusPanel(id: string): Promise<SavedPanel> {
+export async function focusPanel(id: string, auto = false): Promise<SavedPanel> {
   const p = await invoke<SavedPanel>("focus_panel", { id });
+  emit(PANEL_FOCUSED, { id, auto }).catch(() => {});
   await commit(p);
   return p;
 }
@@ -115,7 +120,7 @@ async function doRestore(): Promise<void> {
   // Default ON; a failed read must not strand the user with no panels.
   if (!(await getRestorePanels().catch(() => true))) return;
   const known = new Map(registry.map((m) => [m.id, m]));
-  const rows = keepKnown(await loadLayout(), known.keys());
+  const rows = (await launchRows(known).catch(() => null)) ?? keepKnown(await loadLayout(), known.keys());
   const saved = await invoke<SavedPanel[]>("restore_layout", { rows, screen: await mainClientRect() });
   for (const p of saved) {
     if (p.state !== "open") continue;
@@ -130,7 +135,8 @@ async function doRestore(): Promise<void> {
 /** After maximise/restore/resize: pull every open panel back inside the usable area. */
 export async function reclampPanels(): Promise<void> {
   const screen = await mainClientRect();
-  const ids = [...registry.map((m) => [m.id, m.web?.min ?? MIN] as const), [SETTINGS_ID, MIN] as const, [MASTER_ID, MIN] as const];
+  const ids = [...registry.map((m) => [m.id, m.web?.min ?? MIN] as const), [SETTINGS_ID, MIN] as const, [MASTER_ID, MIN] as const,
+    ...Object.keys(DESK_SIZES).map((id) => [id, MIN] as const)];
   const open: { id: string; rect: Rect; min: { w: number; h: number } }[] = [];
   for (const [id, min] of ids) {
     const p = await getPanel(id).catch(() => null); // not open -> skip

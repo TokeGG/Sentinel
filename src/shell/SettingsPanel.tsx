@@ -8,6 +8,8 @@ import { AboutSection } from "./settings/AboutSection";
 import { AppearanceSection } from "./settings/AppearanceSection";
 import { DiagnosticsSection } from "./settings/DiagnosticsSection";
 import { DataSection } from "./settings/DataSection";
+import { DesktopSection } from "./settings/DesktopSection";
+import { ExportSection } from "./settings/ExportSection";
 import { GeneralSection } from "./settings/GeneralSection";
 import { NotificationsSection } from "./settings/NotificationsSection";
 import { JobsSection } from "./settings/JobsSection";
@@ -25,7 +27,9 @@ export function SettingsPanel() {
       <AccountsSection onError={onError} />
       <NotificationsSection onError={onError} />
       <JobsSection onError={onError} />
+      <DesktopSection onError={onError} />
       <DataSection onError={onError} />
+      <ExportSection onError={onError} />
       <DiagnosticsSection onError={onError} />
       <UpdatesSection onError={onError} />
       <AboutSection onError={onError} />

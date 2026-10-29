@@ -15,6 +15,10 @@ import { useBadges } from "./shell/useBadges";
 import { useNotifLog } from "./shell/useNotifLog";
 import { ChromeRoute, chromeIdFromHash } from "./shell/ChromeRoute";
 import { GripRoute, gripIdFromHash } from "./shell/GripRoute";
+import { useShellCommands } from "./shell/desk/useShellCommands";
+import { useDesktopSync } from "./shell/desk/useDesktopSync";
+import { useAppKeys } from "./shell/desk/useAppKeys";
+import { Tour } from "./shell/desk/Tour";
 import "./modules/notes"; // self-registers into `registry` on import
 import "./modules/news";
 import "./modules/pccare";
@@ -37,6 +41,7 @@ import "./modules/chat";
 import "./modules/skills";
 import "./modules/bot";
 import "./App.css";
+import "./shell/desk/desk.css";
 
 // Child panel webviews load this same bundle at #/panel/<id>; they render only
 // that module and never start the scheduler, restore layout, or listen.
@@ -45,6 +50,10 @@ function MainShell() {
   const [settingsTick, setSettingsTick] = useState(0);
   const onPanelClosed = useBadges(registry, setError);
   useNotifLog(setError);
+  const deskFail = (e: unknown) => setError(String(e));
+  useShellCommands(deskFail); // palette / keys / tray commands, nav history, pins
+  useAppKeys();
+  const skyTint = useDesktopSync(deskFail);
   useEffect(() => {
     getDb()
       .then(() => {
@@ -88,6 +97,8 @@ function MainShell() {
       </TitleBar>
       <div className="starmap">
         <StarMap modules={registry} onError={setError} />
+        <div className="sky-tint" style={{ background: skyTint }} />
+        <Tour />
         {error && (
           <div className="hud-error" role="alert">
             <span>{error}</span>

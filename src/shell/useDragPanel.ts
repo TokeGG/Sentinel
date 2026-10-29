@@ -4,6 +4,7 @@
 // the element holding the pointer capture).
 import { useRef, useState } from "react";
 import { dragRect, resizeRect, type Rect } from "./layout";
+import { snapAfterDrag } from "./desk/layoutOps";
 import { commit, dragMove, dragResize, focusPanel, getPanel, mainClientRect, MIN } from "./panelApi";
 
 export type Kind = "move" | "resize";
@@ -67,6 +68,7 @@ export function useDragPanel(id: string, kind: Kind, min = MIN) {
         drag.current = d;
         flush();
         drag.current = null;
+        if (kind === "move") await snapAfterDrag(id).catch(() => {}); // edge snapping
         await commit(await getPanel(id)); // persist once, at drag end
       }
       await focusPanel(id); // raise last: may re-create (and so destroy) this webview

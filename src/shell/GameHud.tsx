@@ -8,6 +8,8 @@ import { saveGameModeAuto, saveStarMotion } from "./generalSettings";
 import { openMaster } from "./panelApi";
 import { setGameMode as shareGameMode, setStarMotion as shareStarMotion } from "./motionStore";
 import { OrbitControls } from "./OrbitControls";
+import { sendCmd } from "./desk/shellCmd";
+import { BRIEFING_ID } from "./desk/ids";
 
 // Main-window only: game-mode listeners, the auto toggle, the manual button,
 // rendered as the toolbar inside the title bar (the error line lives in App).
@@ -64,6 +66,11 @@ export function GameHud({ setError, refresh = 0 }: { setError: (e: string | null
     getGameModeAuto().then(setAuto).catch(fail);
     getStarMotion().then((on) => { setMotion(on); shareStarMotion(on); }).catch(fail);
   }, [refresh]);
+  const manualRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    const un = listen("tray-game-mode", () => manualRef.current()); // tray menu + palette
+    return () => void un.then((f) => f());
+  }, []);
   const toggleManual = async () => {
     try {
       await invoke("set_game_mode", { manual: !manual });
@@ -71,8 +78,11 @@ export function GameHud({ setError, refresh = 0 }: { setError: (e: string | null
     } catch (e) { fail(e); }
   };
 
+  manualRef.current = toggleManual;
   return (
     <div className="hud-row">
+      <button onClick={() => sendCmd({ type: "palette" }).catch(fail)} title="Search everything (Ctrl+K)">Search</button>
+      <button onClick={() => sendCmd({ type: "open", id: BRIEFING_ID }).catch(fail)}>Briefing</button>
       <span className={`hud-state${active ? " on" : ""}`}>{active ? "Game mode on" : "Game mode off"}</span>
       <button className={manual ? "on" : ""} onClick={toggleManual}>Game mode</button>
       <button className={auto ? "on" : ""} disabled={auto === null} onClick={toggleAuto}>

@@ -1,5 +1,6 @@
 mod bot;
 mod commands;
+mod desktop;
 mod migrations;
 mod gamemode;
 mod panels;
@@ -14,8 +15,12 @@ pub fn run() {
         .manage(Mcp::default())
         .manage(bot::BotBrowser::default())
         .manage(gamemode::GameMode::default())
+        .manage(desktop::hotkeys::Hotkeys::default())
         .setup(|app| {
             gamemode::start_poll(app.handle().clone());
+            if let Err(e) = desktop::tray::create(app.handle()) {
+                eprintln!("tray icon unavailable: {e}");
+            }
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
@@ -24,6 +29,9 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(desktop::hotkeys::plugin())
+        // Start with Windows: registered only when the user enables it in Settings (off by default).
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations("sqlite:sentinel.db", migrations::all())
@@ -44,6 +52,9 @@ pub fn run() {
             mail_move,
             mail_delete,
             mail_send,
+            mail_fetch_attachment,
+            mail_save_attachment,
+            mail_append_draft,
             backup_database,
             delete_backup,
             restore_database,
@@ -82,7 +93,10 @@ pub fn run() {
             bot::bot_show,
             bot::bot_close,
             gamemode::set_game_mode,
-            gamemode::set_game_mode_auto
+            gamemode::set_game_mode_auto,
+            desktop::tray::set_tray_unread,
+            desktop::hotkeys::set_hotkeys,
+            desktop::io::read_text_file
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
