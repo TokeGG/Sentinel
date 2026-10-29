@@ -134,9 +134,10 @@ pub async fn focus_panel(app: AppHandle, id: String) -> Result<SavedPanel, Strin
         p.open(&id);
         top
     };
-    // Already topmost: no re-create (it would kill the chrome mid-drag).
-    if !(was_top && app.get_webview(&label(&id)).is_some()) {
-        raise(&app, &id, &s)?;
+    // Topmost or web panel: just focus (re-create kills chrome mid-drag / a live call).
+    match app.get_webview(&label(&id)) {
+        Some(w) if was_top || s.url.is_some() => w.set_focus().map_err(e)?,
+        _ => raise(&app, &id, &s)?,
     }
     saved(&id, s.rect, &app.state::<Mutex<Panels>>())
 }
