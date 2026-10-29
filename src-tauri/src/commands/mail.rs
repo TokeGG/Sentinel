@@ -1,123 +1,70 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
+use std::net::TcpStream;
+
+// Shared IMAP plumbing for the mail commands (mail_fetch / mail_body /
+// mail_ops / mail_send). The password is passed in per call by the TS side,
+// which reads it from the OS keychain; nothing here stores or logs it.
+#[derive(Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct MailAcct {
+    pub host: String,
+    pub port: u16,
+    /// "ssl" (implicit TLS, e.g. 993) or "starttls" (e.g. 143). Never plaintext.
+    pub tls: String,
+    pub username: String,
+    pub password: String,
+}
+
+pub type Sess = imap::Session<native_tls::TlsStream<TcpStream>>;
+
+pub fn connect(a: &MailAcct) -> Result<Sess, String> {
+    let tls = native_tls::TlsConnector::builder().build().map_err(|e| e.to_string())?;
+    let addr = (a.host.as_str(), a.port);
+    let client = if a.tls == "starttls" {
+        imap::connect_starttls(addr, &a.host, &tls)
+    } else {
+        imap::connect(addr, &a.host, &tls)
+    }
+    .map_err(|e| e.to_string())?;
+    client.login(&a.username, &a.password).map_err(|e| e.0.to_string())
+}
+
+/// Runs blocking IMAP/SMTP work off the async runtime.
+pub async fn blocking<T: Send + 'static>(
+    f: impl FnOnce() -> Result<T, String> + Send + 'static,
+) -> Result<T, String> {
+    tauri::async_runtime::spawn_blocking(f).await.map_err(|e| e.to_string())?
+}
 
 #[derive(Serialize)]
-pub struct MailHeader {
-    uid: u32,
-    from: String,
-    subject: String,
-    date: String,
+pub struct MailFolder {
+    name: String,
+    /// Special-use attributes such as "\\Sent"; the TS side decides the role.
+    attrs: Vec<String>,
 }
 
-// Read-only IMAP fetch: connects, pulls the most recent `limit` message
-// headers from INBOX, disconnects. No message is ever deleted or marked —
-// this command only reads. Blocking (the `imap`/`native-tls` crates are
-// sync), run off the main thread by Tauri's async command machinery.
 #[tauri::command]
-pub async fn imap_fetch_inbox(
-    host: String,
-    port: u16,
-    username: String,
-    password: String,
-    limit: u32,
-) -> Result<Vec<MailHeader>, String> {
-    tauri::async_runtime::spawn_blocking(move || {
-        let tls = native_tls::TlsConnector::builder()
-            .build()
-            .map_err(|e| e.to_string())?;
-        let client = imap::connect((host.as_str(), port), &host, &tls).map_err(|e| e.to_string())?;
-        let mut session = client
-            .login(&username, &password)
-            .map_err(|e| e.0.to_string())?;
-        let mailbox = session.select("INBOX").map_err(|e| e.to_string())?;
-
-        let total = mailbox.exists;
-        if total == 0 {
-            session.logout().ok();
-            return Ok(vec![]);
+pub async fn mail_list_folders(acct: MailAcct) -> Result<Vec<MailFolder>, String> {
+    blocking(move || {
+        let mut s = connect(&acct)?;
+        let names = s.list(Some(""), Some("*")).map_err(|e| e.to_string())?;
+        let mut out = Vec::new();
+        for n in names.iter() {
+            let mut attrs = Vec::new();
+            let mut selectable = true;
+            for a in n.attributes() {
+                match a {
+                    imap::types::NameAttribute::NoSelect => selectable = false,
+                    imap::types::NameAttribute::Custom(c) => attrs.push(c.to_string()),
+                    _ => {}
+                }
+            }
+            if selectable {
+                out.push(MailFolder { name: n.name().to_string(), attrs });
+            }
         }
-        let start = total.saturating_sub(limit.saturating_sub(1)).max(1);
-        let seq = format!("{start}:{total}");
-
-        let messages = session
-            .fetch(&seq, "(UID ENVELOPE)")
-            .map_err(|e| e.to_string())?;
-
-        let mut headers: Vec<MailHeader> = messages
-            .iter()
-            .filter_map(|m| {
-                let env = m.envelope()?;
-                let from = env
-                    .from
-                    .as_ref()
-                    .and_then(|addrs| addrs.first())
-                    .map(|a| {
-                        let mailbox = a.mailbox.as_ref().map(|m| String::from_utf8_lossy(m).into_owned());
-                        let host = a.host.as_ref().map(|h| String::from_utf8_lossy(h).into_owned());
-                        match (mailbox, host) {
-                            (Some(m), Some(h)) => format!("{m}@{h}"),
-                            (Some(m), None) => m,
-                            _ => "(unknown)".to_string(),
-                        }
-                    })
-                    .unwrap_or_else(|| "(unknown)".to_string());
-                let subject = env
-                    .subject
-                    .as_ref()
-                    .map(|s| String::from_utf8_lossy(s).into_owned())
-                    .unwrap_or_else(|| "(no subject)".to_string());
-                let date = env
-                    .date
-                    .as_ref()
-                    .map(|d| String::from_utf8_lossy(d).into_owned())
-                    .unwrap_or_default();
-                Some(MailHeader { uid: m.uid.unwrap_or(0), from, subject, date })
-            })
-            .collect();
-        headers.reverse(); // newest first
-
-        session.logout().ok();
-        Ok(headers)
+        s.logout().ok();
+        Ok(out)
     })
     .await
-    .map_err(|e| e.to_string())?
 }
-
-// SMTP send — a distinct, explicit command from the fetch path. Nothing
-// else in the app calls this implicitly; only the Email module's `send_mail`
-// skill does, and only on direct user action from the UI.
-#[tauri::command]
-pub async fn smtp_send_mail(
-    host: String,
-    port: u16,
-    username: String,
-    password: String,
-    to: String,
-    subject: String,
-    body: String,
-) -> Result<(), String> {
-    use lettre::message::Message;
-    use lettre::transport::smtp::authentication::Credentials;
-    use lettre::{SmtpTransport, Transport};
-
-    tauri::async_runtime::spawn_blocking(move || {
-        let email = Message::builder()
-            .from(username.parse().map_err(|e: lettre::address::AddressError| e.to_string())?)
-            .to(to.parse().map_err(|e: lettre::address::AddressError| e.to_string())?)
-            .subject(subject)
-            .body(body)
-            .map_err(|e| e.to_string())?;
-
-        let creds = Credentials::new(username, password);
-        let mailer = SmtpTransport::relay(&host)
-            .map_err(|e| e.to_string())?
-            .port(port)
-            .credentials(creds)
-            .build();
-
-        mailer.send(&email).map_err(|e| e.to_string())?;
-        Ok(())
-    })
-    .await
-    .map_err(|e| e.to_string())?
-}
-
