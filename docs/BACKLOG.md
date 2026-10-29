@@ -41,3 +41,7 @@ Principles that still apply to everything above: local-first, no hosted AI, noth
 13. Lab notebook with tagged commands and snippets per engagement
 14. Scope drift alerts: a discovered host outside scope is listed but never touched
 15. Bot-assisted triage: the local bot summarises run output and drafts findings for review (never runs tools out of scope)
+
+## Final steps (owner-authorised)
+- When everything above is built: open one PR, merge it, start the Windows app build (tag-driven release; tag creation may need the owner).
+- Then test and "head-start" the browser bot: Playwright-driven fixture pages exercising driver.js and the agent loop with a scripted model, starter knowledge notes, a task-understanding step (restate goal, plan, success check), prompt and brain-default improvements. Real-Ollama / WebView2 behaviour still needs the owner's PC.
