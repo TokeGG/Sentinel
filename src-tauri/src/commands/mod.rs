@@ -40,6 +40,8 @@ pub mod pc_moves;
 pub mod pc_browser;
 pub mod net_tools;
 pub mod git_tools;
+pub mod games;
+pub mod media_local;
 
 pub use system::*;
 pub use network::*;
@@ -74,3 +76,5 @@ pub use pc_moves::{apply_moves, list_dir_files};
 pub use pc_browser::{browser_caches, clear_browser_cache};
 pub use net_tools::{default_gateway, ping_hosts, wake_on_lan};
 pub use git_tools::{git_status, scan_secrets};
+pub use games::{game_manifests, steam_app_manifests};
+pub use media_local::{now_playing, read_image_data};

@@ -20,7 +20,7 @@ test("specs are well-formed and every teaching targets a real, in-bounds number"
   }
   assert.deepEqual(shippedBrain(), DEFAULT_BROWSER_BRAIN);
   const f = importBrains(BROWSER_SPECS, exportBrains(BROWSER_SPECS, SHIPPED_BRAINS));
-  assert.ok(f.ok && f.brains.browser.waitAfterAction === 900);
+  assert.ok(f.ok && f.brains.browser.waitAfterAction === 1100);
 });
 
 test("classifyStep: one kind per step, most specific first", () => {
@@ -67,9 +67,9 @@ test("lessons: failed runs count double; end to end the brain moves a capped, ri
   assert.equal(lose.waitAfterAction.weight, 2 * win.waitAfterAction.weight);
   assert.equal(win.waitAfterAction.weight, 16);
   const B = DEFAULT_BROWSER_BRAIN;
-  assert.equal(lessonBrain(BROWSER_SPECS, B, win, LOWER_KEYS).waitAfterAction, 900, "16 < min weight: not yet");
+  assert.equal(lessonBrain(BROWSER_SPECS, B, win, LOWER_KEYS).waitAfterAction, 1100, "16 < min weight: not yet");
   const next = limitChange(BROWSER_SPECS, B, lessonBrain(BROWSER_SPECS, B, lose, LOWER_KEYS));
-  assert.ok(next.waitAfterAction > 900 && next.waitAfterAction <= 900 + 0.2 * 4800);
+  assert.ok(next.waitAfterAction > 1100 && next.waitAfterAction <= 1100 + 0.2 * 4800);
   const loop = lessonBrain(BROWSER_SPECS, B, { loopPatience: { value: 2, weight: 150 } }, LOWER_KEYS);
   assert.ok(loop.loopPatience < 3);
 });

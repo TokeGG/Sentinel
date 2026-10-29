@@ -21,6 +21,10 @@
     "core:window:allow-start-dragging",
     "core:window:allow-is-maximized",
     "opener:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "steam://rungameid/*" }, { "url": "com.epicgames.launcher://apps/*" }]
+    },
     "dialog:default",
     "clipboard-manager:default",
     "updater:default",

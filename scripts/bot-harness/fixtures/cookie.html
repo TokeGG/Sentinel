@@ -1,0 +1,6 @@
+<!doctype html><html><head><title>City Library</title>
+<style>#cb{position:fixed;inset:0;background:#000c;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px}#main{display:none}</style></head><body>
+<div id="cb">We use cookies. <button id="acc">Accept all</button> <button id="rej">Reject all</button></div>
+<div id="main"><h1>City Library</h1><p>Opening hours: Mon-Fri 9:00-17:00</p></div>
+<script>for (const id of ["acc", "rej"]) document.getElementById(id).onclick = () => { document.getElementById("cb").remove(); document.getElementById("main").style.display = "block"; };</script>
+</body></html>

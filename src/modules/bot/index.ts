@@ -1,10 +1,14 @@
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { runDueJobs } from "./jobRunner";
 import { addTextNote, addUrlNote, deleteNote, exportBrain, importBrain, rateRun, resetBrain } from "./ops";
+import { addJob, deleteJob, deleteSiteNote, deleteWorkflow, enableJob, putSiteNote, saveDemo, saveRunAsWorkflow, shareBrain, updateWorkflow } from "./opsExtras";
 import { botSections } from "./panelLogic";
 import { recentEpisodes } from "./store";
 
 // Browser bot: a local model (Ollama on this PC) drives a separate browser window to reach a goal you type.
-// It runs ONLY when you press Run in the panel: no schedule, no autostart. Game mode closes its browser.
+// It runs when you press Run (or Replay) in the panel. Scheduled jobs exist but are doubly opt-in: the module's
+// Auto-refresh toggle (core/scheduler, off by default) AND each job's own switch (off when created). Game mode
+// pauses the scheduler and closes its browser.
 export const botModule: ModuleManifest = {
   id: "hub.bot",
   name: "Browser Bot",
@@ -15,6 +19,7 @@ export const botModule: ModuleManifest = {
   panel: "custom",
   ui: () => import("./Panel"),
   customize: { sections: botSections },
+  schedule: { skill: "run_due_jobs", intervalMinutes: 15 },
   skills: [
     { name: "add_note", run: addTextNote },
     { name: "add_note_url", run: addUrlNote },
@@ -23,6 +28,17 @@ export const botModule: ModuleManifest = {
     { name: "export_brain", run: exportBrain },
     { name: "import_brain", run: importBrain },
     { name: "reset_brain", run: resetBrain },
+    { name: "share_brain", run: shareBrain },
+    { name: "save_run_workflow", run: saveRunAsWorkflow },
+    { name: "save_demo", run: saveDemo },
+    { name: "update_workflow", run: updateWorkflow },
+    { name: "delete_workflow", run: deleteWorkflow },
+    { name: "add_job", run: addJob },
+    { name: "enable_job", run: enableJob },
+    { name: "delete_job", run: deleteJob },
+    { name: "run_due_jobs", run: runDueJobs },
+    { name: "put_site_note", run: putSiteNote },
+    { name: "delete_site_note", run: deleteSiteNote },
   ],
   load: async () => (await recentEpisodes()) as unknown as Record<string, unknown>[],
 };

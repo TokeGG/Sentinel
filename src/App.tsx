@@ -40,6 +40,8 @@ import "./modules/discord";
 import "./modules/chat";
 import "./modules/skills";
 import "./modules/bot";
+import "./modules/games";
+import "./modules/media";
 import "./App.css";
 import "./shell/desk/desk.css";
 

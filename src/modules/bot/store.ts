@@ -23,14 +23,15 @@ export async function getEpisode(id: number): Promise<Episode | null> {
 }
 export const rateEpisode = (id: number, t: "up" | "down") => run(q.setThumbs(id, t));
 
-export async function loadLearnState(): Promise<LearnState> {
-  const [p] = await rows<{ json: string }>(q.getBrain(q.popKey(BROWSER_CLASS)));
-  const [l] = await rows<{ json: string }>(q.getBrain(q.lessonsKey(BROWSER_CLASS)));
+/** `cls`: BROWSER_CLASS (normal runs) or LAB_CLASS (Lab mode keeps its own brain). */
+export async function loadLearnState(cls = BROWSER_CLASS): Promise<LearnState> {
+  const [p] = await rows<{ json: string }>(q.getBrain(q.popKey(cls)));
+  const [l] = await rows<{ json: string }>(q.getBrain(q.lessonsKey(cls)));
   const base = shippedBrain();
   const pop = q.parsePopulation(p?.json);
-  return { pop: pop ? freshenPopulation(BROWSER_SPECS, pop, base) : newPopulation(BROWSER_SPECS, BROWSER_CLASS, base, seededRng(Date.now())), lessons: q.parseLessons(l?.json) };
+  return { pop: pop ? freshenPopulation(BROWSER_SPECS, pop, base) : newPopulation(BROWSER_SPECS, cls, base, seededRng(Date.now())), lessons: q.parseLessons(l?.json) };
 }
-export async function saveLearnState(st: LearnState) {
-  await run(q.putBrain(q.popKey(BROWSER_CLASS), st.pop));
-  await run(q.putBrain(q.lessonsKey(BROWSER_CLASS), st.lessons));
+export async function saveLearnState(st: LearnState, cls = BROWSER_CLASS) {
+  await run(q.putBrain(q.popKey(cls), st.pop));
+  await run(q.putBrain(q.lessonsKey(cls), st.lessons));
 }

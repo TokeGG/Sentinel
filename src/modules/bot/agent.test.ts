@@ -170,7 +170,7 @@ test("a throwing model ends the run as failed; a throwing store does not lose th
 test("variant id and goal are carried into the episode", async () => {
   const r = rig([A({ type: "done", result: "x" })], [ok], { variantId: "g0v3" });
   const ep = await runAgent(r.deps, { goal: "my goal" });
-  assert.deepEqual([ep.variantId, ep.goal, ep.maxSteps], ["g0v3", "my goal", 25]);
+  assert.deepEqual([ep.variantId, ep.goal, ep.maxSteps], ["g0v3", "my goal", 30]);
 });
 
 test("actionGate blocks any action before it runs (Lab mode)", async () => {

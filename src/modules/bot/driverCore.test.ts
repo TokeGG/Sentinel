@@ -37,7 +37,7 @@ test("observe runs window.__sb.observe() and maps the reply", async () => {
   assert.equal(o.hash, "h1");
   assert.equal(r.calls[0].cmd, "bot_run");
   assert.equal(r.calls[0].args.js, "window.__sb.observe()");
-  assert.equal(r.calls[0].args.timeoutMs, 15000);
+  assert.equal(r.calls[0].args.timeoutMs, 20000);
 });
 
 test("observe re-looks when the page navigated under it, then gives an error observation instead of throwing", async () => {

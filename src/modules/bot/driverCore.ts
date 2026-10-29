@@ -97,6 +97,8 @@ export function makeDriver(d: DriverDeps) {
     driver,
     open: (url: string, visible: boolean) => send("bot_open", { url, visible }, ms() * 2, "id"),
     show: (visible: boolean) => d.invoke("bot_show", { visible }),
+    /** Run a window.__sb.* call and return its value (teach-by-demo); null on failure. */
+    exec: async (js: string): Promise<unknown> => { const r = await run(js); return r.ok ? parse(r) : null; },
     close: async () => { d.corr.failAll("closed"); await d.invoke("bot_close", {}).catch(() => {}); },
   };
 }

@@ -53,7 +53,7 @@ export const PROVIDERS: Provider[] = [
     scopes: ["https://outlook.office.com/IMAP.AccessAsUser.All", "https://outlook.office.com/SMTP.Send", "offline_access", "openid", "email"],
     clientGroup: "microsoft", redirect: loop(53691, "localhost"), purpose: "Email panel: IMAP and SMTP over OAuth (no app password)." },
   { id: "twitch", label: "Twitch", flow: "device-code", deviceUrl: "https://id.twitch.tv/oauth2/device", tokenUrl: "https://id.twitch.tv/oauth2/token",
-    scopes: ["chat:read", "chat:edit"], clientGroup: "twitch", strictScopes: true, purpose: "Chat panel: send messages in Twitch chat." },
+    scopes: ["chat:read", "chat:edit", "user:read:follows"], clientGroup: "twitch", strictScopes: true, purpose: "Chat panel: send messages in Twitch chat; Media panel: live followed channels." },
   { id: "github", label: "GitHub", flow: "device-code", deviceUrl: "https://github.com/login/device/code", tokenUrl: "https://github.com/login/oauth/access_token",
     scopes: ["read:user"], clientGroup: "github", headers: { Accept: "application/json" }, purpose: "GitHub panel: your starred repos; higher API rate limits for skill installs." },
   { id: "reddit", label: "Reddit", flow: "loopback-pkce", authUrl: "https://www.reddit.com/api/v1/authorize", tokenUrl: "https://www.reddit.com/api/v1/access_token",

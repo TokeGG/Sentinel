@@ -7,6 +7,7 @@ import { useModule } from "../../ui/useModule";
 import { ConfirmPlan } from "./ConfirmPlan";
 import { InstallPane } from "./InstallPane";
 import { ItemList } from "./ItemList";
+import { MarketPane } from "./MarketPane";
 import { ModelPane } from "./ModelPane";
 import type { Plan } from "./install";
 import type { Item } from "./panelLogic";
@@ -33,7 +34,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="skills"><Tile title="Skills"><ItemList items={items.filter((i) => i.kind === "skill")} busy={busy} run={run} onPlan={setPlan} empty="No skills" /></Tile></Section>
         <Section id="servers"><Tile title="MCP servers (off until you switch them on)"><ItemList items={items.filter((i) => i.kind === "mcp")} busy={busy} run={run} onPlan={setPlan} empty="No MCP servers" /></Tile></Section>
         <Section id="install"><Tile title="Install from GitHub"><InstallPane module={module} busy={busy} run={run} onPlan={setPlan} /></Tile></Section>
-        <Section id="model"><Tile title="Local model (for the future bot)"><ModelPane busy={busy} run={run} /></Tile></Section>
+        <Section id="market"><Tile title="Marketplace (suggested, verify before install)"><MarketPane busy={busy} run={run} onPlan={setPlan} /></Tile></Section>
+        <Section id="model"><Tile title="Local model (used by the Browser Bot)"><ModelPane busy={busy} run={run} /></Tile></Section>
       </Sections>
     </div>
   );

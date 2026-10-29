@@ -86,3 +86,8 @@
 .bot-goal > :is(.ui-file-text, textarea), .bot-goal > .ui-quickadd { flex: none; }
 .bot-root .ui-quickadd input { flex: 1; }
 .bot-root .ui-actions, .bot-root .ui-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); }
+.bot-plan { margin: 6px 0; padding: 6px 8px; border: 1px dashed var(--ph-line); white-space: pre-wrap; font: inherit; }
+.bot-steps { margin: 4px 0; padding-left: 20px; }
+.bot-steps li.bad { color: var(--ph-dim); }
+.bot-wf-step { display: flex; gap: 6px; align-items: center; }
+.bot-wf-step input { flex: 1; min-width: 0; }

@@ -38,8 +38,14 @@ export interface Step {
   timedOut?: boolean;
   retries?: number;
   output?: string;
+  /** The model's short reason for this action (explain-why). */
+  why?: string;
+  /** Role + label of the target element when it was chosen (saved workflows replay by this, ids change). */
+  el?: { role: string; text: string };
+  /** Page the action was taken on (site notebook). */
+  url?: string;
 }
-export type Outcome = "done" | "failed" | "maxSteps" | "timeout" | "loop" | "cancelled" | "denied";
+export type Outcome = "done" | "failed" | "maxSteps" | "timeout" | "loop" | "cancelled" | "denied" | "dry";
 export interface Episode {
   goal: string;
   variantId?: string;
@@ -50,6 +56,8 @@ export interface Episode {
   startedAt: number;
   endedAt: number;
   result?: string;
+  /** Task understanding the model wrote before acting (plan.ts). */
+  plan?: import("./plan.ts").TaskPlan | null;
 }
 
 /** Actions that should change the page when they work. */
