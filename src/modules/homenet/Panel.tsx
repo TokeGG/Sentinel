@@ -1,9 +1,9 @@
 import { useRef, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
-import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Chip, EmptyState, ErrorLine } from "../../ui/kit";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
+import { DeviceRow, type Dev } from "./DeviceRow";
 import { deviceName, deviceState, newDevices, sortDevices } from "./panelLogic";
 import "./homenet.css";
 
@@ -16,15 +16,10 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const known = useRef<Set<string> | null>(null);
   if (known.current === null && updated) known.current = new Set(rows.map((r) => String(r.id)));
   const fresh = new Set(newDevices(rows, known.current ?? new Set(rows.map((r) => String(r.id)))).map((r) => String(r.id)));
-  const devices = sortDevices<Record<string, unknown>>(rows).map((r) => ({
-    id: r.id,
-    ip: r.ip,
-    mac: r.mac,
-    tag: r.tag,
-    name: deviceName(r) ?? "Unknown device",
-    unknown: deviceName(r) === null,
-    isNew: fresh.has(String(r.id)),
-  }));
+  const devices: Dev[] = sortDevices<Record<string, unknown>>(rows).map((r) => {
+    const unknown = deviceName(r) === null, isNew = fresh.has(String(r.id));
+    return { id: r.id, ip: r.ip, mac: r.mac, tag: r.tag, name: deviceName(r) ?? (r.hostname ? String(r.hostname) : "Unknown device"), isNew, state: deviceState({ isNew, unknown: unknown && !r.hostname }), raw: r };
+  });
   const selected = mac || String(devices[0]?.mac ?? "");
   return (
     <div className="hn">
@@ -45,17 +40,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           {devices.length ? (
             <ul className="hn-list">
               <li className="hn-head" aria-hidden="true"><span /><span>Name</span><span>IP</span><span>MAC</span></li>
-              {devices.map((d) => {
-                const st = deviceState(d);
-                return (
-                  <li key={String(d.id)} className={`hn-dev ${st}`}>
-                    <i className="hn-dot" title={st} />
-                    <span className="hn-name">{d.name}{d.isNew && <em className="hn-new">NEW</em>}</span>
-                    <span className="hn-ip">{String(d.ip)}</span>
-                    <span className="hn-mac">{String(d.mac)} <ConfirmButton label="Forget" className="ui-btn ui-sm" disabled={busy} title="Remove from the saved list (comes back if a scan sees it again)" onConfirm={() => void run("forget_device", { mac: d.mac })} /></span>
-                  </li>
-                );
-              })}
+              {devices.map((d) => <DeviceRow key={String(d.id)} d={d} busy={busy} run={run} />)}
             </ul>
           ) : (
             <EmptyState title={hasScan ? "No devices yet — run a scan." : "No devices yet."} />

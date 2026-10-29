@@ -89,3 +89,13 @@ test("makeOllamaLlm posts to the local endpoint and returns the message content"
   const fEmpty = (async () => ({ ok: true, json: async () => ({}) })) as unknown as typeof fetch;
   await assert.rejects(makeOllamaLlm({ fetch: fEmpty, model: "m" }).decide(input()), /empty/);
 });
+
+test("ollamaJson only talks to the local Ollama and returns the reply text", async () => {
+  const { ollamaJson } = await import("./llm.ts");
+  const seen: string[] = [];
+  const f = (async (u: string) => { seen.push(u); return { ok: true, json: async () => ({ message: { content: "{}" } }) }; }) as unknown as typeof fetch;
+  assert.equal(await ollamaJson({ fetch: f, model: "m" }, []), "{}");
+  assert.deepEqual(seen, ["http://127.0.0.1:11434/api/chat"]);
+  await assert.rejects(ollamaJson({ fetch: f, model: "m", url: "http://example.com/api/chat" }, []), /non-local/);
+  await assert.rejects(ollamaJson({ fetch: f, model: "" }, []), /no local model/);
+});

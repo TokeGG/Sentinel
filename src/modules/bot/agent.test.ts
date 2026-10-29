@@ -172,3 +172,11 @@ test("variant id and goal are carried into the episode", async () => {
   const ep = await runAgent(r.deps, { goal: "my goal" });
   assert.deepEqual([ep.variantId, ep.goal, ep.maxSteps], ["g0v3", "my goal", 25]);
 });
+
+test("actionGate blocks any action before it runs (Lab mode)", async () => {
+  const click = A({ type: "click", target: "b1" });
+  const r = rig([click, A({ type: "done", result: "x" })], [ok], { actionGate: async (a) => ({ allowed: a.type !== "click", reason: "not in Lab mode" }) });
+  const ep = await runAgent(r.deps, { goal: "g" });
+  assert.equal(r.acted.length, 0);
+  assert.match(ep.steps[0].error ?? "", /blocked: not in Lab mode/);
+});

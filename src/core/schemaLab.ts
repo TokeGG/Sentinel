@@ -1,4 +1,4 @@
-// Bootstrap mirror of src-tauri/migrations/34_pentest_lab.sql (see schema.ts).
+// Bootstrap mirror of src-tauri/migrations/34_pentest_lab.sql (pentest lab tables + network_device_meta) (see schema.ts).
 export const LAB_STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS pentest_run_args (
     run_id INTEGER PRIMARY KEY,
@@ -42,5 +42,11 @@ export const LAB_STATEMENTS: string[] = [
     affected TEXT NOT NULL,
     cvss REAL,
     summary TEXT NOT NULL DEFAULT ''
+)`,
+  `CREATE TABLE IF NOT EXISTS network_device_meta (
+    mac TEXT PRIMARY KEY,
+    hostname TEXT NOT NULL DEFAULT '',
+    notes TEXT NOT NULL DEFAULT '',
+    first_seen TEXT NOT NULL DEFAULT (datetime('now'))
 )`,
 ];

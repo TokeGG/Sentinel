@@ -115,3 +115,14 @@ export function makeOllamaLlm(deps: { fetch: typeof fetch; model: string; url?: 
     },
   };
 }
+
+/** One JSON-format chat turn on the local model (Lab triage). Same endpoint rule: Ollama on 127.0.0.1 only. */
+export async function ollamaJson(deps: { fetch: typeof fetch; model: string; url?: string }, messages: ChatMessage[], signal?: AbortSignal): Promise<string> {
+  const url = assertOllamaUrl(deps.url ?? OLLAMA_CHAT_URL);
+  if (!deps.model) throw new Error("no local model selected (Skills > Local model)");
+  const res = await deps.fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ model: deps.model, messages, stream: false, format: "json", options: { temperature: 0.2 } }), signal });
+  if (!res.ok) throw new Error(`ollama ${res.status}`);
+  const j = (await res.json()) as { message?: { content?: unknown } };
+  if (typeof j.message?.content !== "string") throw new Error("ollama: empty reply");
+  return j.message.content;
+}

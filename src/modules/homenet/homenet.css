@@ -22,3 +22,5 @@
   .hn-head { display: grid; column-gap: var(--gap); padding: 0 var(--pad); font-size: 0.75em; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); }
   .hn-dot, .hn-name, .hn-ip, .hn-mac { grid-area: auto; }
 }
+.hn-detail { grid-column: 1 / -1; display: flex; flex-direction: column; gap: 6px; padding-top: 6px; }
+.hn-dev .ui-link { font: inherit; font-weight: inherit; text-align: left; }

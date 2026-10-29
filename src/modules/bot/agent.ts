@@ -16,6 +16,8 @@ export interface AgentDeps {
   store: { saveEpisode(ep: Episode): Promise<void> | void };
   /** Ask the user before an irreversible action. */
   confirm(action: Action, obs: Observation): Promise<boolean>;
+  /** Gate for EVERY action (Lab mode: only tools and in-scope goto pass). Absent = no extra restriction. */
+  actionGate?(action: Action): Promise<{ allowed: boolean; reason: string }>;
   /** Gate for tool actions (MCP). Absent = tools refused. */
   toolGate?(action: Extract<Action, { type: "tool" }>): Promise<{ allowed: boolean; reason: string }>;
   brain: Brain;
@@ -72,6 +74,10 @@ export async function runAgent(d: AgentDeps, o: RunOpts): Promise<Episode> {
     if (patience >= 2 && same.length === patience - 1) { outcome = "loop"; break; }
 
     const refuse = (error: string): Step => ({ obs: obs.hash, action, ok: false, error, changed: false });
+    if (d.actionGate) {
+      const g = await d.actionGate(action);
+      if (!g.allowed) { steps.push(refuse(`blocked: ${g.reason}`)); continue; }
+    }
     if (action.type === "tool") {
       const v = d.toolGate ? await d.toolGate(action) : { allowed: false, reason: "no tool gate" };
       if (!v.allowed) { steps.push(refuse(`tool blocked: ${v.reason}`)); continue; }

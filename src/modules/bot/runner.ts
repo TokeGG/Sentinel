@@ -6,7 +6,8 @@ import { logActivity } from "../../core/db";
 import { listSkills } from "../skills/registry";
 import { listMcpTools } from "../skills/mcp";
 import { getSetting, LOCAL_MODEL_KEY } from "../skills/store";
-import type { Action, Episode, Observation } from "./actions";
+import type { Action, BrowserDriver, Episode, Observation } from "./actions";
+import type { McpTool } from "../skills/mcpGate";
 import { runAgent } from "./agent";
 import { int } from "./brainSpecs";
 import { openBrowserDriver } from "./driver";
@@ -19,12 +20,25 @@ import { makeOllamaLlm, relevantSkills } from "./llm";
 import * as store from "./store";
 import { botRunTool, botToolGate } from "./tools";
 
+/** Lab mode (pentest/labBot.ts): replaces the tool list, tool execution and the action gate; the run is logged to the engagement. */
+export interface LabHooks {
+  startUrl: string;
+  goal(userGoal: string): string;
+  tools: McpTool[];
+  gate(a: Action): Promise<{ allowed: boolean; reason: string }>;
+  runTool(a: Extract<Action, { type: "tool" }>): Promise<string>;
+  wrapDriver(d: BrowserDriver): BrowserDriver;
+  /** Every top-level navigation; false = it left the scope, so the run is stopped. */
+  onNav(url: string): Promise<boolean>;
+}
+
 export interface RunRequest {
   goal: string;
   preApproved: boolean;
   showWindow: boolean;
   signal: AbortSignal;
   log: LogFn;
+  lab?: LabHooks;
   confirm(a: Action, o: Observation): Promise<boolean>;
 }
 export interface RunResult { episode: Episode; episodeId?: number }
@@ -35,17 +49,21 @@ export async function runBot(r: RunRequest): Promise<RunResult> {
   const st = await store.loadLearnState();
   const variant = pickVariant(st.pop, seededRng(Date.now()));
   const brain = variant.brain;
-  const notes = noteLines(retrieve(await store.allNotes(), r.goal, int(brain, "lessonCount")));
-  const skills = relevantSkills(r.goal, (await listSkills()).filter((s) => s.enabled).map(({ name, description, body }) => ({ name, description, body })));
-  const tools = (await listMcpTools().catch(() => [])).slice(0, 20);
+  const lab = r.lab;
+  const goal = lab ? lab.goal(r.goal) : r.goal;
+  const notes = lab ? [] : noteLines(retrieve(await store.allNotes(), r.goal, int(brain, "lessonCount")));
+  const skills = lab ? [] : relevantSkills(r.goal, (await listSkills()).filter((s) => s.enabled).map(({ name, description, body }) => ({ name, description, body })));
+  const tools = lab ? [...lab.tools, ...(await listMcpTools().catch(() => [])).slice(0, 12)] : (await listMcpTools().catch(() => [])).slice(0, 20);
   r.log("info", `variant ${variant.id}; ${notes.length} notes, ${skills.length} skills, ${tools.length} tools; caps ${int(brain, "maxStepsPerGoal")} steps / ${brain.wallClockSec} s`);
 
   const stop = new AbortController();
   const abort = () => stop.abort();
   if (r.signal.aborted) abort(); else r.signal.addEventListener("abort", abort, { once: true });
   const drv = await openBrowserDriver({
-    brain, visible: r.showWindow, runTool: botRunTool, onStopped: (why) => { r.log("warn", `browser stopped (${why})`); abort(); },
-    onNav: (url, allowed) => { r.log("nav", `${allowed ? "" : "DENIED "}${url}`); void logActivity("bot", "navigate", url.slice(0, 200), allowed ? "allowed" : "denied").catch(() => {}); },
+    brain, visible: r.showWindow, startUrl: lab?.startUrl, runTool: lab?.runTool ?? botRunTool, onStopped: (why) => { r.log("warn", `browser stopped (${why})`); abort(); },
+    onNav: (url, allowed) => {
+      r.log("nav", `${allowed ? "" : "DENIED "}${url}`);
+      if (lab) void lab.onNav(url).then((ok) => { if (!ok) { r.log("warn", `left the engagement scope (${url}): run stopped`); abort(); } }); void logActivity("bot", "navigate", url.slice(0, 200), allowed ? "allowed" : "denied").catch(() => {}); },
   });
   stop.signal.addEventListener("abort", () => void drv.close(), { once: true }); // Stop = the browser closes at once
   const stopped = new Promise<false>((res) => stop.signal.addEventListener("abort", () => res(false), { once: true }));
@@ -54,19 +72,19 @@ export async function runBot(r: RunRequest): Promise<RunResult> {
   let episode: Episode;
   try {
     episode = await runAgent({
-      driver: logDriver(drv.driver, r.log),
+      driver: logDriver(lab ? lab.wrapDriver(drv.driver) : drv.driver, r.log),
       llm: logLlm(makeOllamaLlm({ fetch, model }), r.log),
       clock: { now: () => Date.now(), sleep: (ms) => new Promise((res) => setTimeout(res, ms)) },
       store: { saveEpisode: async (e) => { id = await store.saveEpisode(e); } },
       confirm: (a, o) => Promise.race([r.confirm(a, o), stopped]),
-      toolGate: botToolGate, brain, variantId: variant.id, notes, skills, tools,
-    }, { goal: r.goal, preApproved: r.preApproved, signal: stop.signal });
+      toolGate: lab?.gate ?? botToolGate, actionGate: lab?.gate, brain, variantId: variant.id, notes, skills, tools,
+    }, { goal, preApproved: lab ? false : r.preApproved, signal: stop.signal });
   } finally {
     r.signal.removeEventListener("abort", abort);
     await drv.close();
   }
   void logActivity("bot", "run", r.goal.slice(0, 200), episode.outcome).catch(() => {});
-  try { await learn(st, episode); } catch (e) { r.log("warn", `learning step failed: ${(e as Error).message}`); }
+  try { if (!lab) await learn(st, episode); } catch (e) { r.log("warn", `learning step failed: ${(e as Error).message}`); }
   return { episode, episodeId: id };
 }
 
