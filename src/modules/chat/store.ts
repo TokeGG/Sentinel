@@ -7,12 +7,12 @@ type Row = Record<string, unknown>;
 
 export async function addRoom(args?: Record<string, unknown>) {
   const ref = detectRoom(String(args?.input ?? ""), String(args?.site ?? "auto"));
-  if (!ref) throw new Error("not recognised: paste a Twitch/Kick/destiny.gg URL, a chat popout URL, or pick a site and type a channel name");
+  if (!ref) throw new Error("not recognised: paste a Twitch/Kick/destiny.gg/YouTube-live URL, a chat popout URL, or pick a site and type a channel name");
   const d = await getDb();
   const id = `${ref.site}:${ref.target}`;
   const r = await d.execute(
     "INSERT OR IGNORE INTO chat_rooms (id, site, target, label, position) VALUES ($1, $2, $3, $4, (SELECT COALESCE(MAX(position), 0) + 1 FROM chat_rooms))",
-    [id, ref.site, ref.target, ref.label]
+    [id, ref.site, ref.target, String(args?.label || ref.label)]
   );
   if (r.rowsAffected) await logActivity("chat", "add_room", ref.label, ref.site);
   return { ok: true, id };

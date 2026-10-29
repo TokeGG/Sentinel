@@ -47,5 +47,7 @@ export interface Connector {
   parseRoom(input: string): RoomRef | null;
   /** Absent for `embed`: the site renders its own chat in an iframe. */
   connect?(room: RoomRef, h: Handlers): Promise<Connection>;
+  /** Embed-only sites whose room target is not itself a URL: iframe src and own-panel URL. */
+  urls?(room: RoomRef, host: string): { frame: string; panel: string };
   auth?: { credentialKey: string; help: string };
 }

@@ -4,7 +4,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { extractChannel, feedUrl, parseChannelInput } from "./channelUrl";
 import { parseYtFeed } from "./feed";
-import { parseTakeout } from "./takeout";
+import { libraryRows } from "./libraryStore";
 
 // A consent cookie keeps EU requests from being redirected to a consent page.
 const HEADERS = { "Accept-Language": "en", Cookie: "SOCS=CAI; CONSENT=YES+1" };
@@ -76,37 +76,6 @@ export async function refreshFeeds() {
   return { added, failed };
 }
 
-export async function markWatched(args?: Record<string, unknown>) {
-  const d = await getDb();
-  await d.execute("INSERT OR IGNORE INTO youtube_watched (video_id, channel_id, title) VALUES ($1, $2, $3)", [
-    String(args?.videoId ?? ""),
-    args?.channelId ? String(args.channelId) : null,
-    String(args?.title ?? ""),
-  ]);
-  return { ok: true };
-}
-
-export async function clearHistory() {
-  await (await getDb()).execute("DELETE FROM youtube_watched");
-  await logActivity("youtube", "clear_history", "watch history cleared", "ok");
-  return { ok: true };
-}
-
-export async function importHistory(args?: Record<string, unknown>) {
-  const items = parseTakeout(String(args?.text ?? ""));
-  const d = await getDb();
-  for (let i = 0; i < items.length; i += 100) {
-    const chunk = items.slice(i, i + 100);
-    const marks = chunk.map((_, j) => `($${j * 4 + 1}, $${j * 4 + 2}, $${j * 4 + 3}, COALESCE(datetime($${j * 4 + 4}), datetime('now')))`);
-    await d.execute(
-      `INSERT OR IGNORE INTO youtube_watched (video_id, channel_id, title, watched_at) VALUES ${marks.join(", ")}`,
-      chunk.flatMap((x) => [x.videoId, x.channelId, x.title, x.watchedAt])
-    );
-  }
-  await logActivity("youtube", "import_history", "Takeout watch history", `${items.length} item(s)`);
-  return { ok: true, count: items.length };
-}
-
 export async function loadRows(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   const channels = await d.select<Record<string, unknown>[]>("SELECT * FROM youtube_channels ORDER BY title COLLATE NOCASE");
@@ -115,10 +84,9 @@ export async function loadRows(): Promise<Record<string, unknown>[]> {
      FROM youtube_videos v JOIN youtube_channels c ON c.channel_id = v.channel_id
      ORDER BY COALESCE(v.published_at, v.fetched_at) DESC LIMIT 300`
   );
-  const watched = await d.select<Record<string, unknown>[]>("SELECT * FROM youtube_watched ORDER BY watched_at DESC, id DESC LIMIT 1000");
   return [
     ...channels.map((r) => ({ ...r, kind: "channel" })),
     ...videos.map((r) => ({ ...r, kind: "video" })),
-    ...watched.map((r) => ({ ...r, kind: "watched" })),
+    ...(await libraryRows()),
   ];
 }

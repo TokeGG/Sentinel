@@ -51,6 +51,29 @@ export function parseDgg(input: string): RoomRef | null {
   return ok ? { site: "dgg", target: "destiny.gg", label: "destiny.gg" } : null;
 }
 
+const YT_ID = /^[\w-]{11}$/;
+/** YouTube live chat from a watch / youtu.be / live / live_chat URL (or a bare 11-char video id). */
+export function parseYoutube(input: string): RoomRef | null {
+  const s = input.trim();
+  let id = s;
+  if (looksUrl(s)) {
+    const u = urlOf(s);
+    if (!u || u.protocol !== "https:" || u.username || u.password) return null;
+    const p = u.pathname.split("/").filter(Boolean);
+    if (u.hostname === "youtu.be") id = p[0] ?? "";
+    else if (!hostIs(u, "youtube.com")) return null;
+    else if (p[0] === "watch" || p[0] === "live_chat") id = u.searchParams.get("v") ?? "";
+    else if (p[0] === "live") id = p[1] ?? "";
+    else return null;
+  }
+  return YT_ID.test(id) ? { site: "youtube", target: id, label: `youtube ${id}` } : null;
+}
+/** Chat iframe source (embed_domain must be the embedding page's host) and the top-level popout for "Open as its own panel". */
+export const youtubeChatUrls = (id: string, host: string) => ({
+  frame: `https://www.youtube.com/live_chat?v=${id}&embed_domain=${encodeURIComponent(host)}`,
+  panel: `https://www.youtube.com/live_chat?is_popout=1&v=${id}`,
+});
+
 /** Any https page (a chat popout/embed URL). Never matches a bare word. */
 export function parseEmbed(input: string): RoomRef | null {
   const s = input.trim();
@@ -60,7 +83,7 @@ export function parseEmbed(input: string): RoomRef | null {
   return { site: "embed", target: u.href, label: u.hostname.replace(/^www\./, "") + (u.pathname.length > 1 ? u.pathname.slice(0, 24) : "") };
 }
 
-const PARSERS: Record<string, (s: string) => RoomRef | null> = { twitch: parseTwitch, kick: parseKick, dgg: parseDgg, embed: parseEmbed };
+const PARSERS: Record<string, (s: string) => RoomRef | null> = { twitch: parseTwitch, kick: parseKick, dgg: parseDgg, youtube: parseYoutube, embed: parseEmbed };
 
 /** Parse input for `site`; "auto" needs a URL (a bare name is ambiguous) and
  *  tries the sites in order, with `embed` as the catch-all last. */

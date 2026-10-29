@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { listen } from "@tauri-apps/api/event";
 import type { ModuleManifest } from "../../core/module";
 import { CredentialFields } from "../../core/panel/CredentialFields";
 import { EmptyState, ErrorLine, Tile } from "../../ui/kit";
@@ -13,7 +14,7 @@ import { RoomView } from "./RoomView";
 import "./chat.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
-  const { rows, busy, error, run } = useModule(module);
+  const { rows, busy, error, run, refresh } = useModule(module);
   const mode = useOption<string>("view", "tabs");
   const cols = useOption("columns", 2);
   const stamp = useOption("timestamps", false);
@@ -26,6 +27,15 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const shown = useMemo(() => new Set(visibleRooms(rooms, mode, activeId).map((r) => r.id)), [rooms, mode, activeId]);
   const shownRef = useRef(shown);
   shownRef.current = shown;
+
+  // Another panel (YouTube "Chat") added a room: reload and jump to it.
+  useEffect(() => {
+    const un = listen<{ id?: string }>("chat-rooms-changed", (e) => {
+      void refresh();
+      if (e.payload?.id) setActive(e.payload.id);
+    });
+    return () => void un.then((f) => f()).catch(() => {});
+  }, [refresh]);
 
   useEffect(() => setUnread((u) => (Object.keys(u).some((k) => shown.has(k)) ? Object.fromEntries(Object.entries(u).filter(([k]) => !shown.has(k))) : u)), [shown]);
   const bump = useCallback((id: string) => {

@@ -1,12 +1,82 @@
-.yt-player { display: flex; flex-direction: column; gap: var(--gap); }
-.yt-player iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: var(--radius); background: #000; }
-.yt-player-bar { display: flex; align-items: center; gap: var(--gap); }
-.yt-text { display: flex; flex-direction: column; min-width: 0; flex: 1; text-align: left; }
-.yt-title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.yt-item { display: flex; align-items: center; gap: var(--gap); width: 100%; background: none; border: 0; padding: 0; color: var(--text); font: inherit; cursor: pointer; min-width: 0; }
-.yt-item:hover .yt-title { color: var(--accent-text); }
-.yt-item:focus-visible { outline: none; box-shadow: var(--focus); }
-.yt-thumb { width: 96px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: calc(var(--radius) - 2px); background: var(--surface); flex: none; }
-.yt-dim { opacity: 0.55; }
-.yt-chan { display: flex; align-items: center; gap: var(--gap); }
-.yt-chan .yt-title { flex: 1; min-width: 0; }
+/* YouTube panel: dark YouTube-style look scoped to .yt. Colours come from the
+   panel tokens (--base, --surface, --text, --line, --accent); only YouTube red
+   for the watch-later "on" state is local. Responsive via a container query on
+   the panel width, not the screen. */
+.yt { container-type: inline-size; display: flex; flex-direction: column; gap: var(--gap); --yt-red: #ff4e45; --card-min: 220px; }
+.yt-top { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
+.yt-top .ui-head { flex: none; }
+.yt-search { flex: 1 1 160px; min-width: 120px; max-width: 520px; background: var(--base); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 6px 14px; font: inherit; }
+.yt-search:focus-visible { outline: none; box-shadow: var(--focus); }
+.yt-top .ui-quickadd { flex: 1 1 240px; max-width: 420px; }
+.yt-top .ui-quickadd input { flex: 1; min-width: 0; border-radius: 999px; }
+.yt-body { display: grid; grid-template-columns: 148px minmax(0, 1fr); gap: var(--pad); align-items: start; }
+.yt-main { min-width: 0; }
+.yt-sections .ui-section:empty { display: none; }
+
+.yt-side { display: flex; flex-direction: column; gap: 2px; position: sticky; top: 0; }
+.yt-nav { display: flex; align-items: center; gap: 10px; background: none; border: 0; color: var(--text); font: inherit; padding: 8px 10px; border-radius: 10px; cursor: pointer; text-align: left; }
+.yt-nav:hover { background: var(--surface-2); }
+.yt-nav.on { background: var(--accent-soft); font-weight: 600; }
+.yt-nav:focus-visible { outline: none; box-shadow: var(--focus); }
+.yt-nav-ico { width: 1.2em; text-align: center; flex: none; }
+.yt-nav-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.yt-nav-n { font-size: 0.75em; color: var(--text-dim); }
+
+.yt-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.yt-chips .kit-chip { flex: none; border-radius: 8px; white-space: nowrap; }
+.yt-h { margin: var(--gap) 0 var(--gap); font: 600 1.05em var(--font-display); }
+
+.yt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr)); gap: calc(var(--pad) * 1.4) var(--pad); }
+.yt-card { min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.yt-dim { opacity: 0.6; }
+.yt-thumbwrap { position: relative; border-radius: 12px; overflow: hidden; background: var(--surface); aspect-ratio: 16 / 9; }
+.yt-thumbbtn { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: none; cursor: pointer; position: relative; }
+.yt-thumbbtn:focus-visible { outline: none; box-shadow: inset var(--focus); }
+.yt-thumb { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--surface); }
+.yt-thumbbtn:hover .yt-thumb { filter: brightness(1.08); }
+.yt-dur { position: absolute; right: 6px; bottom: 6px; background: rgba(0, 0, 0, 0.8); color: #fff; font-size: 0.75em; padding: 1px 5px; border-radius: 4px; }
+.yt-later { position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 6px; border: 0; background: rgba(0, 0, 0, 0.7); color: #fff; cursor: pointer; opacity: 0; }
+.yt-card:hover .yt-later, .yt-later:focus-visible, .yt-later.on { opacity: 1; }
+.yt-later.on { background: var(--yt-red); }
+.yt-info { display: flex; gap: 10px; align-items: flex-start; min-width: 0; }
+.yt-avatar { flex: none; border-radius: 50%; display: inline-grid; place-items: center; color: #fff; font-weight: 600; font-size: 0.9em; }
+.yt-meta { display: flex; flex-direction: column; min-width: 0; flex: 1; text-align: left; background: none; border: 0; padding: 0; color: var(--text); font: inherit; }
+button.yt-meta { cursor: pointer; }
+.yt-ctitle { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 600; line-height: 1.3; }
+button.yt-meta:hover .yt-ctitle { color: var(--accent-text); }
+.yt-by { overflow: hidden; text-overflow: ellipsis; }
+.yt-menuwrap { position: relative; flex: none; }
+.yt-dots { background: none; border: 0; color: var(--text-dim); cursor: pointer; font-size: 1.2em; padding: 0 6px; border-radius: 6px; opacity: 0; }
+.yt-card:hover .yt-dots, .yt-dots:focus-visible, .yt-dots[aria-expanded="true"] { opacity: 1; }
+.yt-menu { position: absolute; right: 0; top: 100%; z-index: 5; display: flex; flex-direction: column; min-width: 190px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 4px; box-shadow: 0 6px 18px var(--shadow); }
+.yt-menu button { background: none; border: 0; color: var(--text); font: inherit; text-align: left; padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+.yt-menu button:hover { background: var(--accent-soft); }
+
+.yt-watch { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: var(--pad); align-items: start; }
+.yt-watch-main { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.yt-player iframe { width: 100%; aspect-ratio: 16 / 9; border: 0; border-radius: 12px; background: #000; display: block; }
+.yt-watch-title { margin: 0; font: 600 1.15em var(--font-display); }
+.yt-watch-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.yt-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+.yt-upnext { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.yt-upnext h4, .yt-sub { margin: 0; font: 600 0.95em var(--font-display); color: var(--text-dim); }
+.yt-nextitem { display: flex; gap: 8px; background: none; border: 0; padding: 0; color: var(--text); font: inherit; text-align: left; cursor: pointer; min-width: 0; }
+.yt-nextitem .yt-thumb { width: 150px; flex: none; aspect-ratio: 16 / 9; border-radius: 8px; }
+.yt-nextitem:hover .yt-ctitle { color: var(--accent-text); }
+.yt-nextitem:focus-visible { outline: none; box-shadow: var(--focus); }
+
+.yt-chlist { display: flex; flex-direction: column; gap: 6px; max-width: 640px; }
+.yt-chrow { display: flex; align-items: center; gap: 10px; padding: 4px 0; }
+
+@container (max-width: 760px) {
+  .yt-watch { grid-template-columns: minmax(0, 1fr); }
+  .yt-nextitem .yt-thumb { width: 168px; }
+}
+@container (max-width: 520px) {
+  .yt-body { grid-template-columns: 44px minmax(0, 1fr); gap: var(--gap); }
+  .yt-nav { justify-content: center; padding: 8px 4px; }
+  .yt-nav-label, .yt-nav-n { display: none; }
+  .yt { --card-min: 160px; }
+  .yt-actions { margin-left: 0; }
+}
+@container (min-width: 1100px) { .yt { --card-min: 260px; } }

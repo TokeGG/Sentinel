@@ -2,6 +2,7 @@ import { PENTEST_STATEMENTS } from "./schemaPentest.ts";
 import { SKILLS_STATEMENTS } from "./schemaSkills.ts";
 import { BOT_STATEMENTS } from "./schemaBot.ts";
 import { CLONED_STATEMENTS } from "./schemaCloned.ts";
+import { YOUTUBE_STATEMENTS } from "./schemaYoutube.ts";
 // Bootstrap mirror of src-tauri/migrations/26_social_post_meta.sql (see schema.ts).
 export const SOCIAL_STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS social_post_meta (
@@ -12,4 +13,4 @@ export const SOCIAL_STATEMENTS: string[] = [
 )`,
 ];
 
-export const LATER_STATEMENTS: string[] = [...PENTEST_STATEMENTS, ...SOCIAL_STATEMENTS, ...SKILLS_STATEMENTS, ...BOT_STATEMENTS, ...CLONED_STATEMENTS];
+export const LATER_STATEMENTS: string[] = [...PENTEST_STATEMENTS, ...SOCIAL_STATEMENTS, ...SKILLS_STATEMENTS, ...BOT_STATEMENTS, ...CLONED_STATEMENTS, ...YOUTUBE_STATEMENTS];
