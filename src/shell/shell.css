@@ -85,3 +85,14 @@ html:has(.panel-grip), html:has(.panel-grip) body { margin: 0; overflow: hidden;
   background: linear-gradient(135deg, transparent 52%, rgba(255, 255, 255, 0.28) 52%, rgba(255, 255, 255, 0.28) 60%, transparent 60%, transparent 74%, rgba(255, 255, 255, 0.28) 74%, rgba(255, 255, 255, 0.28) 82%, transparent 82%);
 }
 .panel-grip:hover { filter: brightness(1.6); }
+
+/* Snap zone preview (main window, behind panels) */
+.snap-preview { position: fixed; z-index: 5; pointer-events: none; border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent, #6aa0ff) 22%, transparent); border: 2px solid color-mix(in srgb, var(--accent, #6aa0ff) 70%, transparent);
+  backdrop-filter: blur(2px); transition: all 120ms ease-out; }
+.snap-picker { padding: var(--s-2, 8px); display: grid; gap: 8px; }
+.snap-layouts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.snap-thumb { position: relative; aspect-ratio: 16 / 10; border: 1px solid var(--line); border-radius: var(--r-sm); }
+.snap-thumb button { position: absolute; box-sizing: border-box; border: 2px solid var(--surface, #111); border-radius: 4px; background: var(--accent-soft); cursor: pointer; padding: 0; }
+.snap-thumb button:hover, .snap-thumb button:focus-visible { background: var(--accent); }
+.snap-assist-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }

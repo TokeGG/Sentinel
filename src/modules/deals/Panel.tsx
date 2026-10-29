@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink";
 import type { ModuleManifest } from "../../core/module";
 import { FeedPanel } from "../news/FeedPanel";
 import { rowAge, sourceLabel } from "../news/panelLogic";

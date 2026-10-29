@@ -1,6 +1,6 @@
 // "Suggested channels" starter list under Channels: one Add per @handle (resolved by add_channel).
 import type { ModuleState } from "../../ui/useModule";
-import { notFollowed } from "./suggested";
+import { notFollowed } from "./suggestedList";
 
 export function Suggested({ handles, busy, run }: { handles: (string | null | undefined)[]; busy: boolean; run: ModuleState["run"] }) {
   const list = notFollowed(handles);

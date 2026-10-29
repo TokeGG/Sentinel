@@ -1,4 +1,4 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import type { ModuleManifest } from "../module";
 import { RowAction } from "./RowAction";
 

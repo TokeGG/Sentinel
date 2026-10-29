@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS browser_bookmarks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    url TEXT NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    folder TEXT NOT NULL DEFAULT '',
+    bar INTEGER NOT NULL DEFAULT 0,
+    created TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (url, folder)
+);
+CREATE TABLE IF NOT EXISTS browser_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    url TEXT NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    visited TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE TABLE IF NOT EXISTS browser_apps (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    url TEXT NOT NULL UNIQUE,
+    pos INTEGER NOT NULL DEFAULT 0
+);

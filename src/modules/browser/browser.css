@@ -1,0 +1,33 @@
+.br-root { position: fixed; inset: 0; display: grid; grid-template-rows: var(--b-top) 1fr; grid-template-columns: var(--b-left) 1fr; background: var(--surface); color: var(--text); font-size: var(--fs-sm, 13px); }
+.br-band { grid-column: 1 / -1; display: grid; grid-template-rows: 32px 36px 28px; border-bottom: 1px solid var(--line); overflow: hidden; }
+.br-tabs { display: flex; align-items: end; gap: 2px; padding: 0 6px; overflow-x: auto; scrollbar-width: none; }
+.br-tab { display: flex; align-items: center; gap: 6px; height: 28px; min-width: 90px; max-width: 200px; padding: 0 6px 0 10px; border-radius: 8px 8px 0 0; background: var(--raised, rgba(255,255,255,.04)); cursor: default; }
+.br-tab.on { background: var(--accent-soft); box-shadow: inset 0 2px 0 var(--accent); }
+.br-tab.priv { font-style: italic; }
+.br-tab-title { flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.br-tab button, .br-new { background: none; border: 0; color: inherit; cursor: pointer; border-radius: 4px; }
+.br-tab button:hover, .br-new:hover { background: var(--accent-soft); }
+.br-new { height: 26px; width: 26px; }
+.br-bar { display: flex; align-items: center; gap: 4px; padding: 0 6px; }
+.br-bar > button { background: none; border: 0; color: inherit; height: 28px; min-width: 28px; border-radius: 6px; cursor: pointer; }
+.br-bar > button:hover:not(:disabled), .br-bar > button.on { background: var(--accent-soft); }
+.br-bar > button:disabled { opacity: .4; }
+.br-addr { flex: 1; height: 28px; border-radius: 14px; border: 1px solid var(--line); background: var(--base, #0008); color: inherit; padding: 0 12px; }
+.br-addr:focus { outline: 2px solid var(--accent-line, var(--accent)); }
+.br-marks { display: flex; gap: 2px; align-items: center; padding: 0 8px; overflow: hidden; white-space: nowrap; }
+.br-marks button { background: none; border: 0; color: inherit; padding: 2px 8px; border-radius: 6px; max-width: 160px; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.br-marks button:hover { background: var(--accent-soft); }
+.br-side { display: flex; flex-direction: column; gap: 6px; align-items: center; padding: 8px 0; border-right: 1px solid var(--line); overflow-y: auto; }
+.br-side button { width: 32px; height: 32px; border-radius: 10px; border: 1px solid var(--line); background: var(--accent-soft); color: var(--accent-text, inherit); font-weight: 600; cursor: pointer; }
+.br-side button:hover { border-color: var(--accent); }
+.br-page { position: relative; overflow: auto; }
+.br-sheet { padding: 16px; display: grid; gap: 6px; align-content: start; }
+.br-sheet-head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.br-sheet h3, .br-sheet h4 { margin: 8px 0 4px; }
+.br-row { display: flex; gap: 8px; align-items: center; min-height: 30px; }
+.br-link { background: none; border: 0; color: var(--accent-text, var(--accent)); text-align: left; cursor: pointer; flex: 1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.br-newtab { display: grid; gap: 24px; justify-items: center; padding: 15vh 24px 24px; }
+.br-newtab form { width: min(560px, 100%); display: flex; }
+.br-dial { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 12px; width: min(720px, 100%); }
+.br-dial button { display: grid; gap: 6px; justify-items: center; padding: 12px 6px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised, transparent); color: inherit; cursor: pointer; overflow: hidden; }
+.br-dial b { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px; background: var(--accent-soft); }

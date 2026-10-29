@@ -1,6 +1,6 @@
 // Reader add-ons: conversation strip, snooze menu, unsubscribe helper (confirm first).
 import { useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import { safeLink } from "../../ui/safeLink";
 import { parseUnsubscribe, snoozeChoices, snoozeLabel } from "./mailExtras";
 import { dateLabel, senderLabel } from "./panelLogic";

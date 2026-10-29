@@ -16,7 +16,8 @@ import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
 import { MASTER_ID, SETTINGS_ID } from "./panelApi";
 import { MasterHub } from "./MasterHub";
 import { SettingsPanel } from "./SettingsPanel";
-import { BRIEFING_ID, CAPTURE_ID, HELP_ID, PALETTE_ID } from "./desk/ids";
+import { BRIEFING_ID, CAPTURE_ID, HELP_ID, PALETTE_ID, SNAP_ID } from "./desk/ids";
+import { SnapLayouts } from "./snap/SnapLayouts";
 import { Palette } from "./desk/Palette";
 import { Briefing } from "./desk/Briefing";
 import { HelpPanel } from "./desk/HelpPanel";
@@ -25,7 +26,7 @@ import { useAppKeys } from "./desk/useAppKeys";
 
 const SPECIAL: Record<string, ComponentType> = {
   [SETTINGS_ID]: SettingsPanel, [MASTER_ID]: MasterHub, [PALETTE_ID]: Palette,
-  [BRIEFING_ID]: Briefing, [HELP_ID]: HelpPanel, [CAPTURE_ID]: CaptureBox,
+  [BRIEFING_ID]: Briefing, [HELP_ID]: HelpPanel, [CAPTURE_ID]: CaptureBox, [SNAP_ID]: SnapLayouts,
 };
 
 export function panelIdFromHash(hash: string): string | null {

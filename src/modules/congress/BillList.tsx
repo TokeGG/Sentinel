@@ -1,4 +1,4 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink";
 import type { Taste } from "../../core/taste/useTaste";
 import { TasteButtons } from "../../ui/TasteButtons";
 import { WhyBadge } from "../../ui/WhyBadge";

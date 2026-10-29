@@ -1,4 +1,4 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import { safeLink } from "../../ui/safeLink";
 import { Avatar, byLine, type Card, type CardActions } from "./Cards";
 import { Player } from "./Player";

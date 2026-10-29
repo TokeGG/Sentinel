@@ -1,4 +1,4 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink";
 import { useState, type CSSProperties } from "react";
 import { safeLink } from "../../ui/safeLink";
 import type { Taste } from "../../core/taste/useTaste";

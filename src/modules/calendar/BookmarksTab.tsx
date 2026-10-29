@@ -1,5 +1,5 @@
 // Bookmarks / read-later: save a link, mark read, filter, open via safeLink.
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import { useState } from "react";
 import { ErrorLine, Row } from "../../ui/kit";
 import { safeLink } from "../../ui/safeLink";

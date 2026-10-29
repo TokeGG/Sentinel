@@ -17,6 +17,15 @@ pub fn grip_rect(outer: Rect) -> Rect {
 /// keep in sync with EMBED_TAB_H in src/modules/social/embedSites.ts (a test enforces it).
 pub const EMBED_TAB_H: f64 = 32.0;
 
+/// In-app browser page area: content minus the toolbar band (tabs + address + bookmarks)
+/// and the left web-app sidebar; keep in sync with src/modules/browser/layout.ts (tested).
+pub const BROWSER_TOP: f64 = 96.0;
+pub const BROWSER_LEFT: f64 = 44.0;
+pub fn browser_rect(outer: Rect) -> Rect {
+    let (_, c) = geometry(outer);
+    let l = BROWSER_LEFT.min(c.w);
+    Rect { x: c.x + l, y: c.y + BROWSER_TOP, w: (c.w - l).max(0.0), h: (c.h - BROWSER_TOP).max(0.0) }
+}
 /// Embedded web view rect: the content rect minus the tab bar.
 pub fn embed_rect(outer: Rect) -> Rect {
     let (_, c) = geometry(outer);
@@ -66,6 +75,12 @@ mod tests {
         let (c, b) = geometry(r(0.0, 0.0, 0.0, 0.0));
         assert_eq!((c.w, c.h), (0.0, CHROME_H));
         assert_eq!((b.y, b.w, b.h), (CHROME_H, 0.0, 0.0));
+    }
+    #[test]
+    fn browser_page_sits_right_of_sidebar_below_toolbar() {
+        let b = browser_rect(r(10.0, 20.0, 300.0, 300.0));
+        assert_eq!((b.x, b.y, b.w, b.h), (10.0 + BROWSER_LEFT, 20.0 + CHROME_H + BROWSER_TOP, 300.0 - BROWSER_LEFT, 300.0 - CHROME_H - BROWSER_TOP));
+        assert_eq!(browser_rect(r(0.0, 0.0, 20.0, 50.0)).w, 0.0);
     }
     #[test]
     fn embed_sits_below_chrome_and_tab_bar() {

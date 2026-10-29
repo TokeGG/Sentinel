@@ -13,3 +13,13 @@ describe("safeLink", () => {
     assert.equal(safeLink(42), null);
   });
 });
+
+it("queueLink appends, dedupes and caps the pending list", async () => {
+  const { queueLink } = await import("./safeLink.ts");
+  assert.equal(queueLink(null, "https://a/"), '["https://a/"]');
+  assert.equal(queueLink('["https://a/","https://b/"]', "https://a/"), '["https://b/","https://a/"]');
+  assert.equal(queueLink("junk", "https://a/"), '["https://a/"]');
+  let q: string | null = null;
+  for (let i = 0; i < 30; i++) q = queueLink(q, `https://x/${i}`);
+  assert.equal(JSON.parse(q!).length, 20);
+});

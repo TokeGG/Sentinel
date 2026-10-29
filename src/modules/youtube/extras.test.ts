@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SUGGESTED, notFollowed } from "./suggested.ts";
+import { SUGGESTED, notFollowed } from "./suggestedList.ts";
 import { byGroup, continueList, groupMap, newUploads, parsePlayerMsg, playerUrl, rateMsg, total, type Progress } from "./extras.ts";
 
 test("playerUrl enables the JS API and resume point; rejects bad ids", () => {

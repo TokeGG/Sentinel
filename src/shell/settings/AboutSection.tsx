@@ -1,4 +1,4 @@
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import pkg from "../../../package.json";
 import { Row } from "../../ui/kit";
 import { safeLink } from "../../ui/safeLink";

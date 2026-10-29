@@ -47,6 +47,7 @@ pub fn all() -> Vec<Migration> {
         Migration { version: 40, description: "pc speed tests, net device icons, uptime, events", sql: include_str!("../migrations/40_pc_net_dev.sql"), kind: MigrationKind::Up },
         Migration { version: 41, description: "bot workflows, jobs, site notes", sql: include_str!("../migrations/41_bot_extras.sql"), kind: MigrationKind::Up },
         Migration { version: 42, description: "games library, game news, show tracker", sql: include_str!("../migrations/42_games_media.sql"), kind: MigrationKind::Up },
+        Migration { version: 43, description: "in-app browser bookmarks, history, sidebar apps", sql: include_str!("../migrations/43_browser.sql"), kind: MigrationKind::Up },
     ]
 }
 
@@ -57,7 +58,7 @@ mod tests {
     #[test]
     fn versions_are_ascending_and_match_position() {
         let m = all();
-        assert_eq!(m.len(), 42);
+        assert_eq!(m.len(), 43);
         for (i, mig) in m.iter().enumerate() {
             assert_eq!(mig.version, (i as i64) + 1);
         }

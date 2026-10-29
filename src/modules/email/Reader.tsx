@@ -1,7 +1,7 @@
 // Reading pane. HTML is sanitized (sanitize.ts) and shown in a sandbox="" iframe (no scripts,
 // forms, popups, same-origin); remote images stay blocked until "Load images" is pressed.
 import { useMemo, useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import { safeLink } from "../../ui/safeLink";
 import { formatList } from "./addresses";
 import { Avatar } from "./Avatar";

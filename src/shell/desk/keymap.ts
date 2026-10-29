@@ -3,7 +3,7 @@ export type ShellCmd =
   | { type: "palette" } | { type: "reopen" } | { type: "back" } | { type: "forward" }
   | { type: "focusMode" } | { type: "tile"; preset: string } | { type: "open"; id: string }
   | { type: "layout"; name: string } | { type: "saveLayout"; name: string } | { type: "pin"; id?: string }
-  | { type: "gameMode" } | { type: "nextMonitor" } | { type: "capture" } | { type: "help" };
+  | { type: "gameMode" } | { type: "nextMonitor" } | { type: "capture" } | { type: "help" } | { type: "snapLayouts"; id?: string };
 
 export type KeyLike = { key: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean };
 
@@ -16,5 +16,6 @@ export function keyToCmd(e: KeyLike): ShellCmd | null {
   if (e.altKey && !mod && k === "arrowleft") return { type: "back" };
   if (e.altKey && !mod && k === "arrowright") return { type: "forward" };
   if (k === "f1" && !mod) return { type: "help" };
+  if (mod && e.altKey && !e.shiftKey && k === "z") return { type: "snapLayouts" };
   return null;
 }

@@ -1,6 +1,6 @@
 // "Following & Likes": per platform, who/what you follow and what you liked, where the API allows.
 import { useEffect, useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink";
 import { ErrorLine, Tile } from "../../ui/kit";
 import { safeLink } from "../../ui/safeLink";
 import { FOLLOW_PLATFORMS, type FollowItem, type FollowLists, type FollowPlatform } from "./follows";

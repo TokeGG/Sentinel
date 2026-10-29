@@ -1,5 +1,5 @@
 // One repo card: owner/name, stars, description, language + cloned chips, clone button.
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import type { Ranked } from "../../core/taste/model";
 import type { Taste } from "../../core/taste/useTaste";
 import { TasteButtons } from "../../ui/TasteButtons";
