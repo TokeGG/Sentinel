@@ -61,3 +61,6 @@
 .chat-composer { display: flex; align-items: center; gap: var(--gap); padding: 8px 10px; border-top: 1px solid var(--line); background: color-mix(in srgb, var(--base) 45%, var(--surface)); }
 .chat-composer input { flex: 1; padding: 7px 12px; }
 .chat-frame { flex: 1; width: 100%; min-height: 280px; border: 0; background: var(--white); }
+.chat-state { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-left: 4px; flex: none; }
+.chat-conn { padding: 2px 10px; font-size: var(--fs-xs); color: var(--text-dim); border-bottom: 1px solid var(--line); }
+.chat-log { max-height: 140px; overflow: auto; margin: 4px 0; white-space: pre-wrap; word-break: break-all; font-family: monospace; }

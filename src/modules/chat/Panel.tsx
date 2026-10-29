@@ -10,6 +10,7 @@ import { AddRoom } from "./AddRoom";
 import { connectorOf } from "./connectors";
 import { twitch } from "./connectors/twitch";
 import { visibleRooms, toRooms } from "./panelLogic";
+import type { RoomState } from "./types";
 import { RoomTabs } from "./RoomTabs";
 import { RoomView } from "./RoomView";
 import "./chat.css";
@@ -23,6 +24,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const rooms = useMemo(() => toRooms(rows), [rows]);
   const [active, setActive] = useState("");
   const [unread, setUnread] = useState<Record<string, number>>({});
+  const [states, setStates] = useState<Record<string, RoomState>>({});
+  const [fb, setFb] = useState<Set<string>>(new Set());
   const [epoch, setEpoch] = useState(0); // bumped when the Twitch token is saved
   const activeId = rooms.some((r) => r.id === active) ? active : (rooms[0]?.id ?? "");
   const shown = useMemo(() => new Set(visibleRooms(rooms, mode, activeId).map((r) => r.id)), [rooms, mode, activeId]);
@@ -54,8 +57,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       <Sections className="chat-sections">
         <Section id="tabs">
           <div className="chat-tabs">
-            <RoomTabs rooms={rooms} shown={shown} unread={unread} busy={busy} onSelect={setActive} onAct={(skill, id, dir) => void run(skill, { id, dir })} />
-            <AddRoom busy={busy} onAdd={(input, site) => run("add_room", { input, site })} />
+            <RoomTabs rooms={rooms} shown={shown} unread={unread} busy={busy} states={states} fallback={fb} onSelect={setActive} onAct={(skill, id, dir) => void run(skill, { id, dir })} />
+            <AddRoom busy={busy} onAdd={(input, site, chatroom) => run("add_room", { input, site, chatroom })} />
           </div>
         </Section>
         <Section id="rooms">
@@ -66,7 +69,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
               {rooms.map((r) => (
                 <div key={r.id} className="chat-room" hidden={!shown.has(r.id)}>
                   {mode === "columns" && <div className="chat-room-head"><i className="chat-dot" style={{ background: connectorOf(r.site).color }} />{r.label}</div>}
-                  <RoomView room={r} cap={cap} stamp={stamp} epoch={epoch} visible={shown.has(r.id)} onActivity={() => bump(r.id)} />
+                  <RoomView room={r} cap={cap} stamp={stamp} epoch={epoch} visible={shown.has(r.id)} fallback={fb.has(r.id)} onActivity={() => bump(r.id)}
+                    onState={(s) => setStates((m) => (m[r.id]?.status === s.status && m[r.id]?.detail === s.detail ? m : { ...m, [r.id]: s }))}
+                    onFallback={(on) => setFb((f) => { const n = new Set(f); if (on) n.add(r.id); else n.delete(r.id); return n; })} />
                 </div>
               ))}
             </div>
@@ -75,7 +80,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="login">
           <Tile title="Twitch login (to send)">
             <p className="chat-help">{twitch.auth!.help}</p>
-            <p className="chat-help">Kick and destiny.gg are read-only here; embedded sites handle their own login and sending.</p>
+            <p className="chat-help">Kick and destiny.gg are read-only here (destiny.gg sending needs a site login; use its embed); embedded sites handle their own login and sending.</p>
             <CredentialFields module={module} onSaved={() => setEpoch((e) => e + 1)} />
           </Tile>
         </Section>

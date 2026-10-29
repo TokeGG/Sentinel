@@ -1,13 +1,15 @@
 // DB side of the chat module: the user's rooms (re-opened whenever the panel opens).
 import { getDb, logActivity } from "../../core/db";
+import { withKickId } from "./connectors/kickLookup";
 import { detectRoom } from "./connectors/rooms";
 import { moved } from "./panelLogic";
 
 type Row = Record<string, unknown>;
 
 export async function addRoom(args?: Record<string, unknown>) {
-  const ref = detectRoom(String(args?.input ?? ""), String(args?.site ?? "auto"));
-  if (!ref) throw new Error("not recognised: paste a Twitch/Kick/destiny.gg/YouTube-live URL, a chat popout URL, or pick a site and type a channel name");
+  const found = detectRoom(String(args?.input ?? ""), String(args?.site ?? "auto"));
+  if (!found) throw new Error("not recognised: paste a Twitch/Kick/destiny.gg/YouTube-live URL, a chat popout URL, or pick a site and type a channel name");
+  const ref = withKickId(found, String(args?.chatroom ?? ""));
   const d = await getDb();
   const id = `${ref.site}:${ref.target}`;
   const r = await d.execute(
