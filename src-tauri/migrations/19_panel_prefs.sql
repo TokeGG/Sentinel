@@ -1,4 +1,4 @@
-CREATE TABLE panel_prefs (
+CREATE TABLE IF NOT EXISTS panel_prefs (
     module_id TEXT NOT NULL,
     view TEXT NOT NULL,
     json TEXT NOT NULL,

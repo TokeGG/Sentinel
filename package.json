@@ -8,7 +8,7 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "check:size": "node scripts/check-file-size.mjs",
-    "test": "node --experimental-strip-types --test src/core/module.test.ts src/modules/news/rss.test.ts src/modules/youtube/pkce.test.ts src/modules/pentest/scope.test.ts src/shell/layout.test.ts src/shell/hue.test.ts src/core/scheduler.test.ts src/ui/prefs.test.ts src/ui/kit/kit.test.ts src/ui/useModule.test.ts src/ui/sections.test.ts src/shell/panelEvents.test.ts src/shell/stars.test.ts src/shell/motionPolicy.test.ts src/modules/notes/panelLogic.test.ts src/modules/news/panelLogic.test.ts src/modules/deals/panelLogic.test.ts src/modules/pccare/panelLogic.test.ts src/modules/weather/panelLogic.test.ts src/modules/homenet/panelLogic.test.ts src/modules/github/panelLogic.test.ts src/modules/finance/panelLogic.test.ts src/modules/finance/rows.test.ts src/modules/calendar/panelLogic.test.ts src/modules/backup/panelLogic.test.ts src/modules/clipboard/panelLogic.test.ts src/modules/filesearch/panelLogic.test.ts src/ui/safeLink.test.ts src/shell/settingsLogic.test.ts src/shell/orbit.test.ts src/shell/mapLayout.test.ts src/shell/icons.test.ts src/shell/badges.test.ts src/shell/moons.test.ts",
+    "test": "node --experimental-strip-types --test src/core/module.test.ts src/modules/news/rss.test.ts src/modules/youtube/pkce.test.ts src/modules/pentest/scope.test.ts src/shell/layout.test.ts src/shell/hue.test.ts src/core/scheduler.test.ts src/core/schema.test.ts src/core/db.test.ts src/shell/updater.test.ts src/ui/prefs.test.ts src/ui/kit/kit.test.ts src/ui/useModule.test.ts src/ui/sections.test.ts src/shell/panelEvents.test.ts src/shell/stars.test.ts src/shell/motionPolicy.test.ts src/modules/notes/panelLogic.test.ts src/modules/news/panelLogic.test.ts src/modules/deals/panelLogic.test.ts src/modules/pccare/panelLogic.test.ts src/modules/weather/panelLogic.test.ts src/modules/homenet/panelLogic.test.ts src/modules/github/panelLogic.test.ts src/modules/finance/panelLogic.test.ts src/modules/finance/rows.test.ts src/modules/calendar/panelLogic.test.ts src/modules/backup/panelLogic.test.ts src/modules/clipboard/panelLogic.test.ts src/modules/filesearch/panelLogic.test.ts src/ui/safeLink.test.ts src/shell/settingsLogic.test.ts src/shell/orbit.test.ts src/shell/mapLayout.test.ts src/shell/icons.test.ts src/shell/badges.test.ts src/shell/moons.test.ts",
     "tauri": "tauri"
   },
   "dependencies": {
@@ -17,7 +17,9 @@
     "@tauri-apps/plugin-dialog": "^2.8.4",
     "@tauri-apps/plugin-http": "^2.8.3",
     "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-process": "^2.4.0",
     "@tauri-apps/plugin-sql": "^2.6.0",
+    "@tauri-apps/plugin-updater": "^2.14.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },

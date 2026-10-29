@@ -31,6 +31,18 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDkxODZDMjUxNzA3Q0YzOTUKUldTVjgzeHdVY0tHa2M0cHRrU0xEbW9BTmlZejgxaDRoRGpzZFA3N1dCNlpUS1ZKdmJ5WUJsRXEK",
+      "endpoints": [
+        "https://github.com/TokeGG/Sentinel/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
+    }
   }
 }

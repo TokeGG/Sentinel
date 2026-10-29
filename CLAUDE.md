@@ -40,7 +40,11 @@ src/
                         (manifestChecks.ts: skill-ref checks; customizeChecks.ts:
                         customize/accent/ring/icon checks)
     ModulePanel.tsx   — the generic panel for `list` modules (pieces in core/panel/)
-    db.ts             — shared SQLite handle + logActivity()
+    db.ts             — shared SQLite handle (one load promise; retries once if the
+                        plugin migrate fails, then ensureSchema) + logActivity(),
+                        getLoadProblem/getDbDiagnostics (Settings > Database check)
+    schema.ts         — pure SCHEMA_STATEMENTS (bootstrap mirror of migrations 17+),
+                        ensureSchema, describeDb, redactPaths
     credentials.ts    — OS keychain wrapper (TS side)
     scheduler.ts      — opt-in per-module background refresh
   ui/                 — panel UI foundation shared by custom panels: kit/ (Table,
@@ -67,7 +71,8 @@ src/
 
 src-tauri/
   migrations/NN_<module>.sql — numbered SQL, versions 1..19 strictly ascending
-                        (19 = panel_prefs); loaded by src/migrations.rs (order must match version)
+                        (19 = panel_prefs; 17-19 idempotent `IF NOT EXISTS`); loaded by
+                        src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
                         webviews can hand keyboard focus to each other (moves focus only)
@@ -135,6 +140,12 @@ social, youtube still use the generic panel (redesigns planned). To add one:
    match the `<Section id>` values used in `Panel.tsx`.
 
 
+**Standing rule (schema):** a new table needs BOTH a migration file
+(`CREATE TABLE IF NOT EXISTS`) and a `SCHEMA_STATEMENTS` entry in
+`src/core/schema.ts`; `schema.test.ts` enforces it. The SQL plugin only
+migrates inside the first `Database.load` per process and drops its list if
+that migrate fails (later loads succeed without migrating).
+
 ## Patterns already established — copy these, don't reinvent
 
 - **RSS/Atom fetching + dedupe**: `news/rss.ts` (pure parser, tested) +
@@ -182,8 +193,18 @@ code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
 `scripts/check-file-size.mjs` has an ALLOW list of files awaiting their own
 split (finance, pentest, social connectors, youtube). Never add to it; shrink it.
 
+**Updates:** Settings > Updates (`shell/updater.ts`) checks GitHub releases
+only on a button press (no background call). Releases are tag-driven (`v*`):
+CI stamps the version from the tag, signs with secret `TAURI_SIGNING_PRIVATE_KEY`
+and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json.mjs`).
+
 ## What's known-incomplete (check before assuming a gap is a bug)
 
+- On some existing databases the plugin migration fails at the first load
+  (root cause not yet identified). The app then runs in compatibility mode
+  (startup banner; Settings > Database check shows details), and future
+  migrations 20+ will not apply on such a DB unless mirrored in
+  `SCHEMA_STATEMENTS`.
 - Only the custom panels above have the new UI; the rest is default styling.
 - `social/connectors.ts`'s Bluesky and X connectors are `authType: "manual"`
   (no OAuth) — Bluesky because AT Protocol has no public-client OAuth yet,

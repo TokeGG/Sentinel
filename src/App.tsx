@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { registry } from "./core/module";
+import { getDb, getLoadProblem, recordLoadProblem } from "./core/db";
+import { redactPaths } from "./core/schema";
 import { initScheduler, setTimersOwner, syncModule, SCHEDULE_CHANGED } from "./core/scheduler";
 import { listen } from "@tauri-apps/api/event";
 import { StarMap } from "./shell/StarMap";
@@ -34,6 +36,15 @@ function MainShell() {
   const [error, setError] = useState<string | null>(null);
   const [settingsTick, setSettingsTick] = useState(0);
   const onPanelClosed = useBadges(registry, setError);
+  useEffect(() => {
+    getDb()
+      .then(() => {
+        const p = getLoadProblem();
+        if (p) setError(`Database upgrade problem (running in compatibility mode): ${redactPaths(p)}`);
+        return recordLoadProblem();
+      })
+      .catch((e) => setError(`Database could not be opened: ${redactPaths(String(e))}`));
+  }, []);
   useEffect(() => {
     // Only resumes timers the user already switched on — see core/scheduler.ts.
     initScheduler(registry);

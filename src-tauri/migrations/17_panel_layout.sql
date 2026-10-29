@@ -1,4 +1,4 @@
-CREATE TABLE panel_layout (
+CREATE TABLE IF NOT EXISTS panel_layout (
     module_id TEXT PRIMARY KEY,
     x REAL,
     y REAL,
