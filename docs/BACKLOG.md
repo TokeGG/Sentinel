@@ -45,3 +45,6 @@ Principles that still apply to everything above: local-first, no hosted AI, noth
 ## Final steps (owner-authorised)
 - When everything above is built: open one PR, merge it, start the Windows app build (tag-driven release; tag creation may need the owner).
 - Then test and "head-start" the browser bot: Playwright-driven fixture pages exercising driver.js and the agent loop with a scripted model, starter knowledge notes, a task-understanding step (restate goal, plan, success check), prompt and brain-default improvements. Real-Ollama / WebView2 behaviour still needs the owner's PC.
+
+## Accounts: one "Connect" button (owner request)
+Generic connect framework: OAuth2 PKCE (loopback via oauth_listen_once; GitHub/Twitch via device-code), tokens in the OS keychain with silent refresh, one "Connect" / "Disconnect" button per account in every module. Providers: Mastodon (dynamic client registration, no setup), Gmail + Outlook/Microsoft 365 mail (IMAP/SMTP XOAUTH2 in Rust), Google (YouTube subs import), Twitch (chat send), GitHub (device flow), Reddit, Kick, Bluesky OAuth if public clients are supported. Needs one-time client IDs (public, free) from the owner for Google, Microsoft, Twitch, Reddit, GitHub; the app ships them as config.
