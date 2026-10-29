@@ -18,6 +18,8 @@ export function Composer({ status, busy, onPost }: { status: Status[]; busy: boo
         if (!err && (await onPost(text, targets))) setText("");
       }}
     >
+      <span className="soc-avatar soc-me" aria-hidden>✎</span>
+      <div className="soc-compose-main">
       <textarea value={text} rows={2} placeholder={can.length ? "What's happening?" : "Connect Bluesky or Mastodon under Accounts to post"} onChange={(e) => setText(e.target.value)} />
       <div className="ui-controls">
         {can.map((s) => (
@@ -26,10 +28,11 @@ export function Composer({ status, busy, onPost }: { status: Status[]; busy: boo
             {s.label}
           </label>
         ))}
-        {Number.isFinite(limit) && <span className="ui-meta" style={{ marginLeft: "auto" }}>{text.length}/{limit}</span>}
+        {Number.isFinite(limit) && <span className="ui-meta soc-count">{text.length}/{limit}</span>}
         <button type="submit" className="ui-btn primary" disabled={busy || !!err} title={err ?? undefined}>Post</button>
       </div>
       {readOnly.length > 0 && <span className="ui-meta">Read-only here: {readOnly.join(", ")}</span>}
+      </div>
     </form>
   );
 }

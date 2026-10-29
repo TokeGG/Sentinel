@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import type { Observation } from "./actions.ts";
-import { botSections, confirmText, episodeLabel, modelStatus, mistakeLines, noteUrlOk, OUTCOME_LABEL, START_URL } from "./panelLogic.ts";
+import { botSections, confirmText, fxOn, episodeLabel, modelStatus, mistakeLines, noteUrlOk, OUTCOME_LABEL, START_URL } from "./panelLogic.ts";
 
 const read = (f: string) => readFileSync(new URL(f, import.meta.url), "utf8");
 
@@ -45,5 +45,13 @@ describe("bot panelLogic", () => {
     assert.equal(Object.keys(OUTCOME_LABEL).length, 7);
     assert.ok(noteUrlOk("https://a.test/x") && noteUrlOk(" http://a.test ") && !noteUrlOk("file:///x") && !noteUrlOk("javascript:1") && !noteUrlOk("nope"));
     assert.ok(noteUrlOk(START_URL));
+  });
+});
+
+describe("fxOn", () => {
+  it("animates unless reduced motion is on and not overridden", () => {
+    assert.equal(fxOn(false, false), true);
+    assert.equal(fxOn(true, true), true);
+    assert.equal(fxOn(true, false), false);
   });
 });

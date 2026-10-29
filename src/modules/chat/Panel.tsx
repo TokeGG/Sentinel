@@ -7,6 +7,7 @@ import { Section, Sections } from "../../ui/useCustomize";
 import { useOption } from "../../ui/useOption";
 import { useModule } from "../../ui/useModule";
 import { AddRoom } from "./AddRoom";
+import { connectorOf } from "./connectors";
 import { twitch } from "./connectors/twitch";
 import { visibleRooms, toRooms } from "./panelLogic";
 import { RoomTabs } from "./RoomTabs";
@@ -43,8 +44,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   }, []);
 
   return (
-    <>
-      <h2 className="ui-head">
+    <div className="chat-root">
+      <h2 className="ui-head chat-bar">
         <span className="ui-dot" />
         {module.name}
         <span className="ui-count">{rooms.length} room{rooms.length === 1 ? "" : "s"}</span>
@@ -64,7 +65,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             <div className={`chat-body ${mode === "columns" ? "cols" : "tabs"}`} style={{ "--chat-cols": Math.min(cols, Math.max(1, shown.size)) } as React.CSSProperties}>
               {rooms.map((r) => (
                 <div key={r.id} className="chat-room" hidden={!shown.has(r.id)}>
-                  {mode === "columns" && <div className="chat-room-head">{r.label}</div>}
+                  {mode === "columns" && <div className="chat-room-head"><i className="chat-dot" style={{ background: connectorOf(r.site).color }} />{r.label}</div>}
                   <RoomView room={r} cap={cap} stamp={stamp} epoch={epoch} visible={shown.has(r.id)} onActivity={() => bump(r.id)} />
                 </div>
               ))}
@@ -79,6 +80,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           </Tile>
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

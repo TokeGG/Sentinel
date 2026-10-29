@@ -54,3 +54,7 @@ export function urlsIn(text: string): { text: string; url: string }[] {
   const found = (text.match(/https?:\/\/[^\s<>"')\]]+/gi) ?? []).map((u) => u.replace(/[.,;:!?]+$/, ""));
   return [...new Set(found)].slice(0, 50).map((url) => ({ text: url, url }));
 }
+
+/** Stable 0-359 hue for an avatar colour from a name/address; first letter/digit as its glyph. */
+export const avatarHue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+export const initialOf = (s: string) => (s.trim().match(/[\p{L}\p{N}]/u)?.[0] ?? "?").toUpperCase();

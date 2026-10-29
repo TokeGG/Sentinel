@@ -44,6 +44,9 @@ export const PLATFORM_COLORS: Record<string, string> = {
 };
 export const platformColor = (id: string) => PLATFORM_COLORS[id] ?? "#8899a6";
 
+/** Stable 0-359 hue for an initial avatar. */
+export const nameHue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
+
 /** Max post length per platform (Mastodon's is the common default; instances vary). */
 export const POST_LIMITS: Record<string, number> = { bluesky: 300, mastodon: 500 };
 

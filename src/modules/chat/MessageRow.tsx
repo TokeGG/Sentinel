@@ -18,7 +18,7 @@ export const MessageRow = memo(function MessageRow({ m, set, stamp, mention }: {
   return (
     <div className={`chat-row${mention ? " chat-mention" : ""}${m.deleted ? " chat-deleted" : ""}${m.self ? " chat-self" : ""}`}>
       {stamp && <time>{clock(m.time)}</time>}
-      {(m.badges ?? []).map((b, i) => badgeLabel(b) && <span key={i} className="chat-badge" title={b}>{badgeLabel(b)}</span>)}
+      {(m.badges ?? []).map((b, i) => badgeLabel(b) && <span key={i} className="chat-badge" data-b={b} title={b}>{badgeLabel(b)}</span>)}
       <b className="chat-user" style={m.color && HEX.test(m.color) ? { color: m.color } : undefined}>{m.user}</b>
       <span>{m.kind === "action" ? " " : ": "}</span>
       <span className={m.kind === "action" ? "chat-action" : undefined}>{body}</span>

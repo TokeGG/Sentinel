@@ -59,15 +59,15 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   };
 
   return (
-    <>
-      <h2 className="ui-head">
+    <div className="soc-root">
+      <h2 className="ui-head soc-bar">
         <span className="ui-dot" />
         {module.name}
         <span className="ui-count">{shown.length}</span>
-        <button type="button" className="ui-btn" disabled={busy} onClick={() => void run("fetch_all_feeds")}>{busy ? "Working…" : "Refresh"}</button>
+        <button type="button" className="ui-btn soc-refresh" disabled={busy} onClick={() => void run("fetch_all_feeds")}>{busy ? "Working…" : "Refresh"}</button>
       </h2>
       {(error || acts.error) && <ErrorLine message={(error || acts.error)!} />}
-      <Sections>
+      <Sections className="soc-col">
         <Section id="composer"><Composer status={status} busy={busy} onPost={post} /></Section>
         <Section id="filters">
           <div className="ui-chips">
@@ -89,7 +89,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                   <PostCard post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} actions={cardProps(p)} />
                 </div>
               ))}
-              {shown.length > limit && <button type="button" className="ui-btn" onClick={() => setLimit(limit + PAGE)}>Show more</button>}
+              {shown.length > limit && <button type="button" className="ui-btn soc-more" onClick={() => setLimit(limit + PAGE)}>Show more</button>}
             </div>
           ) : (
             <EmptyState
@@ -100,6 +100,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         </Section>
         <Section id="accounts"><Accounts module={module} status={status} busy={busy} run={run} /></Section>
       </Sections>
-    </>
+    </div>
   );
 }

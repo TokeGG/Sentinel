@@ -46,3 +46,6 @@ export const episodeLabel = (e: EpisodeRow): string => `${e.goal.slice(0, 80)} -
 export function noteUrlOk(u: string): boolean {
   try { return /^https?:$/.test(new URL(u.trim()).protocol); } catch { return false; }
 }
+
+/** Terminal animations run unless reduced motion is requested and not overridden by the app setting. */
+export const fxOn = (reducedMotion: boolean, ignoreReduced: boolean) => !reducedMotion || ignoreReduced;
