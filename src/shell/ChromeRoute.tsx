@@ -3,7 +3,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { emitTo, listen } from "@tauri-apps/api/event";
 import { registry } from "../core/module";
-import { closePanel, commit, getPanel, SETTINGS_ID, toggleFullWindow } from "./panelApi";
+import { closePanel, commit, getPanel, MASTER_ID, SETTINGS_ID, toggleFullWindow } from "./panelApi";
 import { useDragPanel } from "./useDragPanel";
 import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
 
@@ -37,7 +37,7 @@ export function ChromeRoute({ id }: { id: string }) {
   return (
     <div className="panel-chrome" style={m?.accent ? ({ "--accent": m.accent } as CSSProperties) : undefined} {...handlers}>
       <i className={`panel-chrome-dot${unread > 0 ? " new" : ""}`} title={unread > 0 ? `${unread} new` : undefined} />
-      <span className="panel-chrome-title" style={err ? { color: "var(--bad)" } : undefined} title={err ?? undefined}>{err ?? (m ? m.name : id === SETTINGS_ID ? "Settings" : id ? id : "Module not found")}</span>
+      <span className="panel-chrome-title" style={err ? { color: "var(--bad)" } : undefined} title={err ?? undefined}>{err ?? (m ? m.name : id === SETTINGS_ID ? "Settings" : id === MASTER_ID ? "Master Hub" : id ? id : "Module not found")}</span>
       {m && m.panel !== "web" && (
         <button className="panel-chrome-gear" title="Customize" aria-label="Customize panel"
           onClick={() => emitTo(panelLabel(id), PANEL_CUSTOMIZE, { id }).catch(fail("customize"))}>⚙</button>

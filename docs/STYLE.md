@@ -6,7 +6,7 @@
 - Panel strip (24px, `shell/ChromeRoute.tsx`): small muted name, tiny status dot (lit = new items), controls appear on hover only.
 - Media modules (YouTube, chat...): mimic the LAYOUT of the real sites with Sentinel colours/fonts, no branding.
 - Lab / Pentest / Bot: terminal style (monospace, sharp corners, phosphor accent, subtle scanlines/glow, animated status lines). Keep animation cheap; obey the motion policy (reduced motion / ignore_reduced_motion / game mode). Step 2.
-- 3D map (shaded planets, tilted orbits, parallax) is a later task; the map reads only `accent` (hue), so nothing here blocks it.
+- 3D map (done): shaded planets, tilted orbits, parallax; reads only `accent` (hue). Inner rings = planets (atmosphere, some ringed), outer rings = smaller dashed-orbit bodies, sun = glowing core. No new tokens (title-bar pill/gear and Master Hub use existing ones).
 
 ## Tokens (`src/ui/tokens.css`)
 Layers `--base` < `--raised` < `--overlay`; per panel `--surface`, `--surface-2`, `--line` (tinted by `--accent` x `--tint`).

@@ -5,7 +5,7 @@ import { registry } from "../core/module";
 import { pauseAll, resumeEnabled } from "../core/scheduler";
 import { getGameModeAuto, getStarMotion } from "./layoutStore";
 import { saveGameModeAuto, saveStarMotion } from "./generalSettings";
-import { openSettings } from "./panelApi";
+import { openMaster } from "./panelApi";
 import { setGameMode as shareGameMode, setStarMotion as shareStarMotion } from "./motionStore";
 import { OrbitControls } from "./OrbitControls";
 
@@ -82,7 +82,7 @@ export function GameHud({ setError, refresh = 0 }: { setError: (e: string | null
         Stars: {motion ? "on" : "off"}
       </button>
       <OrbitControls refresh={refresh} fail={fail} />
-      <button className="hud-settings" onClick={() => openSettings().catch(fail)}>⚙ Settings</button>
+      <button className="hud-settings" onClick={() => openMaster().catch(fail)}>Master Hub</button>
     </div>
   );
 }

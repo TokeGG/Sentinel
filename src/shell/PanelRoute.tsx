@@ -13,7 +13,8 @@ import { PanelContext, useCustomize } from "../ui/useCustomize";
 import type { PanelStatus } from "../ui/Section";
 import { errorText } from "../ui/moduleRun";
 import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
-import { SETTINGS_ID } from "./panelApi";
+import { MASTER_ID, SETTINGS_ID } from "./panelApi";
+import { MasterHub } from "./MasterHub";
 import { SettingsPanel } from "./SettingsPanel";
 
 export function panelIdFromHash(hash: string): string | null {
@@ -40,6 +41,13 @@ export function PanelRoute({ id }: { id: string }) {
     return (
       <PanelShell className="panel-route">
         <SettingsPanel />
+      </PanelShell>
+    );
+  }
+  if (id === MASTER_ID) {
+    return (
+      <PanelShell className="panel-route">
+        <MasterHub />
       </PanelShell>
     );
   }

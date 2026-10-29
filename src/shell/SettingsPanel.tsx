@@ -8,6 +8,7 @@ import { AppearanceSection } from "./settings/AppearanceSection";
 import { DiagnosticsSection } from "./settings/DiagnosticsSection";
 import { DataSection } from "./settings/DataSection";
 import { GeneralSection } from "./settings/GeneralSection";
+import { NotificationsSection } from "./settings/NotificationsSection";
 import { JobsSection } from "./settings/JobsSection";
 import { UpdatesSection } from "./settings/UpdatesSection";
 import "./settings/settings.css";
@@ -20,6 +21,7 @@ export function SettingsPanel() {
       {error && <ErrorLine message={error} onDismiss={() => setError(null)} />}
       <GeneralSection onError={onError} />
       <AppearanceSection onError={onError} />
+      <NotificationsSection onError={onError} />
       <JobsSection onError={onError} />
       <DataSection onError={onError} />
       <DiagnosticsSection onError={onError} />

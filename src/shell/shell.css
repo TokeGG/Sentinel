@@ -14,6 +14,11 @@
 .titlebar-tools { display: flex; align-items: center; min-width: 0; }
 .titlebar-drag { flex: 1; min-width: 24px; }
 .titlebar-btns { display: flex; }
+.titlebar-pill { all: unset; align-self: center; margin-right: 6px; min-width: 18px; height: 18px; padding: 0 6px; box-sizing: border-box; border-radius: 9px; background: var(--bad); color: #fff; font-size: var(--fs-xs); font-weight: 700; line-height: 18px; text-align: center; cursor: pointer; }
+.titlebar-pill:hover { filter: brightness(1.15); }
+.titlebar-pill:focus-visible, .titlebar-gear:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
+.titlebar-gear { all: unset; width: 34px; display: grid; place-items: center; color: var(--text-dim); cursor: pointer; transition: background 0.1s, color 0.1s; }
+.titlebar-gear:hover { background: var(--hover); color: var(--text); }
 .titlebar-btns button {
   all: unset; width: 46px; display: grid; place-items: center; color: var(--text-dim); cursor: default;
   transition: background 0.1s, color 0.1s;

@@ -12,6 +12,7 @@ import { restore, LAYOUT_COMMIT, LAYOUT_DELETE, type SavedPanel } from "./shell/
 import { saveLayout, deleteLayout } from "./shell/layoutStore";
 import { SETTINGS_CHANGED } from "./shell/generalSettings";
 import { useBadges } from "./shell/useBadges";
+import { useNotifLog } from "./shell/useNotifLog";
 import { ChromeRoute, chromeIdFromHash } from "./shell/ChromeRoute";
 import { GripRoute, gripIdFromHash } from "./shell/GripRoute";
 import "./modules/notes"; // self-registers into `registry` on import
@@ -43,6 +44,7 @@ function MainShell() {
   const [error, setError] = useState<string | null>(null);
   const [settingsTick, setSettingsTick] = useState(0);
   const onPanelClosed = useBadges(registry, setError);
+  useNotifLog(setError);
   useEffect(() => {
     getDb()
       .then(() => {
