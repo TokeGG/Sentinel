@@ -27,3 +27,7 @@
 .soc-target { display: flex; align-items: center; gap: 4px; font-size: 0.85em; }
 .soc-accounts { list-style: none; margin: var(--gap) 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .soc-accounts li { display: flex; justify-content: space-between; gap: var(--gap); }
+.soc-act { font-size: 0.85em; color: var(--text-dim); }
+.soc-act.on { color: var(--accent-text); font-weight: 600; }
+.soc-reply { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.soc-reply textarea { width: 100%; box-sizing: border-box; resize: vertical; }

@@ -1,5 +1,6 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import { cred } from "./common";
+import { bskyCreatedUri, bskyDelete, bskyLike, bskyReply, bskyRepost } from "./actions";
 import { parseBluesky } from "./parse";
 import type { SocialConnector } from "./types";
 
@@ -16,6 +17,18 @@ async function session(): Promise<{ accessJwt: string; did: string }> {
   });
   if (!res.ok) throw new Error(`Bluesky login failed: ${res.status}`);
   return (await res.json()) as { accessJwt: string; did: string };
+}
+
+// One authenticated repo write (createRecord / deleteRecord); returns the JSON body.
+async function xrpc(name: "createRecord" | "deleteRecord", body: object): Promise<unknown> {
+  const { accessJwt } = await session();
+  const res = await fetch(`https://bsky.social/xrpc/com.atproto.repo.${name}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessJwt}` },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Bluesky ${name} failed: ${res.status}`);
+  return res.json().catch(() => ({}));
 }
 
 export const bluesky: SocialConnector = {
@@ -36,16 +49,29 @@ export const bluesky: SocialConnector = {
     return parseBluesky(await res.json());
   },
   async post(text) {
-    const { accessJwt, did } = await session();
-    const res = await fetch("https://bsky.social/xrpc/com.atproto.repo.createRecord", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessJwt}` },
-      body: JSON.stringify({
-        repo: did,
-        collection: "app.bsky.feed.post",
-        record: { $type: "app.bsky.feed.post", text, createdAt: new Date().toISOString() },
-      }),
-    });
-    if (!res.ok) throw new Error(`Bluesky post failed: ${res.status}`);
+    const { did } = await session();
+    await xrpc("createRecord", { repo: did, collection: "app.bsky.feed.post", record: { $type: "app.bsky.feed.post", text, createdAt: new Date().toISOString() } });
+  },
+  async like(p) {
+    const { did } = await session();
+    return { liked: true, likeUri: bskyCreatedUri(await xrpc("createRecord", bskyLike(did, p))) };
+  },
+  async unlike(p) {
+    const { did } = await session();
+    await xrpc("deleteRecord", bskyDelete(did, p.meta.likeUri));
+    return { liked: false, likeUri: undefined };
+  },
+  async share(p) {
+    const { did } = await session();
+    return { shared: true, shareUri: bskyCreatedUri(await xrpc("createRecord", bskyRepost(did, p))) };
+  },
+  async unshare(p) {
+    const { did } = await session();
+    await xrpc("deleteRecord", bskyDelete(did, p.meta.shareUri));
+    return { shared: false, shareUri: undefined };
+  },
+  async reply(p, text) {
+    const { did } = await session();
+    await xrpc("createRecord", bskyReply(did, p, text));
   },
 };

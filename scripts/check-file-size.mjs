@@ -10,7 +10,6 @@ export const MAX = 150;
 // Remove an entry when its file is split. Do NOT add new ones.
 const ALLOW = [
   "src/modules/finance/index.ts", // scheduled for its own split (finance)
-  "src/modules/pentest/index.ts", // scheduled for its own split (pentest)
 ];
 
 export function countLines(path, text) {

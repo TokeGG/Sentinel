@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { checkRecipients, formatAddr, isEmail, parseAddressList } from "./addresses.ts";
 import { PRESETS, draftFromPreset, presetById, savesSentCopy, validateDraft } from "./presets.ts";
 import { decodeFolderName, folderLabel, folderOfRole, folderRole, sortFolders } from "./folders.ts";
-import { buildDraft, quoteText } from "./compose.ts";
+import { buildDraft, quoteText } from "./composeLogic.ts";
 import { dateLabel, emailSections, previewLine, searchMessages, sortMessages, staleUids, urlsIn } from "./panelLogic.ts";
 import type { Body, Msg } from "./types.ts";
 

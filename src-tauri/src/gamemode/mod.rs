@@ -75,6 +75,8 @@ async fn evaluate(app: &AppHandle, manual: Option<bool>, auto: Option<bool>) -> 
 
 /// Best-effort: keeps going after a failure, returns the first error.
 fn enter(app: &AppHandle) -> Result<(), String> {
+    crate::commands::mcp::stop_all(app); // MCP servers never run through game mode
+    crate::bot::stop(app, "game mode"); // nor does the bot browser
     let gone = app.state::<Mutex<Panels>>().lock().map_err(e)?.enter_game_mode(&KEEP);
     let mut first_err = None;
     for id in &gone {

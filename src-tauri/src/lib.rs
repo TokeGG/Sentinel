@@ -1,3 +1,4 @@
+mod bot;
 mod commands;
 mod migrations;
 mod gamemode;
@@ -10,6 +11,8 @@ pub fn run() {
     tauri::Builder::default()
         .manage(std::sync::Mutex::new(panels::state::Panels::new()))
         .manage(Specs::default())
+        .manage(Mcp::default())
+        .manage(bot::BotBrowser::default())
         .manage(gamemode::GameMode::default())
         .setup(|app| {
             gamemode::start_poll(app.handle().clone());
@@ -48,6 +51,14 @@ pub fn run() {
             set_credential,
             get_credential,
             delete_credential,
+            skills_write,
+            skills_remove,
+            skills_read_file,
+            mcp_start,
+            mcp_stop,
+            mcp_running,
+            mcp_tools,
+            mcp_call,
             open_panel,
             close_panel,
             move_panel,
@@ -56,9 +67,20 @@ pub fn run() {
             get_panel,
             toggle_full_window,
             restore_layout,
+            bot::bot_open,
+            bot::bot_navigate,
+            bot::bot_run,
+            bot::bot_show,
+            bot::bot_close,
             gamemode::set_game_mode,
             gamemode::set_game_mode_auto
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                commands::mcp::stop_all(app);
+                bot::stop(app, "app exit");
+            }
+        });
 }

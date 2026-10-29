@@ -63,6 +63,10 @@ src/
                         (#/chrome/<id> strip), GameHud, layout.ts (pure clamp/tile/
                         cascade), layoutStore.ts (panel_layout + app_settings via
                         db.ts), settingsStore.ts, panelApi.ts
+  modules/bot/        — browser-bot learning kernel + agent loop (no manifest/driver/UI yet): kernel/
+                        (brain, nudge, variants, brainFile: generic mirror of mmoarena's botbrain/
+                        outplay learning; JSON shape = its botbrain.json), brainSpecs.ts, mistakes.ts,
+                        llm.ts (Ollama 127.0.0.1:11434 only), agent.ts, knowledge.ts, learn.ts, sql.ts/store.ts
   modules/<name>/
     index.ts          — the module's ModuleManifest + its skills
     Panel.tsx, panelLogic.ts (+ .test.ts) — custom panel and its pure logic
@@ -70,14 +74,19 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..24 strictly ascending
-                        (24 = mail; 17-24 idempotent `IF NOT EXISTS`); loaded by
+  migrations/NN_<module>.sql — numbered SQL, versions 1..27 strictly ascending
+                        (26 = social_post_meta, 27 = skills/mcp, 28 = bot; 17-28 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
                         webviews can hand keyboard focus to each other (moves focus only)
+  src/bot/            — browser driver for hub.bot: window.rs (`bot-browser` window, own profile
+                        `profiles/bot`, hidden by default, NO IPC capability), session.rs (pending
+                        commands -> `bot-result` events), chunk.rs (title-channel framing), policy.rs
+                        (nav allow/deny), script.rs + driver.js (injected `window.__sb`)
   src/commands/       — Rust commands by area (backup, credentials, files,
-                        mail + mail_fetch/body/ops/send, network, oauth, pentest, repo, system)
+                        mail + mail_fetch/body/ops/send, mcp + mcp_proc/rpc (stdio MCP client), network,
+                        oauth, pentest, repo, skills_fs (app-owned skills dir), system)
   src/panels/         — panel manager: every panel = a content webview + a
                         ~28px chrome webview (move/resize/close/focus),
                         moved/raised together; manager, restore, webview, geometry,
@@ -118,7 +127,7 @@ right move before writing bespoke UI**:
 | `actions` | zero-arg buttons | "Refresh quotes" |
 | `rowAction` | one button per row | "Clone…" on a GitHub repo row |
 | `credentialFields` | password inputs → OS keychain | GitHub PAT |
-| `forms` | multi-field forms | Email compose, Pentest add-engagement |
+| `forms` | multi-field forms | Email compose |
 | `schedule` | an opt-in "Auto-refresh" checkbox | News, Weather |
 | `customize` | sections/options the user can show, hide, reorder, tune (customize drawer, saved views) | Notes, Finance |
 | `ui` | lazy `() => import("./Panel")`; required for `panel: "custom"` | all custom panels |
@@ -129,9 +138,8 @@ right move before writing bespoke UI**:
 reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
-**Custom panels** exist for notes, news, deals, pccare, weather, homenet,
-github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email. pentest
-still uses the generic panel (redesigns planned). To add one:
+**Custom panels** exist for bot, notes, news, deals, pccare, weather, homenet,
+github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email, skills, pentest. To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
 3. Wrap each user-hideable part in `<Section id="...">` inside `<Sections>`.
@@ -184,14 +192,14 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-446 TS tests + 4 size-guard tests + 60 Rust tests as of this commit. Run the
+674 TS tests + 4 size-guard tests + 74 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
 **File-size rule:** no .ts/.tsx/.rs file over ~150 lines (`*.test.ts` and Rust
 code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
 `scripts/check-file-size.mjs` has an ALLOW list of files awaiting their own
-split (finance, pentest). Never add to it; shrink it.
+split (finance). Never add to it; shrink it.
 
 **Updates:** Settings > Updates (`shell/updater.ts`) checks GitHub releases
 only on a button press (no background call). Releases are tag-driven (`v*`):
@@ -221,13 +229,24 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Rust `restore_database` copies only the files present in the backup, leaves
   stale `-wal`/`-shm` next to the restored db, copies over an open DB, and does
   no validation; needs its own fix.
-- pentest is not yet redesigned (generic panel).
+- Pentest (`modules/pentest`): custom terminal-style panel. `scope.ts` (+ scopeAddr/Rules/Window/Decl)
+  is still the one gate: includes = host/IP, CIDR (min /8, /32 v6), `*.wildcard` (not the apex);
+  exclusions always win; status must be active and inside the UTC window. `runner.ts`/`api.ts`
+  `runTool(engagementId, toolId, target)` is the only way to run; only the built-in `port-scan`
+  is registered (no external programs, no other tools: that needs an explicit decision). Rust
+  `tcp_port_scan` re-checks with a mirror (`commands/pentest_gate.rs`, `pentest_rule.rs`);
+  both sides are tested against `gateVectors.json`, so change the gate in both. Tables: migration 25.
+  Never run in a real window or against a real network yet.
 - Email (`modules/email`): custom panel, multi-account IMAP/SMTP, passwords only in keychain (`pw:<accountId>`), cache in SQLite (`mail_*`, migration 24), HTML sanitized by `sanitize.ts` into a `sandbox=""` iframe. No OAuth (Gmail/iCloud need app passwords). No attachment download, drafts saving or threading. The Rust mail code (mail*.rs, `mail-parser` crate) compiles and its pure parts are unit-tested, but has never run against a live mail server.
+- Social per-post actions (like / boost-repost / inline reply; optional `like`/`unlike`/`share`/`unshare`/`reply` on `SocialConnector`, absent = button hidden; request builders in `social/connectors/actions.ts`, optimistic UI in `useActions.ts`, ids/state in `social_post_meta`): Bluesky, Mastodon (scopes now incl. write:favourites) and Reddit (scopes now incl. vote submit; no repost). Older sign-ins must "Connect" again. X stays a stub. Never run against the live APIs.
+- Browser bot (`modules/bot`): only the pure kernel, agent loop, prompt/parser, notes retrieval and store exist (tested with fakes). No `BrowserDriver` (Rust), no manifest/UI, no URL-note fetching, nothing wires `store.ts` or `toolGate` yet; never run against a real Ollama.
 - Discord panel is built (modules/discord) but media permissions, the screen-share
   picker/Go Live and the unread moon are unverified on Windows; checklist in
   `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.
 - Chat (`modules/chat`, `hub.chat`): sockets run in the panel webview only while it is open. Twitch read (anon IRC) + send (pasted OAuth token in keychain); Kick read via Pusher (channel lookup may be Cloudflare-blocked), read-only; destiny.gg read-only; any other site (incl. iCanHazChat) = `embed` iframe / "Open as its own panel". 7TV/BTTV/FFZ via `emoteSets.ts`. NONE of the live protocols/endpoints have been run against the real sites (sandbox had no outbound access). Add a site = one file in `chat/connectors/` + list it in `connectors/index.ts` (+ parser in `rooms.ts`).
-- Specified in `docs/superpowers/specs/` but not built: skills/MCP hub, browser bot.
+- x, facebook, instagram: web panels (core/webSite.ts), real site + persistent login; no API (no feed merge, like or comment from our UI). Unverified on Windows.
+- Skills & MCP hub (`modules/skills`, `hub.skills`): GitHub install (pinned SHA, confirm screen, files under app data `skills/<skill|mcp>/<id>`), `registry.ts` (`listSkills`/`getSkill`), `mcp.ts` (`listMcpTools`/`callMcpTool`, Rust stdio client; flagged pentest/scan/exploit tools need an in-scope engagement target via `pentest/api` `previewGate`; no Rust-side re-check), Ollama model pick (`local_model`). MCP needs the user's own Node/Python (npx/uvx); servers start only when flipped on, stop on disable/exit/game mode. Bundled skills: `resources/skills/*/SKILL.md`. NEVER run against real GitHub or a real MCP server (only unit tests and a fake stdio server); GUI unverified.
+- Browser bot (`modules/bot`, `hub.bot`; Rust `src-tauri/src/bot/`): runs only on the panel Run button; local Ollama model only; closes on game mode, app exit and panel close. The Rust driver is compile-checked only: the WebView2 `document.title` result channel, hidden-webview behaviour (timer throttling), popups and downloads are unverified on Windows. No GPU or local-model unload yet. Tool (MCP) actions use the existing gate and the bot has no engagement, so pentest-flagged tools are always refused.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
   price); Home Network "new" means new this session; Calendar "overdue" means
   unfiled notes.

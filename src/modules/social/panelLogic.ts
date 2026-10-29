@@ -2,6 +2,7 @@
 import type { OptionDef } from "../../core/customizeChecks.ts";
 import { ago } from "../../ui/kit/format.ts";
 import { safeLink } from "../../ui/safeLink.ts";
+import type { PostMeta } from "./connectors/types.ts";
 
 export interface FeedPost {
   platform: string;
@@ -16,6 +17,7 @@ export interface FeedPost {
   reposts: number | null;
   replies: number | null;
   postedAt: string | null;
+  meta: PostMeta;
 }
 
 export const KEEP_PER_PLATFORM = 500;
@@ -31,6 +33,7 @@ export const socialOptions: OptionDef[] = [
   { key: "density", label: "Density", type: "select", choices: ["comfortable", "compact"], default: "comfortable" },
   { key: "showMedia", label: "Show media", type: "toggle", default: true },
   { key: "showCounts", label: "Show counts", type: "toggle", default: true },
+  { key: "showActions", label: "Show actions (like, boost, reply)", type: "toggle", default: true },
 ];
 
 export const PLATFORM_COLORS: Record<string, string> = {
@@ -54,11 +57,16 @@ export function rowToPost(r: Record<string, unknown>): FeedPost {
     const m: unknown = JSON.parse(String(r.media ?? "[]"));
     if (Array.isArray(m)) media = m.filter((u): u is string => typeof u === "string");
   } catch { /* keep [] */ }
+  let meta: PostMeta = {};
+  try {
+    const m: unknown = JSON.parse(String(r.meta ?? "{}"));
+    if (m && typeof m === "object" && !Array.isArray(m)) meta = m as PostMeta;
+  } catch { /* keep {} */ }
   const s = (v: unknown) => (typeof v === "string" ? v : null);
   return {
     platform: String(r.platform), postId: String(r.post_id), name: String(r.name ?? ""), handle: String(r.handle ?? ""),
     avatar: s(r.avatar), text: String(r.text ?? ""), link: s(r.link), media,
-    likes: num(r.likes), reposts: num(r.reposts), replies: num(r.replies), postedAt: s(r.posted_at),
+    likes: num(r.likes), reposts: num(r.reposts), replies: num(r.replies), postedAt: s(r.posted_at), meta,
   };
 }
 

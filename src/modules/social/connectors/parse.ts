@@ -37,6 +37,15 @@ export function parseBluesky(data: any): SocialPost[] {
       likes: n(post.likeCount),
       reposts: n(post.repostCount),
       replies: n(post.replyCount),
+      meta: {
+        cid: post.cid,
+        rootUri: post.record?.reply?.root?.uri ?? post.uri,
+        rootCid: post.record?.reply?.root?.cid ?? post.cid,
+        liked: !!post.viewer?.like,
+        likeUri: post.viewer?.like,
+        shared: !!post.viewer?.repost,
+        shareUri: post.viewer?.repost,
+      },
     };
   });
 }
@@ -59,6 +68,7 @@ export function parseMastodon(data: any[]): SocialPost[] {
       likes: n(p.favourites_count),
       reposts: n(p.reblogs_count),
       replies: n(p.replies_count),
+      meta: { targetId: String(p.id), liked: !!p.favourited, shared: !!p.reblogged },
     };
   });
 }
@@ -76,5 +86,6 @@ export function parseReddit(data: any): SocialPost[] {
     likes: n(p.score),
     reposts: null,
     replies: n(p.num_comments),
+    meta: { liked: p.likes === true },
   }));
 }

@@ -2,7 +2,7 @@ import type { ModuleManifest } from "../../core/module";
 import { CredentialFields } from "../../core/panel/CredentialFields";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 
-export type Status = { id: string; label: string; connected: boolean; canPost: boolean };
+export type Status = { id: string; label: string; connected: boolean; canPost: boolean; can: { like: boolean; share: boolean; reply: boolean } };
 
 // Collapsible account management: keychain-backed credential fields (the
 // existing CredentialFields), OAuth Connect buttons, per-platform state, and

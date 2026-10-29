@@ -4,9 +4,9 @@
 // mismatch on an old database) later loads succeed WITHOUT migrating and the
 // newer tables never appear. db.ts therefore calls ensureSchema() after every
 // load. The statements must stay identical to the migration files (schema.test.ts
-// enforces it). Migrations 17-22 use CREATE TABLE IF NOT EXISTS so a plugin run
-// after this bootstrap does not fail on "already exists"; no database has applied
-// 17-19 yet, so editing their text cannot cause a stored-checksum mismatch.
+// enforces it). Migrations 17+ use CREATE TABLE IF NOT EXISTS so a plugin run
+// after this bootstrap does not fail on "already exists".
+import { LATER_STATEMENTS } from "./schemaSocial.ts";
 export const SCHEMA_STATEMENTS: string[] = [
   `CREATE TABLE IF NOT EXISTS panel_layout (
     module_id TEXT PRIMARY KEY,
@@ -112,6 +112,7 @@ export const SCHEMA_STATEMENTS: string[] = [
     json TEXT NOT NULL,
     PRIMARY KEY (account_id, folder, uid)
 )`,
+  ...LATER_STATEMENTS, // migrations 25 (pentest), 26 (social), 27 (skills/mcp)
 ];
 
 export async function ensureSchema(exec: (sql: string) => Promise<unknown>): Promise<void> {

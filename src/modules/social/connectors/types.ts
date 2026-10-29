@@ -1,3 +1,20 @@
+/** Per-post ids/state the actions need (persisted in social_post_meta). */
+export interface PostMeta {
+  cid?: string; // Bluesky: content id of the post
+  rootUri?: string; // Bluesky: thread root (for replies)
+  rootCid?: string;
+  targetId?: string; // Mastodon: id of the status to act on (the original of a boost)
+  liked?: boolean;
+  likeUri?: string; // Bluesky: the like record, deleted to un-like
+  shared?: boolean; // boosted / reposted
+  shareUri?: string; // Bluesky: the repost record
+}
+
+export interface PostRef {
+  postId: string;
+  meta: PostMeta;
+}
+
 export interface SocialPost {
   postId: string;
   name: string; // display name
@@ -10,6 +27,7 @@ export interface SocialPost {
   likes: number | null;
   reposts: number | null;
   replies: number | null;
+  meta?: PostMeta;
 }
 
 export interface CredentialSpec {
@@ -32,4 +50,11 @@ export interface SocialConnector {
   fetchFeed(): Promise<SocialPost[]>;
   /** Present only where the connector can publish; the rest are read-only. */
   post?(text: string): Promise<void>;
+  // Per-post actions; absent = the button is hidden. Each resolves to the
+  // meta fields it changed (e.g. the new like record uri).
+  like?(p: PostRef): Promise<PostMeta>;
+  unlike?(p: PostRef): Promise<PostMeta>;
+  share?(p: PostRef): Promise<PostMeta>;
+  unshare?(p: PostRef): Promise<PostMeta>;
+  reply?(p: PostRef, text: string): Promise<void>;
 }

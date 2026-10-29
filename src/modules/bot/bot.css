@@ -1,0 +1,13 @@
+.bot-goal { display: flex; flex-direction: column; gap: var(--gap); }
+.bot-goal textarea { resize: vertical; }
+.bot-log { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; font-size: 0.85em; }
+.bot-line { display: grid; grid-template-columns: 52px 1fr; gap: var(--gap); overflow-wrap: anywhere; }
+.bot-kind { color: var(--text-dim); text-transform: uppercase; font-size: 0.75em; letter-spacing: 0.05em; padding-top: 2px; }
+.bot-line.warn .bot-kind, .bot-line.nav .bot-kind { color: var(--bad); }
+.bot-line.act { color: var(--accent); }
+.bot-mono { font-family: var(--font-mono); font-size: 0.85em; }
+.bot-table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+.bot-table th { text-align: left; color: var(--text-dim); font-weight: normal; }
+.bot-table td, .bot-table th { padding: 2px 6px 2px 0; }
+.bot-table .moved { color: var(--accent); }
+.bot-model-ok { color: var(--good, var(--accent)); }

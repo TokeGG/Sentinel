@@ -5,7 +5,7 @@ import type { ModuleManifest } from "../../core/module";
 import { useModule } from "../../ui/useModule";
 import { errorText } from "../../ui/moduleRun";
 import { cachedFolders, cachedMessages } from "./cache";
-import { buildDraft, emptyDraft, type Draft, type Mode } from "./compose";
+import { buildDraft, emptyDraft, type Draft, type Mode } from "./composeLogic";
 import { checkRecipients, formatAddr } from "./addresses";
 import { searchMessages, sortMessages } from "./panelLogic";
 import { openMessage } from "./sync";

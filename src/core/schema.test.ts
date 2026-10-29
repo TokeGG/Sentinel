@@ -5,9 +5,9 @@ import { readdirSync } from "node:fs";
 import { SCHEMA_STATEMENTS, ensureSchema, describeDb, redactPaths } from "./schema.ts";
 
 const norm = (s: string) => s.replace(/IF NOT EXISTS/gi, "").replace(/\s+/g, "").replace(/;$/, "");
-const files = ["17_panel_layout", "18_game_mode_auto", "19_panel_prefs", "20_youtube_channels", "21_youtube_watched", "22_chat_rooms", "23_social_feed", "24_mail"];
+const files = ["17_panel_layout", "18_game_mode_auto", "19_panel_prefs", "20_youtube_channels", "21_youtube_watched", "22_chat_rooms", "23_social_feed", "24_mail", "25_pentest_workspace", "26_social_post_meta", "27_skills_mcp", "28_bot"];
 
-test("SCHEMA_STATEMENTS match migrations 17-24 exactly", () => {
+test("SCHEMA_STATEMENTS match migrations 17-28 exactly", () => {
   // A migration file may hold several statements; they map to consecutive entries.
   const expected = files.flatMap((f) => {
     const sql = readFileSync(new URL(`../../src-tauri/migrations/${f}.sql`, import.meta.url), "utf8");
