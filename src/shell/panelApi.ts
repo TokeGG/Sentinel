@@ -52,6 +52,10 @@ async function openAt(id: string, size: { w: number; h: number }, web?: WebConfi
   await commit(await getPanel(id));
 }
 
+/** A site (e.g. an embedded chat) as its own web panel; not a module, so not restored on startup. */
+export const openWebPanel = (id: string, url: string, profile: string): Promise<void> =>
+  openAt(id, { w: 460, h: 640 }, { url, profile }, undefined, { w: 320, h: 240 });
+
 // Settings is NOT a module (not in the registry, never a planet); the HUD
 // opens it explicitly. restore() ignores its saved row (unknown id).
 export const SETTINGS_ID = "hub.settings";

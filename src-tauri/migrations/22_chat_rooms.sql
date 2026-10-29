@@ -1,0 +1,8 @@
+CREATE TABLE IF NOT EXISTS chat_rooms (
+    id TEXT PRIMARY KEY,
+    site TEXT NOT NULL,
+    target TEXT NOT NULL,
+    label TEXT NOT NULL,
+    position INTEGER NOT NULL DEFAULT 0,
+    pinned INTEGER NOT NULL DEFAULT 0
+);

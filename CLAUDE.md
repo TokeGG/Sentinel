@@ -70,8 +70,8 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..21 strictly ascending
-                        (21 = youtube_watched; 17-21 idempotent `IF NOT EXISTS`); loaded by
+  migrations/NN_<module>.sql — numbered SQL, versions 1..22 strictly ascending
+                        (22 = chat_rooms; 17-22 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
@@ -130,7 +130,7 @@ reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
 **Custom panels** exist for notes, news, deals, pccare, weather, homenet,
-github, finance, calendar, backup, clipboard, filesearch, youtube. email, pentest,
+github, finance, calendar, backup, clipboard, filesearch, youtube, chat. email, pentest,
 social still use the generic panel (redesigns planned). To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
@@ -225,7 +225,8 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Discord panel is built (modules/discord) but media permissions, the screen-share
   picker/Go Live and the unread moon are unverified on Windows; checklist in
   `docs/superpowers/spikes/2026-10-29-discord-checklist.md`.
-- Specified in `docs/superpowers/specs/` but not built: multi-site chat, skills/MCP hub, browser bot.
+- Chat (`modules/chat`, `hub.chat`): sockets run in the panel webview only while it is open. Twitch read (anon IRC) + send (pasted OAuth token in keychain); Kick read via Pusher (channel lookup may be Cloudflare-blocked), read-only; destiny.gg read-only; any other site (incl. iCanHazChat) = `embed` iframe / "Open as its own panel". 7TV/BTTV/FFZ via `emoteSets.ts`. NONE of the live protocols/endpoints have been run against the real sites (sandbox had no outbound access). Add a site = one file in `chat/connectors/` + list it in `connectors/index.ts` (+ parser in `rooms.ts`).
+- Specified in `docs/superpowers/specs/` but not built: skills/MCP hub, browser bot.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
   price); Home Network "new" means new this session; Calendar "overdue" means
   unfiled notes.
