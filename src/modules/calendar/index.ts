@@ -65,7 +65,7 @@ async function loadAgenda(): Promise<Record<string, unknown>[]> {
 export const calendarModule: ModuleManifest = {
   id: "hub.calendar",
   name: "Calendar & Tasks",
-  accent: "#8f9bff",
+  accent: "#6cd981",
   ring: "daily",
   icon: "calendar",
   description:

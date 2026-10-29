@@ -14,10 +14,13 @@
 .ui-quickadd input:focus-visible, .ui-file-text:focus-visible { outline: none; box-shadow: var(--focus); }
 .ui-btn {
   background: var(--surface-2); color: var(--text); border: 1px solid var(--line);
-  border-radius: calc(var(--radius) - 2px); padding: calc(5px * var(--density)) calc(12px * var(--density));
-  font: inherit; cursor: pointer; white-space: nowrap;
+  border-radius: var(--r-sm); padding: calc(5px * var(--density)) calc(12px * var(--density));
+  font: inherit; cursor: pointer; white-space: nowrap; transition: background 0.12s, border-color 0.12s;
 }
-.ui-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.ui-btn:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent-line); }
+.ui-btn:active:not(:disabled) { background: var(--press); }
+.ui-btn.primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+.ui-btn.primary:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 86%, var(--white)); }
 .ui-btn:disabled { opacity: 0.5; cursor: default; }
 .ui-btn:focus-visible { outline: none; box-shadow: var(--focus); }
 .ui-list { display: flex; flex-direction: column; gap: 2px; }
@@ -81,7 +84,7 @@
 .ui-launch { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
 .ui-launch:empty { display: none; }
 .ui-launch-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: calc(8px * var(--density)) 6px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); font: inherit; cursor: pointer; min-width: 0; }
-.ui-launch-item:hover:not(:disabled) { border-color: var(--accent); }
+.ui-launch-item:hover:not(:disabled) { border-color: var(--accent-line); background: var(--accent-soft); }
 .ui-launch-item:focus-visible { outline: none; box-shadow: var(--focus); }
 .ui-launch-glyph { font-size: 1.5em; color: var(--accent-text); line-height: 1; }
 .ui-launch-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85em; }

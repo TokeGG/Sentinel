@@ -47,7 +47,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const fileSearchModule: ModuleManifest = {
   id: "hub.filesearch",
   name: "Local File Search",
-  accent: "#6ad0ff",
+  accent: "#03c0d8",
   ring: "system",
   icon: "filesearch",
   description:

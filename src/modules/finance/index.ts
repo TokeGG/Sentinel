@@ -160,7 +160,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const financeModule: ModuleManifest = {
   id: "hub.finance",
   name: "Finance",
-  accent: "#e6c04f",
+  accent: "#d4c021",
   ring: "daily",
   icon: "finance",
   description:

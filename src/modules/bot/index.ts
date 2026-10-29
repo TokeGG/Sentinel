@@ -8,7 +8,7 @@ import { recentEpisodes } from "./store";
 export const botModule: ModuleManifest = {
   id: "hub.bot",
   name: "Browser Bot",
-  accent: "#ff9f5a",
+  accent: "#fea669",
   ring: "system",
   icon: "bot",
   description: "Type a goal; a local model browses in its own window to reach it, asking before anything irreversible. Learns from your notes and thumbs.",

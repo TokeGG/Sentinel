@@ -71,7 +71,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const clipboardModule: ModuleManifest = {
   id: "hub.clipboard",
   name: "Clipboard & Quick-Launch",
-  accent: "#b6e04f",
+  accent: "#a5b724",
   ring: "system",
   icon: "clipboard",
   description:

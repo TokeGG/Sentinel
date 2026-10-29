@@ -50,7 +50,7 @@ async function unfiledCount(): Promise<number> {
 export const notesModule: ModuleManifest = {
   id: "hub.notes",
   name: "Notes",
-  accent: "#ffb454",
+  accent: "#b78b06",
   ring: "daily",
   icon: "notes",
   description: "Quick-capture inbox — untagged until you file it.",

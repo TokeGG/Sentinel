@@ -73,7 +73,7 @@ async function loadItems(): Promise<Record<string, unknown>[]> {
 export const dealsModule: ModuleManifest = {
   id: "hub.deals",
   name: "Deals & Promos",
-  accent: "#ff9a4d",
+  accent: "#ea9603",
   ring: "daily",
   icon: "deals",
   description: "RSS/Atom deal feeds you add — same fetch+dedupe pattern as News.",

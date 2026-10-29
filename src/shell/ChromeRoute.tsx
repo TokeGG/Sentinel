@@ -1,7 +1,7 @@
-// 28px chrome strip, a child webview stacked above every panel's content
+// 24px chrome strip, a child webview stacked above every panel's content
 // (Task 9b). Stateless: every rect comes from Rust (get/focus_panel).
-import { useEffect, useState } from "react";
-import { emitTo } from "@tauri-apps/api/event";
+import { useEffect, useState, type CSSProperties } from "react";
+import { emitTo, listen } from "@tauri-apps/api/event";
 import { registry } from "../core/module";
 import { closePanel, commit, getPanel, SETTINGS_ID, toggleFullWindow } from "./panelApi";
 import { useDragPanel } from "./useDragPanel";
@@ -21,6 +21,11 @@ export function chromeIdFromHash(hash: string): string | null {
 export function ChromeRoute({ id }: { id: string }) {
   const m = registry.find((x) => x.id === id);
   const [full, setFull] = useState(false);
+  const [unread, setUnread] = useState(0); // status dot: lit when the module reports new items
+  useEffect(() => {
+    const un = listen<{ id?: string; count?: number }>("planet-badge", ({ payload }) => payload?.id === id && setUnread(Number(payload.count) || 0));
+    return () => void un.then((f) => f()).catch(() => {});
+  }, [id]);
   const { err, fail, handlers } = useDragPanel(id, "move", m?.web?.min);
 
   // A raise (focus_panel on a non-top panel) re-creates this webview before
@@ -30,8 +35,9 @@ export function ChromeRoute({ id }: { id: string }) {
   }, [id]);
 
   return (
-    <div className="panel-chrome" {...handlers}>
-      <span className="panel-chrome-title" style={err ? { color: "#ff7b7b" } : undefined} title={err ?? undefined}>{err ?? (m ? m.name : id === SETTINGS_ID ? "Settings" : id ? id : "Module not found")}</span>
+    <div className="panel-chrome" style={m?.accent ? ({ "--accent": m.accent } as CSSProperties) : undefined} {...handlers}>
+      <i className={`panel-chrome-dot${unread > 0 ? " new" : ""}`} title={unread > 0 ? `${unread} new` : undefined} />
+      <span className="panel-chrome-title" style={err ? { color: "var(--bad)" } : undefined} title={err ?? undefined}>{err ?? (m ? m.name : id === SETTINGS_ID ? "Settings" : id ? id : "Module not found")}</span>
       {m && m.panel !== "web" && (
         <button className="panel-chrome-gear" title="Customize" aria-label="Customize panel"
           onClick={() => emitTo(panelLabel(id), PANEL_CUSTOMIZE, { id }).catch(fail("customize"))}>⚙</button>

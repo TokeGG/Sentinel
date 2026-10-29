@@ -36,7 +36,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const backupModule: ModuleManifest = {
   id: "hub.backup",
   name: "Backup & Snapshot",
-  accent: "#9aa8c4",
+  accent: "#6ba630",
   ring: "system",
   icon: "backup",
   description:

@@ -10,9 +10,9 @@ import { setGameMode as shareGameMode, setStarMotion as shareStarMotion } from "
 import { OrbitControls } from "./OrbitControls";
 
 // Main-window only: game-mode listeners, the auto toggle, the manual button,
-// and a dismissible error line.
+// rendered as the toolbar inside the title bar (the error line lives in App).
 // `refresh` bumps when the Settings panel (another webview) changed a toggle.
-export function GameHud({ error, setError, refresh = 0 }: { error: string | null; setError: (e: string | null) => void; refresh?: number }) {
+export function GameHud({ setError, refresh = 0 }: { setError: (e: string | null) => void; refresh?: number }) {
   const [auto, setAuto] = useState<boolean | null>(null);
   const [active, setActive] = useState(false);
   const [manual, setManual] = useState(false);
@@ -72,25 +72,17 @@ export function GameHud({ error, setError, refresh = 0 }: { error: string | null
   };
 
   return (
-    <div className="hud">
-      <div className="hud-row">
-        <span>{active ? "Game mode: ON" : "Game mode: off"}</span>
-        <button className={manual ? "on" : ""} onClick={toggleManual}>Game mode</button>
-        <button onClick={() => openSettings().catch(fail)}>⚙ Settings</button>
-        <button className={auto ? "on" : ""} disabled={auto === null} onClick={toggleAuto}>
-          Auto game mode {auto ? "on" : "off"}
-        </button>
-        <button className={motion ? "on" : ""} disabled={motion === null} onClick={toggleMotion}>
-          Star motion: {motion ? "on" : "off"}
-        </button>
-        <OrbitControls refresh={refresh} fail={fail} />
-      </div>
-      {error && (
-        <div className="hud-row hud-error" role="alert">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} aria-label="Dismiss">x</button>
-        </div>
-      )}
+    <div className="hud-row">
+      <span className={`hud-state${active ? " on" : ""}`}>{active ? "Game mode on" : "Game mode off"}</span>
+      <button className={manual ? "on" : ""} onClick={toggleManual}>Game mode</button>
+      <button className={auto ? "on" : ""} disabled={auto === null} onClick={toggleAuto}>
+        Auto {auto ? "on" : "off"}
+      </button>
+      <button className={motion ? "on" : ""} disabled={motion === null} onClick={toggleMotion}>
+        Stars: {motion ? "on" : "off"}
+      </button>
+      <OrbitControls refresh={refresh} fail={fail} />
+      <button className="hud-settings" onClick={() => openSettings().catch(fail)}>⚙ Settings</button>
     </div>
   );
 }

@@ -10,7 +10,7 @@
 //! would just call `set_focus` and never re-create.
 //!
 //! Chrome (Task 9b): every panel is TWO child webviews — content
-//! (`label()`), a 28px chrome strip (`chrome_label()`, route
+//! (`label()`), a 24px chrome strip (`chrome_label()`, route
 //! `#/chrome/<id>`) and a 16px bottom-right resize grip (`grip_label()`, route
 //! `#/grip/<id>`), created after it so they stack on top. Every path below
 //! (create/destroy/move/resize/raise/show/hide) acts on both; `Spec.rect` is

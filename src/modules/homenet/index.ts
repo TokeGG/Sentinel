@@ -63,7 +63,7 @@ async function loadDevices(): Promise<Record<string, unknown>[]> {
 export const homeNetModule: ModuleManifest = {
   id: "hub.homenet",
   name: "Home Network",
-  accent: "#2ee6d0",
+  accent: "#02aa94",
   ring: "system",
   icon: "homenet",
   description:

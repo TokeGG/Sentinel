@@ -1,0 +1,82 @@
+/* Shell chrome: the frameless main window's title bar + HUD toolbar, and the
+   per-panel chrome strip and resize grip (separate child webviews). Colours
+   come from ui/tokens.css; the chrome strip gets --accent from ChromeRoute. */
+
+/* ---- main window ---- */
+.shell { position: fixed; inset: 0; display: flex; flex-direction: column; background: var(--base); color: var(--text); font-family: var(--font-body); font-size: var(--fs-sm); }
+.titlebar {
+  height: var(--titlebar-h); flex: none; display: flex; align-items: stretch;
+  background: var(--base); border-bottom: 1px solid var(--line-base);
+  user-select: none; -webkit-user-select: none; position: relative; z-index: 2;
+}
+.titlebar-brand { display: flex; align-items: center; gap: var(--sp-2); padding: 0 var(--sp-3) 0 12px; font-weight: 600; font-size: var(--fs-sm); letter-spacing: 0.04em; color: var(--text-dim); }
+.titlebar-logo { width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ffe9a8, #f2b33d 60%, #b9791a); box-shadow: 0 0 8px rgba(242, 179, 61, 0.6); }
+.titlebar-tools { display: flex; align-items: center; min-width: 0; }
+.titlebar-drag { flex: 1; min-width: 24px; }
+.titlebar-btns { display: flex; }
+.titlebar-btns button {
+  all: unset; width: 46px; display: grid; place-items: center; color: var(--text-dim); cursor: default;
+  transition: background 0.1s, color 0.1s;
+}
+.titlebar-btns button:hover { background: var(--hover); color: var(--text); }
+.titlebar-btns button:active { background: var(--press); }
+.titlebar-btns button.close:hover { background: #e5484d; color: #fff; }
+.titlebar-btns button:focus-visible { outline: 2px solid var(--accent-text); outline-offset: -2px; }
+
+.hud-row { display: flex; align-items: center; gap: 6px; padding-left: var(--sp-2); font-size: var(--fs-xs); color: var(--text-dim); white-space: nowrap; }
+.hud-state { padding-right: 4px; }
+.hud-state.on { color: var(--ok); }
+.hud-row button {
+  font: inherit; font-size: var(--fs-xs); height: 22px; padding: 0 9px; border-radius: var(--r-sm);
+  border: 1px solid transparent; background: transparent; color: var(--text-dim); cursor: pointer;
+  transition: background 0.1s, color 0.1s;
+}
+.hud-row button:hover:not(:disabled) { background: var(--hover); color: var(--text); }
+.hud-row button.on { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); border-color: color-mix(in srgb, var(--ok) 30%, transparent); }
+.hud-row button:disabled { opacity: 0.5; }
+.hud-row button:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
+.hud-row button.hud-settings { color: var(--text); }
+.hud-speed { display: flex; align-items: center; gap: 6px; }
+.hud-speed input { width: 5rem; accent-color: var(--accent); }
+.hud-speed output { min-width: 2.4rem; font-variant-numeric: tabular-nums; }
+.hud-error {
+  position: absolute; top: var(--sp-2); right: var(--sp-2); max-width: min(560px, 90%); display: flex; gap: var(--sp-2); align-items: center;
+  background: var(--overlay); border: 1px solid color-mix(in srgb, var(--bad) 55%, transparent); border-radius: var(--radius);
+  box-shadow: var(--elev-2); color: #ffb4b4; padding: 6px 10px; font-size: var(--fs-sm);
+}
+.hud-error button { all: unset; cursor: pointer; padding: 0 6px; color: var(--text-dim); }
+
+/* ---- panel chrome strip: reads as the panel's own top edge ---- */
+html:has(.panel-chrome), html:has(.panel-chrome) body { margin: 0; overflow: hidden; background: transparent; } /* webview is created transparent (panels/webview.rs) so the rounded corners show */
+html:has(.panel-grip), html:has(.panel-grip) body { margin: 0; overflow: hidden; background: var(--surface); }
+.panel-chrome {
+  --accent: #6ba630;
+  --tint: 0.5;
+  position: fixed; inset: 0; height: var(--chrome-h);
+  display: flex; align-items: center; gap: 2px; padding: 0 2px 0 var(--sp-2);
+  background: var(--surface); color: var(--text-dim);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  box-shadow: inset 0 2px 0 var(--accent);
+  font: 500 var(--fs-xs)/1 var(--font-body); letter-spacing: 0.03em;
+  cursor: move; user-select: none; -webkit-user-select: none; touch-action: none; overflow: hidden;
+}
+.panel-chrome-dot { width: 6px; height: 6px; border-radius: 50%; margin: 2px 6px 0 0; flex: none; background: var(--text-faint); opacity: 0.6; }
+.panel-chrome-dot.new { background: var(--accent); opacity: 1; box-shadow: 0 0 6px var(--accent); }
+.panel-chrome-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-top: 2px; }
+.panel-chrome button {
+  all: unset; box-sizing: border-box; width: 26px; height: 20px; margin-top: 2px; display: grid; place-items: center;
+  border-radius: var(--r-sm); color: var(--text-faint); font-size: 13px; cursor: pointer;
+  opacity: 0; transition: opacity 0.12s, background 0.12s, color 0.12s;
+}
+.panel-chrome:hover button, .panel-chrome button:focus-visible { opacity: 1; }
+.panel-chrome:hover { color: var(--text); }
+.panel-chrome button:hover { background: var(--hover); color: var(--text); }
+.panel-chrome button.panel-chrome-close:hover { background: #e5484d; color: #fff; }
+.panel-chrome button:focus-visible { outline: 2px solid var(--accent-text); outline-offset: -2px; }
+
+/* ---- resize grip: 16px child webview at the panel's bottom-right corner ---- */
+.panel-grip {
+  position: fixed; inset: 0; cursor: nwse-resize; touch-action: none; user-select: none;
+  background: linear-gradient(135deg, transparent 52%, rgba(255, 255, 255, 0.28) 52%, rgba(255, 255, 255, 0.28) 60%, transparent 60%, transparent 74%, rgba(255, 255, 255, 0.28) 74%, rgba(255, 255, 255, 0.28) 82%, transparent 82%);
+}
+.panel-grip:hover { filter: brightness(1.6); }

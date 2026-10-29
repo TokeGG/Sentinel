@@ -6,7 +6,7 @@ import { emit } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { registry, type ModuleManifest } from "../core/module";
 import type { WebConfig } from "../core/manifestChecks";
-import { cascade, clampToScreen, clientRect, type Rect } from "./layout";
+import { cascade, clampToScreen, clientRect, reclamp, TITLEBAR_H, type Rect } from "./layout";
 import { deleteLayout, loadLayout, saveLayout } from "./layoutStore";
 import { getRestorePanels } from "./settingsStore";
 
@@ -22,17 +22,18 @@ export const LAYOUT_COMMIT = "layout-commit";
 export const LAYOUT_DELETE = "layout-delete";
 const inChrome = () => /^#\/(chrome|grip)\//.test(window.location.hash);
 
-// Panel rects are relative to the MAIN window's client area. In any child
+// Panel rects are relative to the MAIN window's client area (the window is
+// frameless, so that is the whole window) minus the custom title bar band. In any child
 // webview (chrome strip, Settings panel) window.inner* is that webview's own
 // size, so always measure the main window (getCurrentWindow() is the main
 // window when called from it). Not unit-testable here (needs Tauri); the
 // size math is the pure clientRect() in layout.ts.
 export async function mainClientRect(): Promise<Rect> {
-  const fallback: Rect = { x: 0, y: 0, w: window.screen.availWidth, h: window.screen.availHeight };
+  const fallback: Rect = { x: 0, y: TITLEBAR_H, w: window.screen.availWidth, h: window.screen.availHeight - TITLEBAR_H };
   try {
     const w = getCurrentWindow();
     const s = await w.innerSize();
-    return clientRect(s.width, s.height, await w.scaleFactor(), fallback);
+    return clientRect(s.width, s.height, await w.scaleFactor(), fallback, TITLEBAR_H);
   } catch {
     return fallback;
   }
@@ -114,5 +115,21 @@ async function doRestore(): Promise<void> {
     } catch (e) {
       console.error(`restore ${p.id} failed`, e);
     }
+  }
+}
+
+/** After maximise/restore/resize: pull every open panel back inside the usable area. */
+export async function reclampPanels(): Promise<void> {
+  const screen = await mainClientRect();
+  const ids = [...registry.map((m) => [m.id, m.web?.min ?? MIN] as const), [SETTINGS_ID, MIN] as const];
+  const open: { id: string; rect: Rect; min: { w: number; h: number } }[] = [];
+  for (const [id, min] of ids) {
+    const p = await getPanel(id).catch(() => null); // not open -> skip
+    if (p) open.push({ id, rect: p.rect, min });
+  }
+  for (const { id, rect } of reclamp(open, screen)) {
+    await dragResize(id, rect.w, rect.h);
+    await dragMove(id, rect.x, rect.y);
+    await commit(await getPanel(id));
   }
 }

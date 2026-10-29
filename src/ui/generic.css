@@ -19,10 +19,11 @@
   background: var(--base);
   color: var(--text);
   border: 1px solid var(--line);
-  border-radius: calc(var(--radius) - 2px);
+  border-radius: var(--r-sm);
   padding: calc(6px * var(--density)) calc(10px * var(--density));
   font: inherit;
 }
+.panel-shell .module-panel input:focus, .panel-shell .module-panel textarea:focus, .panel-shell .module-panel select:focus { border-color: var(--accent-line); }
 .panel-shell .module-panel ::placeholder { color: var(--text-dim); opacity: 0.85; }
 .panel-shell .module-panel input[type="checkbox"] { accent-color: var(--accent); flex: none; margin: 0; }
 
@@ -33,19 +34,25 @@
   background: var(--accent);
   color: var(--on-accent);
   border: 1px solid var(--accent);
-  border-radius: calc(var(--radius) - 2px);
+  border-radius: var(--r-sm);
   padding: calc(6px * var(--density)) calc(14px * var(--density));
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
 }
+.panel-shell .module-panel button:hover:not(:disabled),
+.panel-shell .module-form button:hover:not(:disabled),
+.panel-shell .module-credentials button:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 86%, var(--white)); }
 .panel-shell .module-panel .module-actions button,
 .panel-shell .module-panel .row-action {
   background: var(--surface-2);
   color: var(--text);
   border-color: var(--line);
+  font-weight: 400;
 }
 .panel-shell .module-panel .module-actions button:hover:not(:disabled),
-.panel-shell .module-panel .row-action:hover:not(:disabled) { border-color: var(--accent-text); }
+.panel-shell .module-panel .row-action:hover:not(:disabled) { background: var(--accent-soft); border-color: var(--accent-line); }
 .panel-shell .module-panel button:disabled { opacity: 0.5; cursor: default; }
 .panel-shell .module-panel .row-action { margin-left: var(--gap); padding: 2px calc(10px * var(--density)); }
 

@@ -9,8 +9,9 @@
   background: var(--surface);
   color: var(--text);
   font-family: var(--font-body);
-  font-size: calc(15px * var(--font-scale));
+  font-size: calc(var(--fs-md) * var(--font-scale));
   line-height: 1.45;
+  font-variant-numeric: tabular-nums;
   padding: var(--pad) calc(var(--pad) * 1.33) 0;
   gap: var(--gap);
 }
@@ -19,9 +20,9 @@
 .kit-tile {
   background: var(--surface-2);
   border: 1px solid var(--line);
-  border-top: 2px solid var(--accent);
   border-radius: var(--radius);
   padding: var(--pad);
+  box-shadow: var(--elev-1), inset 0 2px 0 var(--accent-line);
 }
 .kit-tile-title {
   margin: 0 0 var(--gap);
@@ -47,8 +48,8 @@
   color: var(--text-dim);
   cursor: pointer;
 }
-.kit-chip:hover { color: var(--text); border-color: var(--accent-text); }
-.kit-chip.on { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+.kit-chip:hover { color: var(--text); background: var(--hover); }
+.kit-chip.on { background: var(--accent-soft); border-color: var(--accent-line); color: var(--accent-text); }
 
 .kit-gauge { display: flex; flex-direction: column; gap: 4px; --tone: var(--ok); }
 .kit-gauge + .kit-gauge { margin-top: var(--gap); }
@@ -75,10 +76,10 @@
   color: var(--text-dim);
   cursor: pointer;
 }
-.kit-tab:hover { color: var(--text); }
-.kit-tab.on { color: var(--text); border-bottom-color: var(--accent); }
+.kit-tab:hover { color: var(--text); background: var(--hover); }
+.kit-tab.on { color: var(--accent-text); border-bottom-color: var(--accent); }
 
-.kit-table-wrap { overflow: auto; max-height: 60vh; border: 1px solid var(--line); border-radius: var(--radius); }
+.kit-table-wrap { overflow: auto; max-height: 60vh; border: 1px solid color-mix(in srgb, var(--line) 70%, transparent); border-radius: var(--radius); }
 .kit-table { width: 100%; border-collapse: collapse; font-size: 0.9em; }
 .kit-table th {
   position: sticky;
@@ -94,12 +95,12 @@
   border-bottom: 1px solid var(--line);
 }
 .kit-table td {
-  font-family: var(--font-mono);
   padding: calc(5px * var(--density)) calc(10px * var(--density));
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 55%, transparent);
   color: var(--text);
 }
 .kit-table tbody tr:hover td { background: var(--accent-soft); }
+.kit-table tbody tr:last-child td { border-bottom: 0; }
 .kit-table td.dim { color: var(--text-dim); font-style: italic; }
 .kit-table td.new { color: var(--accent-text); font-weight: 600; }
 .kit-table td.kit-table-empty { font-family: var(--font-body); color: var(--text-dim); text-align: center; }

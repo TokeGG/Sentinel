@@ -2,7 +2,7 @@
 use super::persist::Rect;
 
 /// Height of the chrome strip stacked above every panel's content webview.
-pub const CHROME_H: f64 = 28.0;
+pub const CHROME_H: f64 = 24.0; // keep in sync with --chrome-h in src/ui/tokens.css
 
 /// Side of the square resize-grip overlay webview at the panel's bottom-right.
 pub const GRIP: f64 = 16.0;
@@ -44,7 +44,7 @@ mod tests {
     #[test]
     fn content_sits_below_chrome() {
         let (_, b) = geometry(r(10.0, 20.0, 300.0, 200.0));
-        assert_eq!((b.x, b.y, b.w, b.h), (10.0, 48.0, 300.0, 172.0));
+        assert_eq!((b.x, b.y, b.w, b.h), (10.0, 20.0 + CHROME_H, 300.0, 200.0 - CHROME_H));
     }
     #[test]
     fn content_height_never_negative() {
@@ -65,7 +65,7 @@ mod tests {
     #[test]
     fn grip_shrinks_in_tiny_panels() {
         let g = grip_rect(r(0.0, 0.0, 100.0, 30.0));
-        assert_eq!((g.w, g.h), (2.0, 2.0));
+        assert_eq!((g.w, g.h), (30.0 - CHROME_H, 30.0 - CHROME_H));
         assert_eq!(grip_rect(r(0.0, 0.0, 0.0, 0.0)).w, 0.0);
     }
     #[test]

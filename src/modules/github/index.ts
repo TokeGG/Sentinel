@@ -99,7 +99,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const githubModule: ModuleManifest = {
   id: MODULE_ID,
   name: "GitHub Discovery",
-  accent: "#b18cff",
+  accent: "#bd6ece",
   ring: "security",
   icon: "github",
   description:

@@ -70,7 +70,7 @@ const credentialFields = connectors.flatMap((c) =>
 export const socialModule: ModuleManifest = {
   id: "hub.social",
   name: "Social Media",
-  accent: "#ff7ab8",
+  accent: "#f57cb6",
   ring: "daily",
   icon: "social",
   description:

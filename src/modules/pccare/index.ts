@@ -101,7 +101,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const pcCareModule: ModuleManifest = {
   id: "hub.pccare",
   name: "PC Care",
-  accent: "#4fd6a0",
+  accent: "#03c98f",
   ring: "system",
   icon: "pccare",
   description:

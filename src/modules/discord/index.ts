@@ -16,7 +16,7 @@ export const discordModule: ModuleManifest = {
     min: { w: 480, h: 360 },
   },
   skills: [],
-  accent: "#7c8cff",
+  accent: "#866eea",
   ring: "media",
   icon: "discord",
 };

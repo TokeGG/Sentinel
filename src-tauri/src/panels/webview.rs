@@ -38,7 +38,8 @@ fn create_both(app: &AppHandle, id: &str, s: &Spec) -> Result<(), String> {
     }
     let (chrome, content) = geometry(s.rect);
     add(app, b, content)?;
-    let cb = WebviewBuilder::new(chrome_label(id), WebviewUrl::App(format!("index.html#/chrome/{id}").into()));
+    // Transparent so the strip can paint rounded top corners.
+    let cb = WebviewBuilder::new(chrome_label(id), WebviewUrl::App(format!("index.html#/chrome/{id}").into())).transparent(true);
     add(app, cb, chrome)?;
     // Grip last = topmost: a small overlay in the bottom-right corner of the content.
     let gb = WebviewBuilder::new(grip_label(id), WebviewUrl::App(format!("index.html#/grip/{id}").into()));

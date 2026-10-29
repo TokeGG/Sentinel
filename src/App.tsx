@@ -6,6 +6,7 @@ import { initScheduler, setTimersOwner, syncModule, SCHEDULE_CHANGED } from "./c
 import { listen } from "@tauri-apps/api/event";
 import { StarMap } from "./shell/StarMap";
 import { GameHud } from "./shell/GameHud";
+import { TitleBar } from "./shell/TitleBar";
 import { PanelRoute, panelIdFromHash } from "./shell/PanelRoute";
 import { restore, LAYOUT_COMMIT, LAYOUT_DELETE, type SavedPanel } from "./shell/panelApi";
 import { saveLayout, deleteLayout } from "./shell/layoutStore";
@@ -81,9 +82,19 @@ function MainShell() {
     };
   }, []);
   return (
-    <div className="starmap">
-      <StarMap modules={registry} onError={setError} />
-      <GameHud error={error} setError={setError} refresh={settingsTick} />
+    <div className="shell">
+      <TitleBar onError={setError}>
+        <GameHud setError={setError} refresh={settingsTick} />
+      </TitleBar>
+      <div className="starmap">
+        <StarMap modules={registry} onError={setError} />
+        {error && (
+          <div className="hud-error" role="alert">
+            <span>{error}</span>
+            <button onClick={() => setError(null)} aria-label="Dismiss">x</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

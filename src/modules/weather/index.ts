@@ -85,7 +85,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const weatherModule: ModuleManifest = {
   id: "hub.weather",
   name: "Weather & Alerts",
-  accent: "#4fc3ff",
+  accent: "#04a1cd",
   ring: "daily",
   icon: "weather",
   description: "Current conditions for places you add. No API key needed.",
