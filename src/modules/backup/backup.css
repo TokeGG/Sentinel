@@ -26,3 +26,6 @@
 .bk-root .ui-banner { background: var(--warn-soft); border-color: var(--warn); }
 .bk-root .ui-banner strong { color: var(--warn); }
 .bk-root .ui-banner .bk-acts { margin-top: var(--gap); }
+.bk-health { display: flex; flex-direction: column; gap: 2px; padding: var(--pad); border-radius: var(--radius); border: 1px solid var(--line); border-left: 4px solid var(--good, var(--accent)); background: var(--surface-2); }
+.bk-health.warn { border-left-color: var(--warn, #d9a400); }
+.bk-health.bad { border-left-color: var(--bad); }

@@ -1,29 +1,25 @@
-// Pinned clip ids: a per-viewer convenience kept in localStorage (may be unavailable; then pins last until the panel closes).
-import { useState } from "react";
+// Pinned clip ids, stored in SQLite clip_pins (toggle_pin skill). Pins saved by older
+// builds in localStorage are moved into the DB once, then the local copy is removed.
+import { useEffect } from "react";
+import type { ModuleState } from "../../ui/useModule";
+import { pinnedIds } from "./panelLogic";
 
-const KEY = "sentinel.clipboard.pins";
+const LEGACY = "sentinel.clipboard.pins";
 
-function read(): Set<string> {
+function takeLegacy(): string[] {
   try {
-    const v = JSON.parse(localStorage.getItem(KEY) ?? "[]");
-    return new Set(Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : []);
+    const v = JSON.parse(localStorage.getItem(LEGACY) ?? "[]");
+    localStorage.removeItem(LEGACY);
+    return Array.isArray(v) ? v.filter((x): x is string => typeof x === "string") : [];
   } catch {
-    return new Set();
+    return [];
   }
 }
 
-export function usePins(): [Set<string>, (id: string) => void] {
-  const [pins, setPins] = useState(read);
-  const toggle = (id: string) =>
-    setPins((p) => {
-      const n = new Set(p);
-      if (!n.delete(id)) n.add(id);
-      try {
-        localStorage.setItem(KEY, JSON.stringify([...n]));
-      } catch {
-        /* storage blocked: keep in memory only */
-      }
-      return n;
-    });
-  return [pins, toggle];
+export function usePins(rows: Record<string, unknown>[], run: ModuleState["run"]): [Set<string>, (id: string) => void] {
+  useEffect(() => {
+    const old = takeLegacy();
+    if (old.length) void Promise.all(old.map((id) => run("toggle_pin", { id, on: true })));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  return [pinnedIds(rows), (id: string) => void run("toggle_pin", { id })];
 }

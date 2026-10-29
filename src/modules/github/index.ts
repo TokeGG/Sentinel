@@ -3,6 +3,7 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { fetch } from "@tauri-apps/plugin-http";
 import { logActivity } from "../../core/db";
 import { getCredential } from "../../core/credentials";
+import { getAccessToken, primaryAccount } from "../../core/connect";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { clonedUrls, recordClone } from "./clones";
 import { githubSections } from "./panelLogic";
@@ -19,7 +20,9 @@ interface RepoHit extends Record<string, unknown> {
 }
 
 async function authHeaders(): Promise<Record<string, string>> {
-  const token = await getCredential(MODULE_ID, "pat");
+  // Device-flow sign-in (Settings > Accounts) first; the pasted PAT is the fallback.
+  const signedIn = (await primaryAccount("github").catch(() => null)) ? await getAccessToken("github").catch(() => "") : "";
+  const token = signedIn || (await getCredential(MODULE_ID, "pat"));
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 

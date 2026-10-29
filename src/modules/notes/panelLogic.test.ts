@@ -31,3 +31,11 @@ describe("notes sections parity", () => {
     assert.equal(notesSections.find((s) => s.id === "filed")?.default, false);
   });
 });
+
+describe("notes tabs", () => {
+  it("every tab section is declared and every section sits in exactly one tab", async () => {
+    const { NOTES_TABS } = await import("./panelLogic.ts");
+    const inTabs = NOTES_TABS.flatMap((t) => t.sections).sort();
+    assert.deepEqual(inTabs, notesSections.map((s) => s.id).sort());
+  });
+});

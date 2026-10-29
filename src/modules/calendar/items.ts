@@ -7,6 +7,7 @@ import { serializeIcs, type IcsEvent } from "./ics";
 import { toFields, type ItemFields } from "./itemInput";
 import type { DbItem } from "./ownRows";
 import { nextDay } from "./recur";
+import { moveTo } from "./views";
 
 export async function listItems(): Promise<DbItem[]> {
   const d = await getDb();
@@ -47,6 +48,16 @@ export async function toggleDone(args?: Record<string, unknown>) {
   if (next) await d.execute("UPDATE calendar_items SET starts_at = $1 WHERE id = $2", [next + it.starts_at!.slice(10), id]);
   else await d.execute("UPDATE calendar_items SET done = $1 WHERE id = $2", [it.done ? 0 : 1, id]);
   return { ok: true, advanced: !!next };
+}
+
+/** Drag-to-day: moves an item to `day`, keeping its time of day. */
+export async function moveItem(args?: Record<string, unknown>) {
+  const id = numericId(args?.id);
+  const d = await getDb();
+  const [it] = await d.select<DbItem[]>("SELECT * FROM calendar_items WHERE id = $1", [id]);
+  if (!it) throw new Error("item not found");
+  await d.execute("UPDATE calendar_items SET starts_at = $1, all_day = $2 WHERE id = $3", [moveTo(it.starts_at, String(args?.day ?? "")), it.starts_at && it.starts_at.length > 10 ? 0 : 1, id]);
+  return { ok: true };
 }
 
 export async function deleteItem(args?: Record<string, unknown>) {

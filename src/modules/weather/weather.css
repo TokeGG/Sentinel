@@ -17,3 +17,6 @@
 .wx .ui-quickadd { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px; }
 .wx .ui-quickadd input { border: 0; background: transparent; padding-left: 8px; }
 @container (max-width: 340px) { .wx-card:first-child .wx-temp, .wx-card:first-child .wx-glyph { font-size: 2.8em; } }
+.wx-fc { display: grid; grid-template-columns: minmax(80px, 1fr) repeat(5, minmax(0, 1fr)); gap: 4px; align-items: center; padding: 4px 0; border-bottom: 1px solid var(--line); }
+.wx-fcname { margin: 0; font-size: 0.85em; }
+.wx-fcday { display: flex; flex-direction: column; align-items: center; gap: 1px; font-size: 0.85em; }

@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { healthOf, latest } from "./health.ts";
 import { backupSections, folderName, snapshotsOf, stampOf, whenText } from "./panelLogic.ts";
 
 const NOW = new Date("2026-10-28T12:00:00Z");
@@ -37,9 +38,21 @@ describe("backup panelLogic", () => {
     assert.deepEqual(snapshotsOf([]), []);
   });
   it("section ids are declared and match Panel.tsx", () => {
-    assert.deepEqual(backupSections.map((s) => s.id), ["last", "snapshots", "restore", "notice"]);
+    assert.deepEqual(backupSections.map((s) => s.id), ["health", "last", "snapshots", "restore", "notice"]);
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
     const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
     assert.deepEqual(used, backupSections.map((s) => s.id).sort());
+  });
+});
+
+describe("backup health", () => {
+  it("grades the last backup's age", () => {
+    const now = new Date("2026-10-29T12:00:00Z");
+    assert.equal(healthOf(null, now).tone, "bad");
+    assert.equal(healthOf(new Date("2026-10-29T08:00:00Z"), now).title, "Last backup today");
+    assert.equal(healthOf(new Date("2026-10-20T12:00:00Z"), now).tone, "warn");
+    assert.equal(healthOf(new Date("2026-09-01T12:00:00Z"), now).tone, "bad");
+    assert.equal(latest("2026-10-01T00:00:00Z", [new Date("2026-10-05T00:00:00Z"), null])?.toISOString(), "2026-10-05T00:00:00.000Z");
+    assert.equal(latest(null, []), null);
   });
 });

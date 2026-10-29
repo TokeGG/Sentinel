@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
 import { CredentialFields } from "../../core/panel/CredentialFields";
 import { getCredential } from "../../core/credentials";
+import { ConnectButton } from "../../core/connect/ConnectButton";
 
 export function TokenField({ module, recheck }: { module: ModuleManifest; recheck: unknown }) {
   const [saved, setSaved] = useState<boolean | null>(null);
@@ -24,6 +25,8 @@ export function TokenField({ module, recheck }: { module: ModuleManifest; rechec
   return (
     <details className="ui-token" key={String(saved)} open={saved === false}>
       <summary>{label}</summary>
+      <ConnectButton providerId="github" label="Sign in with GitHub (device code)" onConnected={onSaved} />
+      <p className="ui-meta">Or paste a personal access token:</p>
       <CredentialFields module={module} onSaved={onSaved} />
     </details>
   );

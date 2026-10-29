@@ -62,7 +62,7 @@ export const notesModule: ModuleManifest = {
   accent: "#b78b06",
   ring: "daily",
   icon: "notes",
-  description: "Quick-capture inbox — untagged until you file it.",
+  description: "Quick-capture inbox plus a markdown notebook: folders, tags, search, backlinks, graph, journal, flashcards, snippets, document vault and web clipper.",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: {

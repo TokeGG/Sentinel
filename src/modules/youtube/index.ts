@@ -2,6 +2,7 @@ import { registerModule, type ModuleManifest } from "../../core/module";
 import { ytSections } from "./panelLogic";
 import { addLater, clearHidden, clearHistory, clearSignal, importHistory, markWatched, removeLater, setSignal } from "./libraryStore";
 import { addChannel, loadRows, refreshFeeds, removeChannel } from "./store";
+import { importSubscriptions } from "./subsStore";
 
 // No Google account or API key: channels are added by URL and read from their
 // public Atom feeds; "watched" is recorded locally when you play a video here.
@@ -27,6 +28,7 @@ export const youtubeModule: ModuleManifest = {
     { name: "set_signal", run: setSignal },
     { name: "clear_signal", run: clearSignal },
     { name: "clear_hidden", run: clearHidden },
+    { name: "import_subscriptions", run: importSubscriptions },
   ],
   load: loadRows,
   quickAdd: { skill: "add_channel", argName: "url", placeholder: "Channel or video URL, @handle, or UC… id" },

@@ -53,3 +53,10 @@ describe("clipboard panelLogic", () => {
     assert.deepEqual(pinFirst(c, new Set()).map((x) => x.id), ["a", "b", "c", "d"]);
   });
 });
+
+describe("pinnedIds", () => {
+  it("reads the DB pinned flag", async () => {
+    const { pinnedIds } = await import("./panelLogic.ts");
+    assert.deepEqual([...pinnedIds([{ id: "clip-1", pinned: true }, { id: "clip-2", pinned: false }, { id: "clip-3", pinned: 1 }])], ["clip-1", "clip-3"]);
+  });
+});

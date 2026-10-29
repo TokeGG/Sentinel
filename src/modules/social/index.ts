@@ -31,7 +31,7 @@ async function connectionStatus() {
       label: c.label,
       canPost: !!c.post,
       can: { like: !!c.like, share: !!c.share, reply: !!c.reply },
-      connected: c.connectedKey ? !!(await getCredential("hub.social", `${c.id}_${c.connectedKey}`).catch(() => null)) : false,
+      connected: c.isConnected ? await c.isConnected() : c.connectedKey ? !!(await getCredential("hub.social", `${c.id}_${c.connectedKey}`).catch(() => null)) : false,
     }))
   );
 }

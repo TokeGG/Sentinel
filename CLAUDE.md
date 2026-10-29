@@ -46,6 +46,11 @@ src/
     schema.ts         — pure SCHEMA_STATEMENTS (bootstrap mirror of migrations 17+),
                         ensureSchema, describeDb, redactPaths
     credentials.ts    — OS keychain wrapper (TS side)
+    connect/          — one-click account Connect (Settings > Accounts): pure PKCE/state/URL/token/refresh,
+                        provider registry (providers.ts), loopback via hardened oauth_listen_once (127.0.0.1,
+                        state, path) or device code (GitHub/Twitch); tokens keychain-only (`hub.accounts`), metadata
+                        in `accounts` (migration 36); client IDs clients.ts (empty) or app_settings `client_id:<group>`;
+                        setup steps docs/ACCOUNTS.md. Use getAccessToken(provider) instead of new OAuth code.
     taste/            — local taste layer (pure model/features/order + store + useTaste, migration 35); UI in ui/TasteButtons|WhyBadge|TasteBar|TasteDrawer;
                         per-module profile of decayed feature weights, `app_settings` `taste_off:<module>`; adopted by news, deals, social, congress, github, youtube
     scheduler.ts      — opt-in per-module background refresh
@@ -76,7 +81,7 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..32 strictly ascending (31 = congress, 32 = calendar_items)
+  migrations/NN_<module>.sql — numbered SQL, versions 1..37 strictly ascending (31 = congress, 32 = calendar_items, 36 = accounts, 37 = notes/calendar extras + clip_pins)
                         (26 = social_post_meta, 27 = skills/mcp, 28 = bot, 29 = cloned_projects, 30 = youtube_seen/later/signal; 17-30 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
@@ -194,7 +199,7 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-864 TS tests + 4 size-guard tests + 106 Rust tests as of this commit. Run the
+1058 TS tests + 4 size-guard tests + 121 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
@@ -220,6 +225,8 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 
 ## What's known-incomplete (check before assuming a gap is a bug)
 
+- Account Connect (`core/connect`, Settings > Accounts): Gmail/Outlook XOAUTH2 (email preset `<base>:oauth`, token per call, Rust never stores it), Mastodon (dynamic registration), Reddit, Twitch chat send, GitHub device flow, YouTube subscription import. Old pasted tokens/PATs stay as fallbacks. No client IDs ship; NONE of the flows has run against the real providers, loopback/browser handoff unverified on Windows.
+- Notes tabs (Inbox|Notebook|Journal|Graph|Cards|Snippets|Vault|Clip; `ui/SectionTabs` groups customize sections) and Calendar tabs (Agenda|Calendar|Reminders|Habits|Focus|Contacts|Money|Read later; tables in migration 37): reminders float only while the panel is open; focus writes `app_settings` `focus_until` (nothing reads it yet); clipper/vault untested on real pages/files. Clipboard pins are in `clip_pins`; Weather has a 5-day forecast; Backup health uses `app_settings` `backup_last`. GUI never run.
 - On some existing databases the plugin migration fails at the first load
   (root cause not yet identified). The app then runs in compatibility mode
   (startup banner; Settings > Database check shows details), and future
@@ -254,7 +261,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
   (`pentest_run_args`) so `replay`/retest re-run them through the gate again. Tabs Terminal|Bot|Notebook|Checklist|Timeline; Bot tab = Lab mode
   (`labBotLogic.ts`/`labBot.ts`: tools via runTool/MCP gate only, goto in-scope only, every action logged as `bot:*` run rows). Home Network
   "Send to Lab" = `pentest/api addScopeEntry`. Offline CVE data, evidence hashes, scope drift are pure files with tests. All unverified on Windows/real targets.
-- Email (`modules/email`): custom panel, multi-account IMAP/SMTP, passwords only in keychain (`pw:<accountId>`), cache in SQLite (`mail_*`, migration 24), HTML sanitized by `sanitize.ts` into a `sandbox=""` iframe. No OAuth (Gmail/iCloud need app passwords). No attachment download, drafts saving or threading. The Rust mail code (mail*.rs, `mail-parser` crate) compiles and its pure parts are unit-tested, but has never run against a live mail server.
+- Email (`modules/email`): custom panel, multi-account IMAP/SMTP, passwords only in keychain (`pw:<accountId>`), cache in SQLite (`mail_*`, migration 24), HTML sanitized by `sanitize.ts` into a `sandbox=""` iframe. Gmail/Outlook can also sign in via core/connect (XOAUTH2); iCloud/Yahoo need app passwords. No attachment download, drafts saving or threading. The Rust mail code (mail*.rs, `mail-parser` crate) compiles and its pure parts are unit-tested, but has never run against a live mail server.
 - Social per-post actions (like / boost-repost / inline reply; optional `like`/`unlike`/`share`/`unshare`/`reply` on `SocialConnector`, absent = button hidden; request builders in `social/connectors/actions.ts`, optimistic UI in `useActions.ts`, ids/state in `social_post_meta`): Bluesky, Mastodon (scopes now incl. write:favourites) and Reddit (scopes now incl. vote submit; no repost). Older sign-ins must "Connect" again. X stays a stub. Never run against the live APIs.
 - Browser bot (`modules/bot`): only the pure kernel, agent loop, prompt/parser, notes retrieval and store exist (tested with fakes). No `BrowserDriver` (Rust), no manifest/UI, no URL-note fetching, nothing wires `store.ts` or `toolGate` yet; never run against a real Ollama.
 - GitHub "Cloned repos" section (`github/ClonedSection.tsx`, `clones.ts`, `clonedLogic.ts`; table `cloned_projects`, migration 29; old `cloned_repos` only read for the marker). Open folder = Explorer, VS Code via `code.cmd` on PATH; Delete files needs a path preview + confirm. Rust clone/open/delete are unit-tested for pure parts only; never run against real git/Explorer on Windows.

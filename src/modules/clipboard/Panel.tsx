@@ -19,7 +19,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const [open, setOpen] = useState<Set<string>>(new Set());
   const [checked, setChecked] = useState<string | null>(null);
   const { launch, clips } = splitRows(rows);
-  const [pins, togglePin] = usePins();
+  const [pins, togglePin] = usePins(rows, run);
   const history = pinFirst(dedupeConsecutive(clips), pins);
   const toggle = (id: string) =>
     setOpen((s) => {

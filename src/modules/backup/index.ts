@@ -3,6 +3,8 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { backupSections } from "./panelLogic";
+import { setSetting } from "../../ui/appSetting";
+import { LAST_KEY } from "./health";
 
 let lastBackups: { id: string; title: string }[] = [];
 
@@ -12,6 +14,7 @@ async function backupNow() {
 
   const backupDir = await invoke<string>("backup_database", { destDir: dir });
   lastBackups = [{ id: backupDir, title: `Backed up to ${backupDir}` }, ...lastBackups].slice(0, 20);
+  await setSetting(LAST_KEY, new Date().toISOString());
   await logActivity("backup", "backup_now", "manual snapshot", backupDir);
   return { ok: true, backupDir };
 }

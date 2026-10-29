@@ -1,6 +1,6 @@
 import { getDb } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
-import { addItem, deleteItem, exportIcs, importEvents, listItems, toggleDone, updateItem } from "./items";
+import { addItem, deleteItem, moveItem, exportIcs, importEvents, listItems, toggleDone, updateItem } from "./items";
 import { ownRows } from "./ownRows";
 import { calendarSections, overdueCount } from "./panelLogic";
 
@@ -85,6 +85,7 @@ export const calendarModule: ModuleManifest = {
     { name: "update_item", run: updateItem },
     { name: "toggle_done", run: toggleDone },
     { name: "delete_item", run: deleteItem },
+    { name: "move_item", run: moveItem },
     { name: "import_ics", run: importEvents },
     { name: "export_ics", run: exportIcs },
   ],

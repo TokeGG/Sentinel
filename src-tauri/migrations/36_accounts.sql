@@ -1,4 +1,3 @@
--- Non-secret metadata for connected accounts (tokens live in the OS keychain only).
 CREATE TABLE IF NOT EXISTS accounts (
     provider TEXT NOT NULL,
     account TEXT NOT NULL,

@@ -2,6 +2,7 @@
 // parts and whole-day counts (never ms/86400000 on local times), so DST days
 // of 23/25 hours and times around midnight land on the right day.
 import { ago, utcDate } from "../../ui/kit/format.ts";
+import { EXTRA_SECTIONS } from "./tabs.ts";
 
 type Row = Record<string, unknown>;
 
@@ -12,6 +13,7 @@ export const calendarSections = [
   { id: "week", label: "This week" },
   { id: "tasks", label: "Tasks" },
   { id: "ics", label: "Import / export (.ics)" },
+  ...EXTRA_SECTIONS,
 ];
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];

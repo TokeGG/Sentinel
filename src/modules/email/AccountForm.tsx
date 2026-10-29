@@ -1,6 +1,7 @@
 // Add-account form. The password goes straight to the keychain via the add_account skill
 // and is cleared from state right after.
 import { useState } from "react";
+import { OAuthSignIn } from "./OAuthSignIn";
 import { PRESETS, draftFromPreset, presetById, validateDraft, type AccountDraft } from "./presets";
 
 export function AccountForm({ busy, onAdd, onCancel }: { busy: boolean; onAdd: (d: AccountDraft) => Promise<void>; onCancel?: () => void }) {
@@ -20,6 +21,8 @@ export function AccountForm({ busy, onAdd, onCancel }: { busy: boolean; onAdd: (
   return (
     <form className="mail-form" onSubmit={(e) => { e.preventDefault(); void submit(); }} autoComplete="off">
       <h3>Add account</h3>
+      <OAuthSignIn onAdd={onAdd} />
+      <p className="mail-note">Or use a password / app password:</p>
       <select value={d.preset} onChange={(e) => setD(draftFromPreset(e.target.value, d.email))}>
         {PRESETS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
       </select>

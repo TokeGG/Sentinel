@@ -6,6 +6,7 @@ import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import "./backup.css";
 import { snapshotsOf, whenText } from "./panelLogic";
+import { HealthCard } from "./HealthCard";
 
 // Where the user is asked to confirm a restore. dir === null means "pick a
 // folder in the dialog" (exactly what the generic action did); a string is a
@@ -74,6 +75,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       </h2>
       {error && <ErrorLine message={error} />}
       <Sections>
+        <Section id="health"><HealthCard snaps={snaps} /></Section>
         <Section id="last">
           <div className="bk-hero">
             <div className="bk-hero-main">

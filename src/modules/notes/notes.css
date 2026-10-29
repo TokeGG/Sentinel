@@ -22,3 +22,32 @@
   .nt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
   .nt-filed { margin-top: var(--gap); padding-left: var(--gap); border-left: 1px solid var(--line); }
 }
+/* Notebook + extra tabs */
+.nt-tab { display: flex; flex-direction: column; gap: var(--gap); }
+.nt-book { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); }
+.nt-listpane, .nt-editor, .nt-journal, .nt-cards, .nt-snips, .nt-vault, .nt-clip { display: flex; flex-direction: column; gap: var(--gap); }
+.nt-items { display: flex; flex-direction: column; gap: 2px; max-height: 50vh; overflow: auto; }
+.nt-item { text-align: left; display: flex; flex-direction: column; gap: 2px; padding: 4px 8px; border: 1px solid transparent; border-radius: var(--r-sm); background: none; color: inherit; cursor: pointer; }
+.nt-item:hover { background: var(--hover); }
+.nt-item.on { border-color: var(--accent-line); background: var(--accent-soft); }
+.nt-panes { display: grid; gap: var(--gap); grid-template-columns: minmax(0, 1fr); }
+.nt-text { min-height: 260px; font-family: var(--font-mono, monospace); resize: vertical; }
+.nt-preview { padding: var(--pad); border: 1px solid var(--line); border-radius: var(--radius); overflow-wrap: anywhere; }
+.nt-preview .wikilink { color: var(--accent-text); text-decoration: underline dotted; cursor: pointer; }
+.nt-side { display: flex; flex-direction: column; gap: 4px; }
+.nt-side h4, .nt-journal h4 { margin: var(--gap) 0 0; }
+.nt-att { display: flex; gap: 6px; align-items: center; }
+.nt-pre { white-space: pre-wrap; max-height: 40vh; overflow: auto; }
+.nt-prompt { margin: 0; padding-left: var(--pad); border-left: 3px solid var(--accent); font-style: italic; }
+.nt-graph { width: 100%; height: auto; }
+.nt-graph line { stroke: var(--line); }
+.nt-graph circle { fill: var(--accent); cursor: pointer; }
+.nt-graph text { fill: var(--text); font-size: 11px; }
+.nt-card { padding: var(--pad); border: 1px solid var(--accent-line); border-radius: var(--radius); display: flex; flex-direction: column; gap: var(--gap); }
+.nt-q { font-size: 1.15em; margin: 0; }
+.nt-a { margin: 0; color: var(--accent-text); }
+.nt mark { background: var(--accent-soft); color: var(--accent-text); }
+@container (min-width: 760px) {
+  .nt-book { grid-template-columns: minmax(220px, 1fr) minmax(0, 2.4fr); }
+  .nt-panes.nt-split { grid-template-columns: 1fr 1fr; }
+}

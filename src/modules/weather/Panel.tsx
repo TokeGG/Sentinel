@@ -7,6 +7,7 @@ import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useOption } from "../../ui/useOption";
 import { useModule } from "../../ui/useModule";
 import { placeView, severePlaces, type Units } from "./panelLogic";
+import { ForecastStrip } from "./ForecastStrip";
 import "./weather.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -50,6 +51,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           ) : (
             <EmptyState title="No places yet" hint={hasAdd ? "Add a city with the Add place field." : "Re-enable “Add place” in Customize to add a city."} />
           )}
+        </Section>
+        <Section id="forecast">
+          {rows.map((r) => <ForecastStrip key={String(r.id)} row={r} units={units} />)}
         </Section>
         <Section id="add">
           <QuickAdd module={module} busy={busy} run={run} />

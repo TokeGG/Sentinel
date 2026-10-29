@@ -6,6 +6,7 @@ export type Units = "°C" | "°F";
 export const weatherSections = [
   { id: "alerts", label: "Severe alerts" },
   { id: "places", label: "Places" },
+  { id: "forecast", label: "5-day forecast" },
   { id: "add", label: "Add place" },
   { id: "actions", label: "Refresh" },
 ];

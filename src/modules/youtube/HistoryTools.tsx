@@ -17,6 +17,10 @@ export function HistoryTools({ busy, run, count }: { busy: boolean; run: ModuleS
         Import watch-history.json
         <input type="file" accept=".json,application/json" hidden disabled={busy} onChange={(e) => { void pick(e.target.files?.[0]); e.target.value = ""; }} />
       </label>
+      <button type="button" className="ui-btn" disabled={busy} title="Needs YouTube connected in Settings > Accounts"
+        onClick={async () => { const o = (await run("import_subscriptions")) as { count?: number } | undefined; if (o) setMsg(`Added ${o.count ?? 0} channel(s)`); }}>
+        Import my subscriptions
+      </button>
       {confirm ? (
         <>
           <span className="ui-meta">Delete {count} history item(s)?</span>

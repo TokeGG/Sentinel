@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import { parseDaily, dayName } from "./forecast.ts";
 import { conditionGlyph, conditionText, isSevere, placeView, severePlaces, tempText, toC, toF, weatherSections } from "./panelLogic.ts";
 
 describe("weather panelLogic", () => {
@@ -52,11 +53,22 @@ describe("weather panelLogic", () => {
     assert.deepEqual(severePlaces([{ place: "A", severe: true }, { place: "B" }]), ["A"]);
   });
   it("section ids", () => {
-    assert.deepEqual(weatherSections.map((s) => s.id), ["alerts", "places", "add", "actions"]);
+    assert.deepEqual(weatherSections.map((s) => s.id), ["alerts", "places", "forecast", "add", "actions"]);
   });
   it("every <Section id> in Panel.tsx is declared, and vice versa", () => {
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
     const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
     assert.deepEqual(used, weatherSections.map((s) => s.id).sort());
+  });
+});
+
+describe("forecast", () => {
+  it("parses up to 5 days and names them", () => {
+    const d = parseDaily({ time: ["2026-10-29", "2026-10-30", "bad"], temperature_2m_max: [10, "x"], temperature_2m_min: [2, 3], weather_code: [61] });
+    assert.deepEqual(d, [{ day: "2026-10-29", hi: 10, lo: 2, code: 61 }, { day: "2026-10-30", hi: null, lo: 3, code: null }]);
+    assert.deepEqual(parseDaily(undefined), []);
+    assert.equal(parseDaily({ time: ["2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04", "2026-01-05", "2026-01-06"] }).length, 5);
+    assert.equal(dayName("2026-10-30", 1), "Fri");
+    assert.equal(dayName("2026-10-29", 0), "Today");
   });
 });

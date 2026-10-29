@@ -7,6 +7,7 @@ import { numericId } from "../../ui/rowId";
 // Open-Meteo: free, no API key, no account. Geocoding + forecast + alerts
 // all from the same provider — this is why Weather has zero setup cost.
 const GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search";
+import { FORECAST_QUERY, parseDaily } from "./forecast";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 
 interface Location extends Record<string, unknown> {
@@ -55,11 +56,11 @@ async function refreshWeather() {
   for (const loc of locations) {
     const url =
       `${FORECAST_URL}?latitude=${loc.lat}&longitude=${loc.lon}` +
-      `&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto`;
+      `&current=temperature_2m,weather_code${FORECAST_QUERY}`;
     const res = await fetch(url);
     const data = (await res.json()) as {
       current?: { temperature_2m: number; weather_code: number };
-      daily?: { temperature_2m_max?: number[]; temperature_2m_min?: number[] };
+      daily?: { time?: string[]; temperature_2m_max?: number[]; temperature_2m_min?: number[]; weather_code?: number[] };
     };
     const temp = data.current?.temperature_2m;
     const severe = (data.current?.weather_code ?? 0) >= 95; // thunderstorm+ in WMO codes
@@ -72,6 +73,7 @@ async function refreshWeather() {
       severe,
       high_c: data.daily?.temperature_2m_max?.[0] ?? null,
       low_c: data.daily?.temperature_2m_min?.[0] ?? null,
+      forecast: parseDaily(data.daily),
       title: `${loc.label}: ${temp != null ? `${temp.toFixed(0)}°C` : "—"}${severe ? " ⚠ severe" : ""}`,
     });
   }

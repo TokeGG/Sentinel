@@ -46,7 +46,7 @@ test("previewQuick and quickArgs feed add_item through toFields", () => {
 });
 
 test("section ids: new ones declared, and every <Section id> in the panel files is declared", () => {
-  assert.deepEqual(calendarSections.map((s) => s.id), ["add", "overdue", "today", "week", "tasks", "ics"]);
+  assert.deepEqual(calendarSections.map((s) => s.id), ["add", "overdue", "today", "week", "tasks", "ics", "views", "reminders", "habits", "focus", "contacts", "money", "bookmarks"]);
   const src = ["Panel.tsx"].map((f) => readFileSync(new URL(`./${f}`, import.meta.url), "utf8")).join("");
   const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
   assert.deepEqual(used, calendarSections.map((s) => s.id).sort());

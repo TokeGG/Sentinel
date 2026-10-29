@@ -48,3 +48,23 @@
 .cal-task { list-style: none; display: flex; flex-direction: column; gap: 3px; }
 .cal-sub { margin-left: 22px; }
 .cal-prev { margin: 4px 0 8px; padding-left: 18px; font-size: 0.85em; }
+
+/* Tabs: views, blocks, reminders, habits, focus. */
+.cal-views, .cal-blocks, .cal-focus { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.cal-vgrid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.cal-vcell { min-height: 64px; display: flex; flex-direction: column; gap: 2px; padding: 3px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--r-sm); overflow: hidden; }
+.cal-vcell.out { opacity: 0.5; }
+.cal-vcell.today { border-color: var(--accent); }
+.cal-vgrid.week .cal-vcell { min-height: 160px; }
+.cal-vday { align-self: flex-start; background: none; border: 0; color: var(--text-dim); font: 0.8em var(--font-mono); cursor: pointer; padding: 0 2px; }
+.cal-chip { font-size: 0.75em; padding: 1px 6px; border-radius: var(--r-sm); background: var(--accent-soft); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-chip[draggable="true"] { cursor: grab; }
+.cal-unsched { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; padding: var(--gap); border: 1px dashed var(--line); border-radius: var(--radius); }
+.cal-float { position: sticky; top: 0; z-index: 5; display: flex; flex-direction: column; gap: 4px; padding: var(--gap); background: var(--surface-2); border: 1px solid var(--accent); border-radius: var(--radius); box-shadow: var(--elev-2, 0 4px 16px rgb(0 0 0 / 0.3)); }
+.cal-floatrow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.cal-floatrow strong { flex: 1; }
+.cal-donetext { text-decoration: line-through; color: var(--text-faint); }
+.cal-habit { display: flex; flex-wrap: wrap; align-items: center; gap: var(--gap); }
+.cal-habitdays { display: inline-flex; gap: 2px; }
+.cal-habitdays input { accent-color: var(--accent); }
+.cal-clock { font: 700 3em var(--font-mono); color: var(--accent-text); text-align: center; }
