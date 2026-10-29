@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+import { embedHide, embedShow } from "../../shell/panelApi";
 import type { ModuleManifest } from "../../core/module";
-import { Chip, EmptyState, ErrorLine } from "../../ui/kit";
+import { Chip, EmptyState, ErrorLine, Tabs } from "../../ui/kit";
 import { findSkill } from "../../ui/moduleRun";
 import { Section, Sections } from "../../ui/useCustomize";
 import { useOption } from "../../ui/useOption";
@@ -11,13 +12,29 @@ import { PostCard, type CardActions } from "./PostCard";
 import { cardActions, postKey } from "./actionLogic";
 import { useActions } from "./useActions";
 import { dividerIndex, filterPosts, mergePosts, platformColor, rowToPost, type FeedPost } from "./panelLogic";
+import { FEED_TAB, SOCIAL_TABS, parseTab, siteOf } from "./embedSites";
 import { getLastVisit, markVisited } from "./store";
 import "./social.css";
 
 const PAGE = 100;
+const TAB_KEY = "soc.tab"; // per-viewer convenience: a raise re-creates this webview
+
+function useTab(panelId: string) {
+  const [tab, set] = useState(() => {
+    try { return parseTab(localStorage.getItem(TAB_KEY)); } catch { return FEED_TAB; }
+  });
+  // Show the site's embedded view (or hide them all on Feed). Rust keeps the others alive.
+  useEffect(() => {
+    const s = siteOf(tab);
+    void (s ? embedShow(panelId, s.id, s.url, s.profile, s.hosts) : embedHide(panelId)).catch(() => {});
+    try { localStorage.setItem(TAB_KEY, tab); } catch { /* optional */ }
+  }, [panelId, tab]);
+  return [tab, set] as const;
+}
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
+  const [tab, setTab] = useTab(module.id);
   const density = useOption("density", "comfortable");
   const showMedia = useOption("showMedia", true);
   const showCounts = useOption("showCounts", true);
@@ -60,6 +77,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
 
   return (
     <div className="soc-root">
+      <Tabs className="soc-tabs" tabs={SOCIAL_TABS} active={tab} onChange={setTab} />
+      {tab === FEED_TAB && <>
       <h2 className="ui-head soc-bar">
         <span className="ui-dot" />
         {module.name}
@@ -100,6 +119,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         </Section>
         <Section id="accounts"><Accounts module={module} status={status} busy={busy} run={run} /></Section>
       </Sections>
+      </>}
     </div>
   );
 }

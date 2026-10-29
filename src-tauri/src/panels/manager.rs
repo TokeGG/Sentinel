@@ -6,8 +6,7 @@
 //! `focus_panel` re-creates the child webview (close + add_child at the same
 //! rect); the newest child is on top. Web panels keep their session because
 //! `data_directory` is derived from the profile name, never the label.
-//! Fallback ("A": web panels always on top): only `focus_panel` changes — it
-//! would just call `set_focus` and never re-create.
+//! Fallback ("A": web panels always on top): only `focus_panel` changes (just `set_focus`).
 //!
 //! Chrome (Task 9b): every panel is TWO child webviews — content
 //! (`label()`), a 24px chrome strip (`chrome_label()`, route
@@ -16,7 +15,6 @@
 //! (create/destroy/move/resize/raise/show/hide) acts on both; `Spec.rect` is
 //! the OUTER rect and `geometry()` derives both webview rects from it.
 //!
-//! Locks (`Panels`/`Specs`) are held in short blocks, never across webview calls.
 //! Persistence: commands return `SavedPanel` data; the frontend writes
 //! `panel_layout` (see persist.rs header).
 pub use super::ids::{label, parse_web_url, validate};
@@ -40,6 +38,7 @@ pub struct Spec {
     pub(super) hosts: Vec<String>,
     /// Rect to return to while in "Full window"; None = not full.
     pub(super) prev: Option<Rect>,
+    pub(super) embed: Option<super::embed::EmbedSpec>, // active Social tab view (embed.rs)
 }
 #[derive(Default)]
 pub struct Specs(pub(super) Mutex<HashMap<String, Spec>>);
@@ -72,7 +71,8 @@ pub async fn open_panel(app: AppHandle, id: String, url: Option<String>, profile
     validate(&id, profile.as_deref())?;
     if let Some(u) = &url { parse_web_url(u)?; }
     let hosts = url.as_deref().map(|u| effective_hosts(u, hosts)).unwrap_or_default();
-    let s = Spec { url, profile, rect, hosts, prev: None };
+    let embed = app.state::<Specs>().0.lock().map_err(e)?.get(&id).and_then(|p| p.embed.clone()); // keep across re-open
+    let s = Spec { url, profile, rect, hosts, prev: None, embed };
     app.state::<Specs>().0.lock().map_err(e)?.insert(id.clone(), s.clone());
     let outcome = app.state::<Mutex<Panels>>().lock().map_err(e)?.open(&id);
     if outcome == OpenOutcome::Focused && app.get_webview(&label(&id)).is_some() {

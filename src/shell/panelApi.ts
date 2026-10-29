@@ -8,6 +8,7 @@ import { registry, type ModuleManifest } from "../core/module";
 import type { WebConfig } from "../core/manifestChecks";
 import { cascade, clampToScreen, clientRect, reclamp, TITLEBAR_H, type Rect } from "./layout";
 import { deleteLayout, loadLayout, saveLayout } from "./layoutStore";
+import { keepKnown } from "./restoreLogic";
 import { getRestorePanels } from "./settingsStore";
 
 export type SavedPanel = { id: string; rect: Rect; state: string; z: number };
@@ -84,6 +85,11 @@ export async function toggleFullWindow(id: string): Promise<boolean> {
   return full;
 }
 
+/** Embedded site view inside panel `id` (Rust embed.rs): show this site's, hide the others. */
+export const embedShow = (id: string, site: string, url: string, profile: string, hosts: string[]) =>
+  invoke<void>("embed_show", { id, site, url, profile, hosts });
+export const embedHide = (id: string) => invoke<void>("embed_hide", { id });
+
 export const getPanel = (id: string) => invoke<SavedPanel>("get_panel", { id });
 
 // During a pointer drag: invoke only, no persistence (commit on pointerup).
@@ -106,7 +112,7 @@ async function doRestore(): Promise<void> {
   // Default ON; a failed read must not strand the user with no panels.
   if (!(await getRestorePanels().catch(() => true))) return;
   const known = new Map(registry.map((m) => [m.id, m]));
-  const rows = (await loadLayout()).filter((r) => known.has(r.module_id));
+  const rows = keepKnown(await loadLayout(), known.keys());
   const saved = await invoke<SavedPanel[]>("restore_layout", { rows, screen: await mainClientRect() });
   for (const p of saved) {
     if (p.state !== "open") continue;

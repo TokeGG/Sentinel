@@ -2,7 +2,9 @@
    Flat Pro, tinted by --accent; the feed column is centred and capped when the panel is wide. */
 .panel-shell:has(.soc-root) { padding-top: 0; gap: 0; }
 .soc-root { container: soc / inline-size; margin: 0 calc(var(--pad) * -1.33); }
-.soc-bar { position: sticky; top: 0; z-index: 4; height: 40px; box-sizing: border-box; padding: 0 var(--pad); background: var(--surface); border-bottom: 1px solid var(--line); font-size: var(--fs-md); }
+/* Tab bar: height must equal EMBED_TAB_H (embedSites.ts); the embedded site view sits right below it. */
+.soc-tabs { position: sticky; top: 0; z-index: 5; box-sizing: border-box; height: 32px; padding: 0 var(--pad); gap: 4px; align-items: center; overflow: hidden; background: var(--surface); border-bottom: 1px solid var(--line); }
+.soc-bar { position: sticky; top: 32px; z-index: 4; height: 40px; box-sizing: border-box; padding: 0 var(--pad); background: var(--surface); border-bottom: 1px solid var(--line); font-size: var(--fs-md); }
 .soc-bar .ui-count { margin-left: 4px; margin-right: auto; }
 .soc-bar .ui-btn { font-size: var(--fs-sm); padding: 3px 12px; border-radius: 999px; }
 .soc-root > .kit-error { margin: var(--gap) var(--pad); }

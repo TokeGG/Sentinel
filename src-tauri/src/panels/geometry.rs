@@ -13,6 +13,16 @@ pub fn grip_rect(outer: Rect) -> Rect {
     Rect { x: outer.x + outer.w - side, y: outer.y + outer.h - side, w: side, h: side }
 }
 
+/// Height of the React tab bar at the top of an embedding panel's body (Social);
+/// keep in sync with EMBED_TAB_H in src/modules/social/embedSites.ts (a test enforces it).
+pub const EMBED_TAB_H: f64 = 32.0;
+
+/// Embedded web view rect: the content rect minus the tab bar.
+pub fn embed_rect(outer: Rect) -> Rect {
+    let (_, c) = geometry(outer);
+    Rect { x: c.x, y: c.y + EMBED_TAB_H, w: c.w, h: (c.h - EMBED_TAB_H).max(0.0) }
+}
+
 /// Outer rect (chrome included; the one stored/persisted/returned) ->
 /// (chrome rect, content rect).
 pub fn geometry(outer: Rect) -> (Rect, Rect) {
@@ -56,6 +66,12 @@ mod tests {
         let (c, b) = geometry(r(0.0, 0.0, 0.0, 0.0));
         assert_eq!((c.w, c.h), (0.0, CHROME_H));
         assert_eq!((b.y, b.w, b.h), (CHROME_H, 0.0, 0.0));
+    }
+    #[test]
+    fn embed_sits_below_chrome_and_tab_bar() {
+        let b = embed_rect(r(10.0, 20.0, 300.0, 200.0));
+        assert_eq!((b.x, b.y, b.w, b.h), (10.0, 20.0 + CHROME_H + EMBED_TAB_H, 300.0, 200.0 - CHROME_H - EMBED_TAB_H));
+        assert_eq!(embed_rect(r(0.0, 0.0, 100.0, 40.0)).h, 0.0);
     }
     #[test]
     fn grip_sits_at_bottom_right() {
