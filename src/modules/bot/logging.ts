@@ -2,6 +2,7 @@
 // injected driver and model as it happens (the agent loop itself has no callbacks). Pure.
 import type { Action, ActionResult, BrowserDriver, Observation } from "./actions.ts";
 import type { Llm } from "./llm.ts";
+import type { Brain } from "./kernel/brain.ts";
 
 export type LogKind = "page" | "model" | "act" | "result" | "nav" | "info" | "warn";
 export interface LogEntry { kind: LogKind; text: string; at: number }
@@ -34,7 +35,11 @@ export function logDriver(d: BrowserDriver, log: LogFn): BrowserDriver {
   };
 }
 export function logLlm(l: Llm, log: LogFn): Llm {
-  return { async decide(i, s) { const raw = await l.decide(i, s); log("model", describeModelReply(raw)); return raw; } };
+  const plan = l.plan;
+  return {
+    async decide(i, s) { const raw = await l.decide(i, s); log("model", describeModelReply(raw)); return raw; },
+    ...(plan ? { async plan(g: string, o: Observation, b: Brain, s?: AbortSignal) { const raw = await plan.call(l, g, o, b, s); log("info", `plan: ${describeModelReply(raw)}`); return raw; } } : {}),
+  };
 }
 /** Newest last, bounded (a long run must not grow the panel without limit). */
 export const pushLog = (list: LogEntry[], e: LogEntry, max = 400): LogEntry[] => [...list.slice(-(max - 1)), e];

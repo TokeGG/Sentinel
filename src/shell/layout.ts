@@ -65,8 +65,27 @@ export function resizeRect(start: Rect, dx: number, dy: number, screen: Rect, mi
   return { x, y, w, h };
 }
 
-/** Logical client rect from a measured physical size + scale; falls back when unusable. */
-export function clientRect(physW: number, physH: number, scale: number, fallback: Rect): Rect {
+/** Height of the custom title bar (frameless main window); keep in sync with --titlebar-h in ui/tokens.css. */
+export const TITLEBAR_H = 32;
+
+/**
+ * Area panels may occupy: the logical client rect minus the title bar band at
+ * the top (the window has no native frame, so client area == whole window).
+ * Falls back when the measurement is unusable.
+ */
+export function clientRect(physW: number, physH: number, scale: number, fallback: Rect, top = 0): Rect {
   const ok = [physW, physH, scale].every((n) => Number.isFinite(n) && n > 0);
-  return ok ? { x: 0, y: 0, w: physW / scale, h: physH / scale } : fallback;
+  if (!ok) return fallback;
+  const t = Math.min(Math.max(num(top), 0), physH / scale);
+  return { x: 0, y: t, w: physW / scale, h: physH / scale - t };
+}
+
+/** Panels outside `screen` (after maximise/restore/resize) -> the rects to apply; unchanged ones are omitted. */
+export function reclamp(panels: { id: string; rect: Rect; min: Size }[], screen: Rect): { id: string; rect: Rect }[] {
+  const out: { id: string; rect: Rect }[] = [];
+  for (const p of panels) {
+    const rect = clampToScreen(p.rect, screen, p.min);
+    if (["x", "y", "w", "h"].some((k) => rect[k as keyof Rect] !== p.rect[k as keyof Rect])) out.push({ id: p.id, rect });
+  }
+  return out;
 }

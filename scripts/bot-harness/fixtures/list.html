@@ -1,0 +1,9 @@
+<!doctype html><html><head><title>Catalogue</title></head><body>
+<h1>Catalogue</h1><ul id="l"></ul><a id="next" href="#">Next</a>
+<script>
+const p = Number(new URLSearchParams(location.search).get("page") || 1);
+const items = { 1: ["Bolt", "Nut"], 2: ["Washer", "Spring"], 3: ["Golden widget", "Hinge"] }[p];
+document.getElementById("l").innerHTML = items.map((i) => `<li>${i}</li>`).join("") + `<li>Page ${p} of 3</li>`;
+const n = document.getElementById("next");
+if (p < 3) n.href = "/list.html?page=" + (p + 1); else n.remove();
+</script></body></html>

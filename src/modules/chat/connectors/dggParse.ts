@@ -30,3 +30,29 @@ export function dggMessage(cmd: string, d: Record<string, unknown> | null): Inco
     badges: features.filter((f) => BADGES.has(f)),
   };
 }
+
+export type DggEvent =
+  | { kind: "message"; m: Incoming }
+  | { kind: "ping" }
+  | { kind: "error"; text: string }
+  | { kind: "clear"; user?: string }
+  | { kind: "ignore"; cmd: string }
+  | { kind: "drop" };
+
+/** One raw frame -> action. Tolerates NAMES/JOIN/QUIT/etc. (ignored), ERR with a json
+ *  object, a json string or plain text, and anything that is not "CMD [json]" (dropped). */
+export function dggEvent(raw: string): DggEvent {
+  const { cmd, data } = parseFrame(raw.trim());
+  if (!/^[A-Z]{2,12}$/.test(cmd)) return { kind: "drop" };
+  if (cmd === "PING") return { kind: "ping" };
+  if (cmd === "ERR") {
+    const rest = raw.trim().slice(cmd.length).trim();
+    return { kind: "error", text: String(data?.description ?? data?.data ?? (rest || "chat server error")).slice(0, 160) };
+  }
+  if (cmd === "MUTE" || cmd === "BAN") return { kind: "clear", user: typeof data?.data === "string" ? data.data : undefined };
+  if (cmd === "MSG" || cmd === "BROADCAST") {
+    const m = dggMessage(cmd, data);
+    return m ? { kind: "message", m } : { kind: "drop" };
+  }
+  return { kind: "ignore", cmd };
+}

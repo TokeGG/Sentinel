@@ -58,7 +58,7 @@ describe("pccare panelLogic", () => {
   });
   it("section ids are unique", () => {
     const ids = pccareSections.map((s) => s.id);
-    assert.deepEqual(ids, ["gauges", "disks", "cleanup", "actions"]);
+    assert.deepEqual(ids, ["gauges", "disks", "cleanup", "actions", "tools"]);
   });
   it("every <Section id> in Panel.tsx is declared, and vice versa", () => {
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");

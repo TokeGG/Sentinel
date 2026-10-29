@@ -15,6 +15,22 @@ pub fn label(id: &str) -> String {
 pub fn chrome_label(id: &str) -> String {
     format!("chrome-{}", id.replace('.', "_"))
 }
+/// Label of the panel's bottom-right resize-grip webview; injective like `label()`.
+pub fn grip_label(id: &str) -> String {
+    format!("grip-{}", id.replace('.', "_"))
+}
+/// Label of an embedded site view inside panel `id`: `embed-<panel>-<site>`. Sites have no '-'
+/// ([a-z0-9]{1,16}), so the last '-' splits it unambiguously.
+pub fn embed_label(id: &str, site: &str) -> String {
+    format!("embed-{}-{site}", id.replace('.', "_"))
+}
+pub fn is_valid_site(s: &str) -> bool {
+    !s.is_empty() && s.len() <= 16 && s.bytes().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+}
+/// Does webview `label` belong to panel `id`'s embeds?
+pub fn embed_of(label: &str, id: &str) -> bool {
+    label.strip_prefix("embed-").and_then(|r| r.rsplit_once('-')).is_some_and(|(own, site)| own == id.replace('.', "_") && is_valid_site(site))
+}
 /// Only http/https URLs may be loaded into a web panel.
 pub fn parse_web_url(u: &str) -> Result<tauri::Url, String> {
     let url: tauri::Url = u.parse().map_err(|e| format!("{e}"))?;
@@ -71,5 +87,16 @@ mod tests {
         assert_eq!(chrome_label("hub.notes"), "chrome-hub_notes");
         assert_ne!(chrome_label("a.b"), chrome_label("a-b"));
         assert_ne!(chrome_label("hub.notes"), label("hub.notes"));
+    }
+    #[test]
+    fn embed_labels_belong_to_exactly_one_panel() {
+        let l = embed_label("hub.social", "x");
+        assert_eq!(l, "embed-hub_social-x");
+        assert!(embed_of(&l, "hub.social"));
+        assert!(!embed_of(&l, "hub.soc") && !embed_of(&l, "hub-social-x") && !embed_of(&l, "hub"));
+        // "a" must not claim an embed of "a-b"
+        assert!(!embed_of(&embed_label("a-b", "x"), "a") && embed_of(&embed_label("a-b", "x"), "a-b"));
+        assert!(!embed_of("panel-hub_social", "hub.social"));
+        assert!(is_valid_site("x") && !is_valid_site("") && !is_valid_site("a-b") && !is_valid_site("A"));
     }
 }

@@ -1,6 +1,7 @@
 /* Panel design tokens + UI kit + dark generic-panel restyle (Task 3). */
 @import "./ui/tokens.css";
 @import "./ui/panels.css";
+@import "./shell/shell.css";
 
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
@@ -31,8 +32,9 @@ body {
   --space-text: #d8def0;
   --space-dim: #7c86a6;
   --space-accent: #396cd8;
-  position: fixed;
-  inset: 0;
+  position: relative;
+  flex: 1;
+  min-height: 0;
   background: radial-gradient(ellipse at center, #0d1430 0%, var(--space-bg) 70%);
   color: var(--space-text);
   overflow: hidden;
@@ -43,6 +45,7 @@ body {
   width: 100%;
   height: 100%;
   cursor: grab;
+  touch-action: none;
 }
 
 .starmap canvas.hovering {
@@ -55,61 +58,6 @@ body {
   display: grid;
   place-items: center;
   color: var(--space-dim);
-}
-
-.hud {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-}
-
-.hud-row {
-  display: flex;
-  gap: 0.6rem;
-  align-items: center;
-  background: rgba(13, 20, 48, 0.8);
-  border: 1px solid #23305e;
-  border-radius: 8px;
-  padding: 0.35rem 0.6rem;
-}
-
-.hud button {
-  border-radius: 6px;
-  border: 1px solid #2c3b70;
-  background: #121a3a;
-  color: var(--space-text);
-  padding: 0.25rem 0.6rem;
-  cursor: pointer;
-}
-
-.hud button.on {
-  background: var(--space-accent);
-}
-
-.hud-speed {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.hud-speed input {
-  width: 5.5rem;
-  accent-color: var(--space-accent);
-}
-
-.hud-speed output {
-  min-width: 2.6rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.hud-error {
-  color: #ffb4b4;
-  border-color: #6a2a2a;
 }
 
 .module-desc {
@@ -286,54 +234,4 @@ body {
     color: #eee;
     border-color: #444;
   }
-}
-
-/* Panel chrome strip (Task 9b): its own 28px child webview. */
-.panel-chrome {
-  --space-bg: #05070f;
-  --space-text: #d8def0;
-  --space-dim: #7c86a6;
-  --space-accent: #396cd8;
-  position: fixed;
-  inset: 0;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 0 0 10px;
-  background: #0d1430;
-  color: var(--space-text);
-  border-bottom: 1px solid var(--space-accent);
-  font-size: 13px;
-  line-height: 28px;
-  cursor: move;
-  user-select: none;
-  touch-action: none;
-  overflow: hidden;
-}
-.panel-chrome-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.panel-chrome-close {
-  all: unset;
-  width: 28px;
-  height: 28px;
-  text-align: center;
-  cursor: pointer;
-  color: var(--space-dim);
-}
-.panel-chrome-close:hover { color: #fff; background: #c0392b; }
-.panel-chrome-gear {
-  all: unset;
-  width: 28px;
-  height: 28px;
-  text-align: center;
-  cursor: pointer;
-  color: var(--space-dim);
-}
-.panel-chrome-gear:hover { color: #fff; background: #23305e; }
-.panel-chrome-gear:focus-visible, .panel-chrome-close:focus-visible { outline: 2px solid var(--space-accent); outline-offset: -2px; }
-.panel-chrome-grip {
-  width: 16px;
-  height: 28px;
-  cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 50%, var(--space-dim) 50%, transparent 70%);
 }

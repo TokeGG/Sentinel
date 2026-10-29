@@ -83,6 +83,22 @@
     return { changed: sig() !== before, url: location.href, ...extra };
   };
 
+  // Teach-by-demo: while on, the user's own clicks and typing are recorded (role + label + typed value). Password
+  // fields are never recorded. Kept in memory and mirrored to this origin's sessionStorage so a same-site page load
+  // keeps it; recTake(true) drains the list and turns recording on for a page of another site. Off unless recStart() was called for this tab.
+  const RK = "__sb_rec";
+  const ss = { get: () => { try { return JSON.parse(sessionStorage.getItem(RK) || "null"); } catch (_) { return null; } }, set: (v) => { try { v ? sessionStorage.setItem(RK, JSON.stringify(v)) : sessionStorage.removeItem(RK); } catch (_) {} } };
+  let rec = ss.get();
+  const recPush = (e) => { if (!rec) return; rec.ev.push(e); if (rec.ev.length > 500) rec.ev.shift(); ss.set(rec); };
+  const target = (e) => (e && e.closest ? e.closest(SEL) : null);
+  const secret = (e) => roleOf(e) === "password" || /cc-|one-time-code|current-password|new-password/.test(e.getAttribute("autocomplete") || "");
+  document.addEventListener("click", (ev) => { const e = target(ev.target); if (rec && e && ev.isTrusted && !secret(e) && !["textbox", "select"].includes(roleOf(e))) recPush({ kind: "click", role: roleOf(e), text: labelOf(e), url: location.href }); }, true);
+  document.addEventListener("change", (ev) => { const e = ev.target; if (rec && e && ev.isTrusted && e.matches && e.matches("input,textarea,select") && !secret(e) && !["checkbox", "radio"].includes(e.type)) recPush({ kind: "type", role: roleOf(e), text: labelOf(e).slice(0, 100) === String(e.value || "").slice(0, 100) ? clean(e.placeholder || e.name || e.getAttribute("aria-label")) : labelOf(e), value: String(e.value || "").slice(0, 2000), url: location.href }); }, true);
+  if (rec) recPush({ kind: "nav", role: "", text: "", url: location.href });
+  const recStart = () => { rec = { ev: [{ kind: "nav", role: "", text: "", url: location.href }] }; ss.set(rec); return true; };
+  const recTake = (keepOn) => { if (!rec && keepOn) recStart(); const ev = rec ? rec.ev : []; if (rec) { rec.ev = []; ss.set(rec); } return ev; };
+  const recStop = () => { const ev = recTake(); rec = null; ss.set(null); return ev; };
+
   const run = (id, fn) => { Promise.resolve().then(fn).then((v) => send(id, { ok: true, v }), (e) => send(id, { ok: false, v: String((e && e.message) || e) })); };
-  Object.defineProperty(window, "__sb", { value: Object.freeze({ observe, act, __run: run }), configurable: false });
+  Object.defineProperty(window, "__sb", { value: Object.freeze({ observe, act, recStart, recTake, recStop, __run: run }), configurable: false });
 })();

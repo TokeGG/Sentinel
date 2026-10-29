@@ -8,6 +8,10 @@ export const botSections = [
   { id: "log", label: "Step log and past runs" },
   { id: "knowledge", label: "Knowledge" },
   { id: "brain", label: "Brain" },
+  { id: "workflows", label: "Saved workflows" },
+  { id: "jobs", label: "Scheduled jobs" },
+  { id: "sites", label: "Site notebook" },
+  { id: "weekly", label: "What I learned this week" },
 ];
 
 /** First page of every run (a plain search page; the model goes elsewhere with goto). */
@@ -25,7 +29,7 @@ export function modelStatus(model: string | null, tags: unknown | null): ModelSt
 }
 
 export const OUTCOME_LABEL: Record<Outcome, string> = {
-  done: "finished", failed: "gave up", maxSteps: "hit the step limit", timeout: "ran out of time", loop: "stuck in a loop", cancelled: "stopped", denied: "you declined an action",
+  done: "finished", failed: "gave up", maxSteps: "hit the step limit", timeout: "ran out of time", loop: "stuck in a loop", cancelled: "stopped", denied: "you declined an action", dry: "dry run (plan only, nothing done)",
 };
 
 /** What the confirm dialog shows: the page and the proposed irreversible action. */
@@ -46,3 +50,6 @@ export const episodeLabel = (e: EpisodeRow): string => `${e.goal.slice(0, 80)} -
 export function noteUrlOk(u: string): boolean {
   try { return /^https?:$/.test(new URL(u.trim()).protocol); } catch { return false; }
 }
+
+/** Terminal animations run unless reduced motion is requested and not overridden by the app setting. */
+export const fxOn = (reducedMotion: boolean, ignoreReduced: boolean) => !reducedMotion || ignoreReduced;

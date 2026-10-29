@@ -2,7 +2,26 @@
 use super::persist::Rect;
 
 /// Height of the chrome strip stacked above every panel's content webview.
-pub const CHROME_H: f64 = 28.0;
+pub const CHROME_H: f64 = 24.0; // keep in sync with --chrome-h in src/ui/tokens.css
+
+/// Side of the square resize-grip overlay webview at the panel's bottom-right.
+pub const GRIP: f64 = 16.0;
+
+/// Grip rect: bottom-right corner of the outer rect (never above the chrome strip).
+pub fn grip_rect(outer: Rect) -> Rect {
+    let side = GRIP.min(outer.w.max(0.0)).min((outer.h - CHROME_H).max(0.0));
+    Rect { x: outer.x + outer.w - side, y: outer.y + outer.h - side, w: side, h: side }
+}
+
+/// Height of the React tab bar at the top of an embedding panel's body (Social);
+/// keep in sync with EMBED_TAB_H in src/modules/social/embedSites.ts (a test enforces it).
+pub const EMBED_TAB_H: f64 = 32.0;
+
+/// Embedded web view rect: the content rect minus the tab bar.
+pub fn embed_rect(outer: Rect) -> Rect {
+    let (_, c) = geometry(outer);
+    Rect { x: c.x, y: c.y + EMBED_TAB_H, w: c.w, h: (c.h - EMBED_TAB_H).max(0.0) }
+}
 
 /// Outer rect (chrome included; the one stored/persisted/returned) ->
 /// (chrome rect, content rect).
@@ -35,7 +54,7 @@ mod tests {
     #[test]
     fn content_sits_below_chrome() {
         let (_, b) = geometry(r(10.0, 20.0, 300.0, 200.0));
-        assert_eq!((b.x, b.y, b.w, b.h), (10.0, 48.0, 300.0, 172.0));
+        assert_eq!((b.x, b.y, b.w, b.h), (10.0, 20.0 + CHROME_H, 300.0, 200.0 - CHROME_H));
     }
     #[test]
     fn content_height_never_negative() {
@@ -47,6 +66,23 @@ mod tests {
         let (c, b) = geometry(r(0.0, 0.0, 0.0, 0.0));
         assert_eq!((c.w, c.h), (0.0, CHROME_H));
         assert_eq!((b.y, b.w, b.h), (CHROME_H, 0.0, 0.0));
+    }
+    #[test]
+    fn embed_sits_below_chrome_and_tab_bar() {
+        let b = embed_rect(r(10.0, 20.0, 300.0, 200.0));
+        assert_eq!((b.x, b.y, b.w, b.h), (10.0, 20.0 + CHROME_H + EMBED_TAB_H, 300.0, 200.0 - CHROME_H - EMBED_TAB_H));
+        assert_eq!(embed_rect(r(0.0, 0.0, 100.0, 40.0)).h, 0.0);
+    }
+    #[test]
+    fn grip_sits_at_bottom_right() {
+        let g = grip_rect(r(10.0, 20.0, 300.0, 200.0));
+        assert_eq!((g.x, g.y, g.w, g.h), (294.0, 204.0, GRIP, GRIP));
+    }
+    #[test]
+    fn grip_shrinks_in_tiny_panels() {
+        let g = grip_rect(r(0.0, 0.0, 100.0, 30.0));
+        assert_eq!((g.w, g.h), (30.0 - CHROME_H, 30.0 - CHROME_H));
+        assert_eq!(grip_rect(r(0.0, 0.0, 0.0, 0.0)).w, 0.0);
     }
     #[test]
     fn full_window_round_trips() {

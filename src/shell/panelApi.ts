@@ -6,9 +6,12 @@ import { emit } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { registry, type ModuleManifest } from "../core/module";
 import type { WebConfig } from "../core/manifestChecks";
-import { cascade, clampToScreen, clientRect, type Rect } from "./layout";
+import { cascade, clampToScreen, clientRect, reclamp, TITLEBAR_H, type Rect } from "./layout";
 import { deleteLayout, loadLayout, saveLayout } from "./layoutStore";
+import { keepKnown } from "./restoreLogic";
 import { getRestorePanels } from "./settingsStore";
+import { DESK_SIZES, PANEL_CLOSED, PANEL_FOCUSED } from "./desk/ids";
+import { launchRows } from "./desk/launch";
 
 export type SavedPanel = { id: string; rect: Rect; state: string; z: number };
 
@@ -20,19 +23,20 @@ let opened = 0; // cascade slot only; main window's own counter
 // swaps the shared pool); they ask the main window to persist instead.
 export const LAYOUT_COMMIT = "layout-commit";
 export const LAYOUT_DELETE = "layout-delete";
-const inChrome = () => window.location.hash.startsWith("#/chrome/");
+const inChrome = () => /^#\/(chrome|grip)\//.test(window.location.hash);
 
-// Panel rects are relative to the MAIN window's client area. In any child
+// Panel rects are relative to the MAIN window's client area (the window is
+// frameless, so that is the whole window) minus the custom title bar band. In any child
 // webview (chrome strip, Settings panel) window.inner* is that webview's own
 // size, so always measure the main window (getCurrentWindow() is the main
 // window when called from it). Not unit-testable here (needs Tauri); the
 // size math is the pure clientRect() in layout.ts.
 export async function mainClientRect(): Promise<Rect> {
-  const fallback: Rect = { x: 0, y: 0, w: window.screen.availWidth, h: window.screen.availHeight };
+  const fallback: Rect = { x: 0, y: TITLEBAR_H, w: window.screen.availWidth, h: window.screen.availHeight - TITLEBAR_H };
   try {
     const w = getCurrentWindow();
     const s = await w.innerSize();
-    return clientRect(s.width, s.height, await w.scaleFactor(), fallback);
+    return clientRect(s.width, s.height, await w.scaleFactor(), fallback, TITLEBAR_H);
   } catch {
     return fallback;
   }
@@ -44,7 +48,7 @@ export function openPanel(m: ModuleManifest, rect?: Rect): Promise<void> {
   return openAt(m.id, web?.size ?? DEFAULT_SIZE, web, rect, web?.min);
 }
 
-async function openAt(id: string, size: { w: number; h: number }, web?: WebConfig, rect?: Rect, min = MIN) {
+export async function openAt(id: string, size: { w: number; h: number }, web?: WebConfig, rect?: Rect, min = MIN) {
   const cur = rect ?? (await getPanel(id).then((p) => p.rect, () => undefined));
   const screen = await mainClientRect();
   const r = clampToScreen(cur ?? cascade(opened++, screen, size), screen, min);
@@ -60,18 +64,24 @@ export const openWebPanel = (id: string, url: string, profile: string): Promise<
 // opens it explicitly. restore() ignores its saved row (unknown id).
 export const SETTINGS_ID = "hub.settings";
 export const openSettings = (): Promise<void> => openAt(SETTINGS_ID, { w: 560, h: 520 });
+// The Master Hub (missed notifications) is the same kind of non-module panel; the sun opens it.
+export const MASTER_ID = "hub.master";
+export const openMaster = (): Promise<void> => openAt(MASTER_ID, { w: 540, h: 600 });
 
 // Row first: called from a chrome webview, close_panel destroys the caller
 // before its reply arrives, so nothing after the invoke would run.
 export async function closePanel(id: string): Promise<void> {
+  const rect = await getPanel(id).then((p) => p.rect, () => undefined);
+  await emit(PANEL_CLOSED, { id, rect }).catch(() => {});
   if (inChrome()) await emit(LAYOUT_DELETE, { id });
   else await deleteLayout(id);
   await invoke("close_panel", { id });
 }
 
 /** Raise (no-op in Rust if already top) and persist the authoritative z. */
-export async function focusPanel(id: string): Promise<SavedPanel> {
+export async function focusPanel(id: string, auto = false): Promise<SavedPanel> {
   const p = await invoke<SavedPanel>("focus_panel", { id });
+  emit(PANEL_FOCUSED, { id, auto }).catch(() => {});
   await commit(p);
   return p;
 }
@@ -83,13 +93,18 @@ export async function toggleFullWindow(id: string): Promise<boolean> {
   return full;
 }
 
+/** Embedded site view inside panel `id` (Rust embed.rs): show this site's, hide the others. */
+export const embedShow = (id: string, site: string, url: string, profile: string, hosts: string[]) =>
+  invoke<void>("embed_show", { id, site, url, profile, hosts });
+export const embedHide = (id: string) => invoke<void>("embed_hide", { id });
+
 export const getPanel = (id: string) => invoke<SavedPanel>("get_panel", { id });
 
 // During a pointer drag: invoke only, no persistence (commit on pointerup).
 export const dragMove = (id: string, x: number, y: number) =>
-  invoke<SavedPanel>("move_panel", { id, x, y });
+  invoke<void>("move_panel", { id, x, y });
 export const dragResize = (id: string, w: number, h: number) =>
-  invoke<SavedPanel>("resize_panel", { id, w, h });
+  invoke<void>("resize_panel", { id, w, h });
 
 export const commit = (p: SavedPanel): Promise<void> =>
   inChrome() ? emit(LAYOUT_COMMIT, p) : saveLayout(p.id, p.rect, p.z, p.state);
@@ -105,7 +120,7 @@ async function doRestore(): Promise<void> {
   // Default ON; a failed read must not strand the user with no panels.
   if (!(await getRestorePanels().catch(() => true))) return;
   const known = new Map(registry.map((m) => [m.id, m]));
-  const rows = (await loadLayout()).filter((r) => known.has(r.module_id));
+  const rows = (await launchRows(known).catch(() => null)) ?? keepKnown(await loadLayout(), known.keys());
   const saved = await invoke<SavedPanel[]>("restore_layout", { rows, screen: await mainClientRect() });
   for (const p of saved) {
     if (p.state !== "open") continue;
@@ -114,5 +129,22 @@ async function doRestore(): Promise<void> {
     } catch (e) {
       console.error(`restore ${p.id} failed`, e);
     }
+  }
+}
+
+/** After maximise/restore/resize: pull every open panel back inside the usable area. */
+export async function reclampPanels(): Promise<void> {
+  const screen = await mainClientRect();
+  const ids = [...registry.map((m) => [m.id, m.web?.min ?? MIN] as const), [SETTINGS_ID, MIN] as const, [MASTER_ID, MIN] as const,
+    ...Object.keys(DESK_SIZES).map((id) => [id, MIN] as const)];
+  const open: { id: string; rect: Rect; min: { w: number; h: number } }[] = [];
+  for (const [id, min] of ids) {
+    const p = await getPanel(id).catch(() => null); // not open -> skip
+    if (p) open.push({ id, rect: p.rect, min });
+  }
+  for (const { id, rect } of reclamp(open, screen)) {
+    await dragResize(id, rect.w, rect.h);
+    await dragMove(id, rect.x, rect.y);
+    await commit(await getPanel(id));
   }
 }

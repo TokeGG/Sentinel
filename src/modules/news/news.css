@@ -1,0 +1,29 @@
+/* News + Deals shared frame (FeedPanel) and the News magazine cards. */
+.feed { container-type: inline-size; display: flex; flex-direction: column; gap: var(--gap); }
+.feed .ui-quickadd { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px; }
+.feed .ui-quickadd input { border: 0; background: transparent; padding-left: 8px; }
+.feed .ui-chips { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+.feed .ui-chips .kit-chip { flex: none; }
+.feed .feed-sections { gap: var(--gap); }
+.feed [data-section="status"] { border-top: 1px solid var(--line); padding-top: var(--gap); }
+.nw-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: var(--gap); }
+.nw-card { display: flex; flex-direction: column; gap: 6px; min-width: 0; padding: var(--pad); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); transition: border-color 0.12s, background 0.12s; }
+.nw-card:hover { border-color: var(--accent-line); background: color-mix(in srgb, var(--accent) 8%, var(--surface-2)); }
+.nw-meta { display: flex; align-items: center; justify-content: space-between; gap: var(--gap); min-width: 0; }
+.nw-src { font-size: 0.72em; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.nw-title { background: none; border: 0; padding: 0; font: inherit; font-family: var(--font-display); font-weight: 600; line-height: 1.35; color: var(--text); text-align: left; cursor: pointer; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.nw-title:hover { color: var(--accent-text); }
+@container (min-width: 520px) {
+  .nw-card:first-child { grid-column: 1 / -1; padding: calc(var(--pad) * 1.5); background: linear-gradient(135deg, var(--accent-soft), var(--surface-2) 70%); border-color: var(--accent-line); }
+  .nw-card:first-child .nw-title { font-size: 1.35em; -webkit-line-clamp: 2; }
+}
+.nw-tools { display: flex; flex-direction: column; gap: var(--sp-2); margin-bottom: var(--gap); }
+.nw-topics { display: flex; flex-wrap: wrap; gap: var(--sp-1); align-items: center; }
+.nw-topics input { max-width: 180px; }
+.nw-ticker { display: flex; gap: var(--sp-4); overflow-x: auto; white-space: nowrap; font-size: var(--fs-xs); padding: var(--sp-1) var(--sp-2); border: 1px solid var(--accent-line); border-radius: var(--r-sm); background: var(--accent-soft); }
+.nw-srcmeta { display: grid; grid-template-columns: minmax(0, 1fr) 110px 120px; gap: var(--sp-2); align-items: center; font-size: var(--fs-xs); padding: 2px 0; }
+.nw-badge { font-size: 0.68em; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line); color: var(--text-dim, inherit); }
+.nw-badge.rel-unreliable, .nw-badge.rel-satire { color: var(--warn, inherit); }
+.nw-hl { margin: 0; padding-left: var(--sp-2); border-left: 2px solid var(--accent-line); font-size: var(--fs-xs); }
+.nw-acts { display: flex; gap: var(--sp-1); }
+.nw-audio { width: 100%; height: 32px; }

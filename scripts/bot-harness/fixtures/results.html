@@ -1,0 +1,7 @@
+<!doctype html><html><head><title>Results</title></head><body>
+<h1>Results</h1><ul id="r"></ul>
+<script>
+const q = new URLSearchParams(location.search).get("q") || "";
+for (const n of ["Red mug", "Blue mug", "Green mug"].filter((n) => n.toLowerCase().includes(q.toLowerCase().split(" ")[0])))
+  document.getElementById("r").insertAdjacentHTML("beforeend", `<li><a href="/product.html?name=${encodeURIComponent(n)}">${n}</a></li>`);
+</script></body></html>

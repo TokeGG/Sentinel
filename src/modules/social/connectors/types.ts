@@ -47,6 +47,8 @@ export interface SocialConnector {
   connect?: () => Promise<void>; // oauth connectors only
   /** The credential key whose presence means "connected". */
   connectedKey: string | null;
+  /** Overrides the connectedKey check (connectors bridged to core/connect). */
+  isConnected?: () => Promise<boolean>;
   fetchFeed(): Promise<SocialPost[]>;
   /** Present only where the connector can publish; the rest are read-only. */
   post?(text: string): Promise<void>;
@@ -57,4 +59,6 @@ export interface SocialConnector {
   share?(p: PostRef): Promise<PostMeta>;
   unshare?(p: PostRef): Promise<PostMeta>;
   reply?(p: PostRef, text: string): Promise<void>;
+  /** Mentions/replies to you (unified inbox); absent = the API gives none we can read. */
+  fetchInbox?(): Promise<SocialPost[]>;
 }

@@ -6,21 +6,20 @@
 //! `focus_panel` re-creates the child webview (close + add_child at the same
 //! rect); the newest child is on top. Web panels keep their session because
 //! `data_directory` is derived from the profile name, never the label.
-//! Fallback ("A": web panels always on top): only `focus_panel` changes — it
-//! would just call `set_focus` and never re-create.
+//! Fallback ("A": web panels always on top): only `focus_panel` changes (just `set_focus`).
 //!
 //! Chrome (Task 9b): every panel is TWO child webviews — content
-//! (`label()`) and a 28px chrome strip (`chrome_label()`, route
-//! `#/chrome/<id>`) created after it so it stacks on top. Every path below
+//! (`label()`), a 24px chrome strip (`chrome_label()`, route
+//! `#/chrome/<id>`) and a 16px bottom-right resize grip (`grip_label()`, route
+//! `#/grip/<id>`), created after it so they stack on top. Every path below
 //! (create/destroy/move/resize/raise/show/hide) acts on both; `Spec.rect` is
 //! the OUTER rect and `geometry()` derives both webview rects from it.
 //!
-//! Locks (`Panels`/`Specs`) are held in short blocks, never across webview calls.
 //! Persistence: commands return `SavedPanel` data; the frontend writes
 //! `panel_layout` (see persist.rs header).
 pub use super::ids::{label, parse_web_url, validate};
 pub(crate) use super::webview::{create, destroy, set_visible};
-pub(super) use super::webview::place;
+pub(super) use super::webview::{place, place_pos};
 pub use super::restore::*;
 pub use super::fullwindow::*;
 use super::persist::{self, Rect, SavedPanel};
@@ -39,6 +38,7 @@ pub struct Spec {
     pub(super) hosts: Vec<String>,
     /// Rect to return to while in "Full window"; None = not full.
     pub(super) prev: Option<Rect>,
+    pub(super) embed: Option<super::embed::EmbedSpec>, // active Social tab view (embed.rs)
 }
 #[derive(Default)]
 pub struct Specs(pub(super) Mutex<HashMap<String, Spec>>);
@@ -71,7 +71,8 @@ pub async fn open_panel(app: AppHandle, id: String, url: Option<String>, profile
     validate(&id, profile.as_deref())?;
     if let Some(u) = &url { parse_web_url(u)?; }
     let hosts = url.as_deref().map(|u| effective_hosts(u, hosts)).unwrap_or_default();
-    let s = Spec { url, profile, rect, hosts, prev: None };
+    let embed = app.state::<Specs>().0.lock().map_err(e)?.get(&id).and_then(|p| p.embed.clone()); // keep across re-open
+    let s = Spec { url, profile, rect, hosts, prev: None, embed };
     app.state::<Specs>().0.lock().map_err(e)?.insert(id.clone(), s.clone());
     let outcome = app.state::<Mutex<Panels>>().lock().map_err(e)?.open(&id);
     if outcome == OpenOutcome::Focused && app.get_webview(&label(&id)).is_some() {
@@ -93,18 +94,17 @@ fn update_rect(specs: &Specs, id: &str, f: impl FnOnce(&mut Rect)) -> Result<Rec
     Ok(s.rect)
 }
 
+/// Drag hot paths: sync, position-only moves, no reply payload; persisted on drag end.
 #[tauri::command]
-pub async fn move_panel(app: AppHandle, id: String, x: f64, y: f64) -> Result<SavedPanel, String> {
+pub fn move_panel(app: AppHandle, id: String, x: f64, y: f64) -> Result<(), String> {
     let rect = update_rect(&app.state::<Specs>(), &id, |r| (r.x, r.y) = (x, y))?;
-    place(&app, &id, rect)?;
-    saved(&id, rect, &app.state::<Mutex<Panels>>())
+    place_pos(&app, &id, rect)
 }
 
 #[tauri::command]
-pub async fn resize_panel(app: AppHandle, id: String, w: f64, h: f64) -> Result<SavedPanel, String> {
+pub fn resize_panel(app: AppHandle, id: String, w: f64, h: f64) -> Result<(), String> {
     let rect = update_rect(&app.state::<Specs>(), &id, |r| (r.w, r.h) = (w, h))?;
-    place(&app, &id, rect)?;
-    saved(&id, rect, &app.state::<Mutex<Panels>>())
+    place(&app, &id, rect)
 }
 
 /// The only function to change for fallback "A" (see header).

@@ -51,3 +51,40 @@ pub fn restore_database(app: tauri::AppHandle, backup_dir: String) -> Result<(),
     Ok(())
 }
 
+
+/// Only folders this app created (`sentinel-backup-<epoch>`) may be deleted.
+fn is_backup_dir_name(name: &str) -> bool {
+    name.strip_prefix("sentinel-backup-")
+        .map_or(false, |n| !n.is_empty() && n.chars().all(|c| c.is_ascii_digit()))
+}
+
+/// Deletes a snapshot: its database files, then the folder only if now empty.
+#[tauri::command]
+pub fn delete_backup(backup_dir: String) -> Result<(), String> {
+    let dir = std::path::Path::new(&backup_dir);
+    let name = dir.file_name().and_then(|n| n.to_str()).unwrap_or("");
+    if !is_backup_dir_name(name) {
+        return Err("not a Sentinel backup folder".into());
+    }
+    for f in db_file_names() {
+        let p = dir.join(f);
+        if p.exists() {
+            std::fs::remove_file(&p).map_err(|e| e.to_string())?;
+        }
+    }
+    let _ = std::fs::remove_dir(dir); // keeps the folder if it holds other files
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_backup_dir_name;
+
+    #[test]
+    fn only_app_made_backup_folders_are_deletable() {
+        assert!(is_backup_dir_name("sentinel-backup-1730000000"));
+        for bad in ["", "sentinel-backup-", "sentinel-backup-12x", "Documents", "sentinel-backup-1/..", "x-sentinel-backup-1"] {
+            assert!(!is_backup_dir_name(bad), "{bad}");
+        }
+    }
+}

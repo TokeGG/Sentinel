@@ -5,14 +5,16 @@ import { registry } from "../core/module";
 import { pauseAll, resumeEnabled } from "../core/scheduler";
 import { getGameModeAuto, getStarMotion } from "./layoutStore";
 import { saveGameModeAuto, saveStarMotion } from "./generalSettings";
-import { openSettings } from "./panelApi";
+import { openMaster } from "./panelApi";
 import { setGameMode as shareGameMode, setStarMotion as shareStarMotion } from "./motionStore";
 import { OrbitControls } from "./OrbitControls";
+import { sendCmd } from "./desk/shellCmd";
+import { BRIEFING_ID } from "./desk/ids";
 
 // Main-window only: game-mode listeners, the auto toggle, the manual button,
-// and a dismissible error line.
+// rendered as the toolbar inside the title bar (the error line lives in App).
 // `refresh` bumps when the Settings panel (another webview) changed a toggle.
-export function GameHud({ error, setError, refresh = 0 }: { error: string | null; setError: (e: string | null) => void; refresh?: number }) {
+export function GameHud({ setError, refresh = 0 }: { setError: (e: string | null) => void; refresh?: number }) {
   const [auto, setAuto] = useState<boolean | null>(null);
   const [active, setActive] = useState(false);
   const [manual, setManual] = useState(false);
@@ -64,6 +66,11 @@ export function GameHud({ error, setError, refresh = 0 }: { error: string | null
     getGameModeAuto().then(setAuto).catch(fail);
     getStarMotion().then((on) => { setMotion(on); shareStarMotion(on); }).catch(fail);
   }, [refresh]);
+  const manualRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    const un = listen("tray-game-mode", () => manualRef.current()); // tray menu + palette
+    return () => void un.then((f) => f());
+  }, []);
   const toggleManual = async () => {
     try {
       await invoke("set_game_mode", { manual: !manual });
@@ -71,26 +78,21 @@ export function GameHud({ error, setError, refresh = 0 }: { error: string | null
     } catch (e) { fail(e); }
   };
 
+  manualRef.current = toggleManual;
   return (
-    <div className="hud">
-      <div className="hud-row">
-        <span>{active ? "Game mode: ON" : "Game mode: off"}</span>
-        <button className={manual ? "on" : ""} onClick={toggleManual}>Game mode</button>
-        <button onClick={() => openSettings().catch(fail)}>⚙ Settings</button>
-        <button className={auto ? "on" : ""} disabled={auto === null} onClick={toggleAuto}>
-          Auto game mode {auto ? "on" : "off"}
-        </button>
-        <button className={motion ? "on" : ""} disabled={motion === null} onClick={toggleMotion}>
-          Star motion: {motion ? "on" : "off"}
-        </button>
-        <OrbitControls refresh={refresh} fail={fail} />
-      </div>
-      {error && (
-        <div className="hud-row hud-error" role="alert">
-          <span>{error}</span>
-          <button onClick={() => setError(null)} aria-label="Dismiss">x</button>
-        </div>
-      )}
+    <div className="hud-row">
+      <button onClick={() => sendCmd({ type: "palette" }).catch(fail)} title="Search everything (Ctrl+K)">Search</button>
+      <button onClick={() => sendCmd({ type: "open", id: BRIEFING_ID }).catch(fail)}>Briefing</button>
+      <span className={`hud-state${active ? " on" : ""}`}>{active ? "Game mode on" : "Game mode off"}</span>
+      <button className={manual ? "on" : ""} onClick={toggleManual}>Game mode</button>
+      <button className={auto ? "on" : ""} disabled={auto === null} onClick={toggleAuto}>
+        Auto {auto ? "on" : "off"}
+      </button>
+      <button className={motion ? "on" : ""} disabled={motion === null} onClick={toggleMotion}>
+        Stars: {motion ? "on" : "off"}
+      </button>
+      <OrbitControls refresh={refresh} fail={fail} />
+      <button className="hud-settings" onClick={() => openMaster().catch(fail)}>Master Hub</button>
     </div>
   );
 }

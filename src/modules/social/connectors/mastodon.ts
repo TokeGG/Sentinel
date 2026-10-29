@@ -1,25 +1,17 @@
 import { fetch } from "@tauri-apps/plugin-http";
-import { invoke } from "@tauri-apps/api/core";
-import { openUrl } from "@tauri-apps/plugin-opener";
-import { setCredential } from "../../../core/credentials";
-import { MODULE_ID, cred } from "./common";
+import { connectMastodon, isConnected, mastoAuth } from "./accountToken";
 import { mastoPatch, mastoReplyBody, mastoUrl, type MastoAction } from "./actions";
 import { parseMastodon } from "./parse";
+import { parseMastoMentions } from "./inboxParse";
 import type { PostRef, SocialConnector } from "./types";
 
-// Real one-click OAuth: instances let any app self-register, so "Connect"
-// registers this install, opens the browser to approve, catches the redirect
-// (generic oauth_listen_once). Only upfront input is the instance. Scopes:
-// read + write:statuses (posting, boosts, replies) + write:favourites (likes);
-// accounts connected with fewer scopes must click Connect again.
-const PORT = 53683;
-const SCOPE = "read write:statuses write:favourites";
+// One-click OAuth via core/connect (dynamic client registration, PKCE, Settings > Accounts).
 
 const REAUTH = 'refused — click "Connect Mastodon" again to grant likes, boosts and replies';
 
 async function act(p: PostRef, a: MastoAction) {
-  const token = await cred("mastodon", "access_token");
-  const res = await fetch(mastoUrl(await cred("mastodon", "instance_url"), p, a), { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+  const { base, token } = await mastoAuth();
+  const res = await fetch(mastoUrl(base, p, a), { method: "POST", headers: { Authorization: `Bearer ${token}` } });
   if (res.status === 403) throw new Error(`Mastodon ${REAUTH}`);
   if (!res.ok) throw new Error(`Mastodon ${a} failed: ${res.status}`);
   return mastoPatch(a);
@@ -31,59 +23,22 @@ export const mastodon: SocialConnector = {
   authType: "oauth",
   connectedKey: "access_token",
   credentials: [{ key: "instance_url", label: "Instance URL (e.g. https://mastodon.social)" }],
-  async connect() {
-    const instanceUrl = await cred("mastodon", "instance_url").catch(() => {
-      throw new Error('enter your instance URL above first, then click "Connect"');
-    });
-    const base = instanceUrl.replace(/\/+$/, "");
-    const redirectUri = `http://127.0.0.1:${PORT}`;
-
-    const appRes = await fetch(`${base}/api/v1/apps`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ client_name: "Sentinel Hub", redirect_uris: redirectUri, scopes: SCOPE }),
-    });
-    if (!appRes.ok) throw new Error(`couldn't register with ${base}: ${appRes.status}`);
-    const app = (await appRes.json()) as { client_id: string; client_secret: string };
-
-    const authUrl = new URL(`${base}/oauth/authorize`);
-    authUrl.searchParams.set("client_id", app.client_id);
-    authUrl.searchParams.set("redirect_uri", redirectUri);
-    authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("scope", SCOPE);
-
-    const codePromise = invoke<string>("oauth_listen_once", { port: PORT, timeoutSecs: 120 });
-    await openUrl(authUrl.toString());
-    const code = await codePromise;
-
-    const tokenRes = await fetch(`${base}/oauth/token`, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        client_id: app.client_id,
-        client_secret: app.client_secret,
-        redirect_uri: redirectUri,
-        grant_type: "authorization_code",
-        code,
-        scope: SCOPE,
-      }).toString(),
-    });
-    if (!tokenRes.ok) throw new Error(`token exchange failed: ${tokenRes.status}`);
-    const tokens = (await tokenRes.json()) as { access_token: string };
-
-    await setCredential(MODULE_ID, "mastodon_instance_url", base);
-    await setCredential(MODULE_ID, "mastodon_access_token", tokens.access_token);
-  },
+  connect: connectMastodon,
+  isConnected: () => isConnected("mastodon"),
   async fetchFeed() {
-    const base = await cred("mastodon", "instance_url");
-    const token = await cred("mastodon", "access_token");
+    const { base, token } = await mastoAuth();
     const res = await fetch(`${base}/api/v1/timelines/home?limit=40`, { headers: { Authorization: `Bearer ${token}` } });
     if (!res.ok) throw new Error(`Mastodon fetch failed: ${res.status}`);
     return parseMastodon(await res.json());
   },
+  async fetchInbox() {
+    const { base, token } = await mastoAuth();
+    const res = await fetch(`${base}/api/v1/notifications?types[]=mention&limit=40`, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) throw new Error(`Mastodon notifications failed: ${res.status}`);
+    return parseMastoMentions(await res.json());
+  },
   async post(text) {
-    const base = await cred("mastodon", "instance_url");
-    const token = await cred("mastodon", "access_token");
+    const { base, token } = await mastoAuth();
     const res = await fetch(`${base}/api/v1/statuses`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -97,8 +52,7 @@ export const mastodon: SocialConnector = {
   share: (p) => act(p, "reblog"),
   unshare: (p) => act(p, "unreblog"),
   async reply(p, text) {
-    const base = await cred("mastodon", "instance_url");
-    const token = await cred("mastodon", "access_token");
+    const { base, token } = await mastoAuth();
     const res = await fetch(`${base}/api/v1/statuses`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

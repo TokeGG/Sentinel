@@ -7,6 +7,7 @@ type Row = Record<string, unknown>;
 
 /** Section declarations; Panel renders exactly these ids. */
 export const backupSections = [
+  { id: "health", label: "Backup health" },
   { id: "last", label: "Last backup" },
   { id: "snapshots", label: "Snapshots" },
   { id: "restore", label: "Restore" },

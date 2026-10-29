@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { filesearchSections, folderOf, nameOf, rootsOf, resultsOf, shortPath, shouldSearch } from "./panelLogic.ts";
+import { extOf, filesearchSections, folderOf, splitMatch, nameOf, rootsOf, resultsOf, shortPath, shouldSearch } from "./panelLogic.ts";
 
 describe("filesearch panelLogic", () => {
   it("shouldSearch needs 2+ non-space characters", () => {
@@ -48,5 +48,14 @@ describe("filesearch panelLogic", () => {
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
     const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
     assert.deepEqual(used, filesearchSections.map((s) => s.id).sort());
+  });
+  it("splitMatch and extOf", () => {
+    assert.deepEqual(splitMatch("Invoice-2026.pdf", "invoice"), ["", "Invoice", "-2026.pdf"]);
+    assert.deepEqual(splitMatch("a.txt", "zz"), ["a.txt", "", ""]);
+    assert.deepEqual(splitMatch("a.txt", " "), ["a.txt", "", ""]);
+    assert.equal(extOf("report.final.pdf"), "PDF");
+    assert.equal(extOf(".gitignore"), "");
+    assert.equal(extOf("Makefile"), "");
+    assert.equal(extOf("trailing."), "");
   });
 });

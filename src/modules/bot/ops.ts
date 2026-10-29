@@ -3,6 +3,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { save } from "@tauri-apps/plugin-dialog";
 import { fetch } from "@tauri-apps/plugin-http";
 import { exportText, importState, resetState, thumbsDownEpisode } from "./brainOps";
+import { LAB_CLASS } from "./brainSpecs";
 import { seededRng } from "./kernel/brain";
 import { htmlToText, makeNote } from "./knowledge";
 import { noteUrlOk } from "./panelLogic";
@@ -39,15 +40,18 @@ export async function rateRun(a: A) {
 }
 
 export async function exportBrain() {
-  const text = exportText(await store.loadLearnState());
+  const text = exportText(await store.loadLearnState(), await store.loadLearnState(LAB_CLASS));
   const path = await save({ defaultPath: "botbrain.json", filters: [{ name: "JSON", extensions: ["json"] }] });
   if (path) await invoke("write_text_file", { path, contents: text });
   return { ok: true, text, saved: path ?? null };
 }
+/** Imports the normal brain, and the Lab brain too when the file has a "lab" entry. */
 export async function importBrain(a: A) {
   const r = importState(str(a?.text), rng());
   if (!r.ok) throw new Error(r.error);
   await store.saveLearnState(r.state);
-  return { ok: true };
+  const l = importState(str(a?.text), rng(), LAB_CLASS);
+  if (l.ok) await store.saveLearnState(l.state, LAB_CLASS);
+  return { ok: true, lab: l.ok };
 }
 export async function resetBrain() { await store.saveLearnState(resetState(rng())); return { ok: true }; }

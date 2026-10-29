@@ -31,7 +31,7 @@ async function connectionStatus() {
       label: c.label,
       canPost: !!c.post,
       can: { like: !!c.like, share: !!c.share, reply: !!c.reply },
-      connected: c.connectedKey ? !!(await getCredential("hub.social", `${c.id}_${c.connectedKey}`).catch(() => null)) : false,
+      connected: c.isConnected ? await c.isConnected() : c.connectedKey ? !!(await getCredential("hub.social", `${c.id}_${c.connectedKey}`).catch(() => null)) : false,
     }))
   );
 }
@@ -70,11 +70,11 @@ const credentialFields = connectors.flatMap((c) =>
 export const socialModule: ModuleManifest = {
   id: "hub.social",
   name: "Social Media",
-  accent: "#ff7ab8",
+  accent: "#f57cb6",
   ring: "daily",
   icon: "social",
   description:
-    "One chronological feed across Bluesky, Mastodon and Reddit; post to Bluesky and Mastodon; like, boost and reply where the platform allows. X is not built (its API is paywalled).",
+    "Tabs: a chronological Feed across Bluesky, Mastodon and Reddit (post to Bluesky and Mastodon; like, boost and reply where allowed), lists, mutes and an inbox of mentions/replies (Bluesky, Mastodon), plus the real X, Facebook and Instagram sites with their own persistent logins.",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: { sections: socialSections, options: socialOptions },

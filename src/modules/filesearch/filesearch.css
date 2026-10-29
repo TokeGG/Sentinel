@@ -1,0 +1,29 @@
+/* Local File Search: command-bar search box, folder chips, result rows. Tokens only. */
+.fs-root { container-type: inline-size; display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.fs-root .ui-head { font-size: 1.05em; }
+.fs-root .ui-head .ui-count { background: var(--accent-soft); color: var(--accent-text); border-radius: 999px; padding: 1px 9px; }
+
+.fs-bar { display: flex; align-items: center; gap: var(--gap); background: var(--base); border: 1px solid var(--accent-line); border-radius: var(--radius); padding: 4px var(--pad); box-shadow: 0 0 0 3px var(--accent-soft); }
+.fs-bar:focus-within { border-color: var(--accent); }
+.fs-glyph { color: var(--accent-text); font-size: 1.5em; line-height: 1; transform: rotate(-90deg) scaleX(-1); }
+.fs-bar input::-webkit-search-cancel-button { filter: grayscale(1) opacity(0.6); cursor: pointer; }
+.fs-root .fs-bar input[type="search"] { flex: 1; min-width: 0; appearance: none; background: none; border: 0; border-radius: 0; box-shadow: none; outline: none; color: var(--text); font: inherit; font-size: 1.15em; padding: 6px 0; }
+.fs-root .fs-bar input::placeholder { color: var(--text-faint); }
+.fs-bar .fs-chip { flex: none; }
+
+.fs-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.fs-chip { font: inherit; font-size: 0.8em; font-family: var(--font-mono); color: var(--accent-text); background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 999px; padding: 2px 10px; white-space: nowrap; }
+.fs-chip.add { font-family: var(--font-body); color: var(--text-dim); background: none; border-style: dashed; cursor: pointer; }
+.fs-chip.add:hover:not(:disabled) { color: var(--text); background: var(--hover); }
+.fs-chip.add:disabled { opacity: 0.5; cursor: default; }
+.fs-hint { margin: 0; font-size: 0.78em; color: var(--text-faint); list-style: none; }
+
+.fs-results { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.fs-row { width: 100%; display: flex; align-items: center; gap: var(--pad); padding: 6px var(--pad); background: var(--surface); border: 1px solid transparent; border-radius: var(--r-sm); color: var(--text); font: inherit; text-align: left; cursor: pointer; }
+.fs-row:hover, .fs-row:focus-visible { background: var(--accent-soft); border-color: var(--accent-line); outline: none; }
+.fs-ext { flex: none; width: 40px; text-align: center; font: 700 0.68em var(--font-mono); letter-spacing: 0.04em; color: var(--accent-text); background: var(--accent-soft); border-radius: var(--r-sm); padding: 4px 0; }
+.fs-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.fs-file { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fs-file mark { background: none; color: var(--accent-text); font-weight: 700; }
+.fs-folder { font: 0.75em var(--font-mono); color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@container (min-width: 700px) { .fs-main { flex-direction: row; align-items: baseline; gap: var(--pad); } .fs-file { flex: 0 1 auto; } .fs-folder { margin-left: auto; } }

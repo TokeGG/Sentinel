@@ -15,7 +15,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const emailModule: ModuleManifest = {
   id: MODULE_ID,
   name: "Email",
-  accent: "#7fa6d6",
+  accent: "#06d8d9",
   ring: "daily",
   icon: "email",
   description: "IMAP/SMTP mail client. Passwords live only in the OS keychain. Nothing is fetched or sent unless you press a button (auto-refresh is opt-in).",

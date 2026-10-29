@@ -46,3 +46,10 @@ export function rowAge(r: Row): string {
   const s = [r.published_at, r.fetched_at, r.created_at].find((v) => typeof v === "string" && v);
   return typeof s === "string" ? ago(utcDate(s)) : "";
 }
+
+export type FeedSource = { id: number; url: string; label: string | null };
+
+/** Dropdown text for a stored feed: its label, else the host of its url. */
+export function feedChoiceLabel(s: FeedSource): string {
+  return s.label?.trim() || host(s.url) || s.url;
+}

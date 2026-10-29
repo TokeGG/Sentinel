@@ -15,7 +15,11 @@
         "label": "main",
         "title": "Sentinel",
         "width": 1280,
-        "height": 800
+        "height": 800,
+        "minWidth": 1000,
+        "minHeight": 600,
+        "resizable": true,
+        "decorations": false
       }
     ],
     "security": {

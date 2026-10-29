@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { detectRoom, parseDgg, parseEmbed, parseKick, parseTwitch } from "./rooms.ts";
+import { detectRoom, parseDgg, parseEmbed, parseKick, parseTwitch, parseYoutube, youtubeChatUrls } from "./rooms.ts";
 
 test("twitch: bare, url, popout, reserved", () => {
   assert.equal(parseTwitch("XQC")?.target, "xqc");
@@ -38,4 +38,23 @@ test("detectRoom auto: urls route to their site, bare names need a site", () => 
   assert.equal(detectRoom("xqc", "kick")?.site, "kick");
   assert.equal(detectRoom("https://twitch.tv/xqc", "embed")?.site, "embed");
   assert.equal(detectRoom("x", "nope"), null);
+});
+test("youtube: watch, youtu.be, live, live_chat urls and bare id", () => {
+  for (const u of ["https://www.youtube.com/watch?v=dQw4w9WgXcQ", "youtube.com/watch?feature=x&v=dQw4w9WgXcQ", "https://youtu.be/dQw4w9WgXcQ?t=5",
+    "https://www.youtube.com/live/dQw4w9WgXcQ", "https://m.youtube.com/live_chat?v=dQw4w9WgXcQ&is_popout=1", "dQw4w9WgXcQ"])
+    assert.deepEqual(parseYoutube(u), { site: "youtube", target: "dQw4w9WgXcQ", label: "youtube dQw4w9WgXcQ" }, u);
+  for (const bad of ["https://www.youtube.com/@chan", "https://www.youtube.com/watch?v=short", "https://www.youtube.com/watch", "http://youtu.be/dQw4w9WgXcQ",
+    "https://evil.com/watch?v=dQw4w9WgXcQ", "https://notyoutube.com/live/dQw4w9WgXcQ", "https://youtu.be/", "xqc"])
+    assert.equal(parseYoutube(bad), null, bad);
+});
+test("youtube chat urls: embed_domain is the host, popout is top-level", () => {
+  const u = youtubeChatUrls("dQw4w9WgXcQ", "tauri.localhost");
+  assert.equal(u.frame, "https://www.youtube.com/live_chat?v=dQw4w9WgXcQ&embed_domain=tauri.localhost");
+  assert.equal(u.panel, "https://www.youtube.com/live_chat?is_popout=1&v=dQw4w9WgXcQ");
+});
+test("detectRoom routes youtube urls before the embed catch-all", () => {
+  assert.equal(detectRoom("https://youtu.be/dQw4w9WgXcQ")?.site, "youtube");
+  assert.equal(detectRoom("https://www.youtube.com/@chan")?.site, "embed");
+  assert.equal(detectRoom("dQw4w9WgXcQ"), null);
+  assert.equal(detectRoom("dQw4w9WgXcQ", "youtube")?.target, "dQw4w9WgXcQ");
 });

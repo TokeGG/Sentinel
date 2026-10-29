@@ -10,6 +10,8 @@ import { START_URL } from "./panelLogic";
 export interface OpenOpts {
   brain: Brain;
   visible: boolean;
+  /** Lab mode opens an in-scope page instead of the default search page. */
+  startUrl?: string;
   runTool?(a: Extract<Action, { type: "tool" }>): Promise<string>;
   /** Every top-level navigation the window attempted (allowed or denied). */
   onNav?(url: string, allowed: boolean): void;
@@ -32,7 +34,7 @@ export async function openBrowserDriver(o: OpenOpts) {
   });
   let disposed = false;
   const dispose = () => { if (!disposed) { disposed = true; unlisten.forEach((f) => f()); } };
-  const first = await core.open(START_URL, o.visible);
+  const first = await core.open(o.startUrl ?? START_URL, o.visible);
   if (!first.ok) { await core.close(); dispose(); throw new Error(`could not open the bot browser: ${failureText(first)}`); }
   return { ...core, close: async () => { await core.close(); dispose(); } };
 }

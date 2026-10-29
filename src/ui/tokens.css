@@ -1,44 +1,63 @@
-/* Panel design tokens. The ONLY place literal colors live; the kit and
-   generic.css use these variables. --accent/--density/--font-scale/--tint are
-   overridden per panel by PanelShell (from prefs cssVars). Derived tokens are
-   re-declared on .panel-shell so they recompute from that panel's overrides. */
+/* Design system v2 tokens. The ONLY place literal colors live; the kit and
+   generic.css use these variables. --accent is set per panel (module accent,
+   or the saved view's accent via PanelShell/prefs cssVars); every accent
+   derivative (--accent-soft/-line/-text, --surface, --line) is re-declared on
+   .panel-shell so it recomputes from that panel's own colour.
+   Layers (dark): --base (window) < --raised (panel body, tinted) < --overlay
+   (cards, inputs, drawer). Keep --base in sync with BASE in ui/accents.test.ts. */
 @import "./generic.css";
 @import "./kit/kit.css";
 @import "./drawer/drawer.css";
 
 :root {
-  --accent: #396cd8;
+  --accent: #6ba630;
   --density: 1;
   --font-scale: 1;
   --tint: 0.5;
 
-  --base: #0a0f1f;
-  --base-2: #121a36;
-  --line-base: #26325e;
-  --text: #e4e9f7;
-  --text-dim: #9ea9cc;
+  --base: #0a0d16;
+  --raised: #10141f;
+  --overlay: #171c2a;
+  --base-2: var(--overlay); /* legacy alias */
+  --line-base: #232a3c;
+  --text: #e6eaf4;
+  --text-dim: #99a3bd;
+  --text-faint: #6a7490;
   --ok: #3ecf8e;
   --warn: #f2b33d;
   --bad: #ff6b6b;
   --white: #ffffff;
-  --on-accent-dark: #0a0f1f; /* keep in sync with DARK_TEXT in kit/format.ts */
+  --on-accent-dark: #0a0d16; /* keep in sync with DARK_TEXT in kit/format.ts */
   --on-accent-light: #ffffff;
   --on-accent: var(--on-accent-light);
   --shadow: rgba(0, 0, 0, 0.45);
+  --hover: rgba(255, 255, 255, 0.05);
+  --press: rgba(255, 255, 255, 0.09);
 
-  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, sans-serif;
-  --font-body: "Segoe UI", system-ui, sans-serif;
+  /* 8px spacing scale */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 16px; --sp-4: 24px; --sp-5: 32px;
+  /* radii */
+  --r-sm: 6px; --radius: 8px; --r-lg: 8px;
+  /* type scale */
+  --fs-xs: 11px; --fs-sm: 12.5px; --fs-md: 14px; --fs-lg: 16px; --fs-xl: 20px;
+  --font-display: "Segoe UI Variable Display", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-body: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: "Cascadia Mono", Consolas, ui-monospace, monospace;
-  --radius: 8px;
+  /* elevation */
+  --elev-1: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --elev-2: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  --titlebar-h: 32px; /* keep in sync with TITLEBAR_H in shell/layout.ts */
+  --chrome-h: 24px; /* keep in sync with CHROME_H in panels/geometry.rs */
 }
 
 :root,
 .panel-shell {
-  --surface: color-mix(in srgb, var(--accent) calc(var(--tint) * 10%), var(--base));
-  --surface-2: color-mix(in srgb, var(--accent) calc(var(--tint) * 14%), var(--base-2));
-  --line: color-mix(in srgb, var(--accent) calc(var(--tint) * 30%), var(--line-base));
-  --accent-text: color-mix(in srgb, var(--accent) 55%, var(--white));
-  --accent-soft: color-mix(in srgb, var(--accent) 22%, transparent);
+  --surface: color-mix(in srgb, var(--accent) calc(var(--tint) * 26%), var(--raised));
+  --surface-2: color-mix(in srgb, var(--accent) calc(var(--tint) * 30%), var(--overlay));
+  --line: color-mix(in srgb, var(--accent) calc(var(--tint) * 24%), var(--line-base));
+  --accent-text: color-mix(in srgb, var(--accent) 60%, var(--white));
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 42%, transparent);
   --ok-soft: color-mix(in srgb, var(--ok) 16%, transparent);
   --warn-soft: color-mix(in srgb, var(--warn) 16%, transparent);
   --bad-soft: color-mix(in srgb, var(--bad) 16%, transparent);
@@ -46,3 +65,11 @@
   --pad: calc(12px * var(--density));
   --focus: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent-text);
 }
+
+/* Slim scrollbars everywhere (WebView2 = Chromium). */
+* { scrollbar-width: thin; scrollbar-color: rgba(255, 255, 255, 0.16) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.14); border-radius: 8px; border: 3px solid transparent; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-line); background-clip: content-box; }
+::selection { background: var(--accent-line); }

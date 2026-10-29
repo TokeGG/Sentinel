@@ -9,7 +9,6 @@ export const MAX = 150;
 // Files still over the limit today; each is scheduled for its own split.
 // Remove an entry when its file is split. Do NOT add new ones.
 const ALLOW = [
-  "src/modules/finance/index.ts", // scheduled for its own split (finance)
 ];
 
 export function countLines(path, text) {

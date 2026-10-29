@@ -1,9 +1,12 @@
 import { useState } from "react";
 import type { ModuleManifest } from "../../core/module";
-import { EmptyState, ErrorLine, Row, Tile } from "../../ui/kit";
+import { EmptyState, ErrorLine, Tile } from "../../ui/kit";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
+import "./backup.css";
 import { snapshotsOf, whenText } from "./panelLogic";
+import { HealthCard } from "./HealthCard";
 
 // Where the user is asked to confirm a restore. dir === null means "pick a
 // folder in the dialog" (exactly what the generic action did); a string is a
@@ -21,7 +24,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const backupHome = ["last", "restore", "snapshots", "notice"].find((id) => ids.includes(id));
   const restoreHome = ["restore", "snapshots", "notice"].find((id) => ids.includes(id));
   const backupAndRestore = (home: string) => (
-    <div className="ui-actions">
+    <div className="bk-acts">
       {backupHome === home && backupBtn}
       {restoreHome === home && (
         <button type="button" className="ui-btn" disabled={busy} onClick={() => setPending({ dir: null, from: home as Pending["from"] })}>
@@ -45,7 +48,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             ? "This overwrites Sentinel's current data. Restart the app afterwards."
             : "The folder you choose next will be restored immediately and replaces Sentinel's current data. This cannot be undone."}
         </div>
-        <div className="ui-actions">
+        <div className="bk-acts">
           <button
             type="button"
             className="ui-btn primary"
@@ -65,25 +68,29 @@ export default function Panel({ module }: { module: ModuleManifest }) {
     );
 
   return (
-    <>
+    <div className="bk-root">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
       </h2>
       {error && <ErrorLine message={error} />}
       <Sections>
+        <Section id="health"><HealthCard snaps={snaps} /></Section>
         <Section id="last">
-          <Tile title="Last backup">
-            {lastSnap ? (
-              <p className="ui-big">
-                {whenText(lastSnap.when)} <span className="ui-meta">· size not recorded</span>
-              </p>
-            ) : (
-              <EmptyState title="No backup made in this session" hint="Backup history is kept only until the app closes." />
-            )}
-            {lastSnap && <div className="ui-meta ui-path">{lastSnap.path}</div>}
-            {backupHome === "last" && <div className="ui-actions">{backupBtn}</div>}
-          </Tile>
+          <div className="bk-hero">
+            <div className="bk-hero-main">
+              <span className="bk-label">Last backup</span>
+              {lastSnap ? (
+                <>
+                  <p className="bk-big">{whenText(lastSnap.when)}</p>
+                  <div className="bk-path" title={lastSnap.path}>{lastSnap.path}</div>
+                </>
+              ) : (
+                <EmptyState title="No backup made in this session" hint="Backup history is kept only until the app closes." />
+              )}
+            </div>
+            {backupHome === "last" && <div className="bk-acts">{backupBtn}</div>}
+          </div>
         </Section>
         <Section id="snapshots">
           <Tile title="Snapshots this session">
@@ -91,21 +98,20 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             {snaps.length === 0 ? (
               <EmptyState title="No snapshots yet" />
             ) : (
-              <div className="ui-list">
-                {snaps.map((s) => (
-                  <Row
-                    key={s.path}
-                    end={
-                      <button type="button" className="ui-btn" disabled={busy} onClick={() => setPending({ dir: s.path, from: "snapshots" })}>
-                        Restore…
-                      </button>
-                    }
-                  >
-                    <span className="ui-link" title={s.path}>{s.name}</span>
-                    <span className="ui-meta"> {whenText(s.when)}</span>
-                  </Row>
+              <ol className="bk-line">
+                {snaps.map((s, i) => (
+                  <li key={s.path} className={`bk-snap${i === 0 ? " latest" : ""}`}>
+                    <div className="bk-snap-main">
+                      <span className="bk-when">{whenText(s.when)}</span>
+                      <span className="bk-name" title={s.path}>{s.name}</span>
+                    </div>
+                    <button type="button" className="ui-btn sm" disabled={busy} onClick={() => setPending({ dir: s.path, from: "snapshots" })}>
+                      Restore…
+                    </button>
+                    <ConfirmButton label="Delete" className="ui-btn sm" disabled={busy} title="Deletes this snapshot's files" onConfirm={() => void run("delete_backup", { dir: s.path })} />
+                  </li>
                 ))}
-              </div>
+              </ol>
             )}
             {confirmBar("snapshots")}
           </Tile>
@@ -122,12 +128,12 @@ export default function Panel({ module }: { module: ModuleManifest }) {
               <strong>Restored.</strong> Restart Sentinel to see the restored data take effect.
             </div>
           ) : (
-            <p className="ui-meta">After a restore, a restart reminder appears here.</p>
+            <p className="ui-meta bk-note">After a restore, a restart reminder appears here.</p>
           )}
           {backupAndRestore("notice")}
           {confirmBar("notice")}
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

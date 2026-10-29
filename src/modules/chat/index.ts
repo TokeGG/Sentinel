@@ -7,10 +7,10 @@ import { addRoom, loadRooms, moveRoom, pinRoom, removeRoom } from "./store";
 export const chatModule: ModuleManifest = {
   id: "hub.chat",
   name: "Chat",
-  accent: "#c26bff",
+  accent: "#c28efb",
   ring: "media",
   icon: "chat",
-  description: "Twitch, Kick and destiny.gg chat in tabs or columns, with 7TV/BTTV/FFZ emotes; any other site as an embed.",
+  description: "Twitch, Kick and destiny.gg chat in tabs or columns, with 7TV/BTTV/FFZ emotes; YouTube live chat and any other site as an embed.",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: { sections: chatSections, options: chatOptions },

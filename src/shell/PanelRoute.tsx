@@ -13,8 +13,20 @@ import { PanelContext, useCustomize } from "../ui/useCustomize";
 import type { PanelStatus } from "../ui/Section";
 import { errorText } from "../ui/moduleRun";
 import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
-import { SETTINGS_ID } from "./panelApi";
+import { MASTER_ID, SETTINGS_ID } from "./panelApi";
+import { MasterHub } from "./MasterHub";
 import { SettingsPanel } from "./SettingsPanel";
+import { BRIEFING_ID, CAPTURE_ID, HELP_ID, PALETTE_ID } from "./desk/ids";
+import { Palette } from "./desk/Palette";
+import { Briefing } from "./desk/Briefing";
+import { HelpPanel } from "./desk/HelpPanel";
+import { CaptureBox } from "./desk/CaptureBox";
+import { useAppKeys } from "./desk/useAppKeys";
+
+const SPECIAL: Record<string, ComponentType> = {
+  [SETTINGS_ID]: SettingsPanel, [MASTER_ID]: MasterHub, [PALETTE_ID]: Palette,
+  [BRIEFING_ID]: Briefing, [HELP_ID]: HelpPanel, [CAPTURE_ID]: CaptureBox,
+};
 
 export function panelIdFromHash(hash: string): string | null {
   return hash.startsWith("#/panel/") ? decodeURIComponent(hash.slice("#/panel/".length)) : null;
@@ -36,10 +48,12 @@ function customBody(m: ModuleManifest): Body {
 }
 
 export function PanelRoute({ id }: { id: string }) {
-  if (id === SETTINGS_ID) {
+  useAppKeys(); // Ctrl+K etc. work inside panels too (forwarded to the main window)
+  const Special = SPECIAL[id];
+  if (Special) {
     return (
       <PanelShell className="panel-route">
-        <SettingsPanel />
+        <Special />
       </PanelShell>
     );
   }

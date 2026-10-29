@@ -1,7 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildSlots, makeScene, stepScene, placeScene, fitView, planetRadius, planetTime, OUTER_EXTENT, RING_PHASE } from "./mapLayout.ts";
-import { orbitPos, EASE_MS, RING_RADIUS, RING_PERIOD_S } from "./orbit.ts";
+import { buildSlots, makeScene, stepScene, fitView, planetRadius, planetTime, RING_PHASE } from "./mapLayout.ts";
+import { placeScene } from "./place3d.ts";
+import { EASE_MS, RING_RADIUS, RING_PERIOD_S } from "./orbit.ts";
 import { hitTest, SUN } from "./mapHit.ts";
 import type { ModuleManifest } from "../core/module.ts";
 
@@ -123,29 +124,43 @@ test("rings start phase-shifted so the index-0 planets do not line up", () => {
     for (let j = i + 1; j < 4; j++) assert.ok(Math.abs(ang[i] - ang[j]) > 0.3, `rings ${i} and ${j} aligned`);
 });
 
-test("placeScene writes current orbit positions in screen space; hitTest uses them", () => {
+test("placeScene puts the sun at the view origin and gives planets screen position, depth and radius; hitTest uses them", () => {
   const sc = makeScene(buildSlots(mods));
-  sc.orbitT = 300; // a quarter turn of the security ring
-  const view = { tx: 640, ty: 420, scale: 0.5 };
+  sc.orbitT = 300;
+  const view = { tx: 640, ty: 420, scale: 0.5 }, n = sc.slots.length;
   placeScene(sc, view);
-  const w = orbitPos("security", 0, 1, planetTime(sc, 3), 1, { x: 0, y: 0 });
-  close(sc.sx[3], 640 + w.x * 0.5);
-  close(sc.sy[3], 420 + w.y * 0.5);
-  const r = planetRadius(view.scale);
-  assert.equal(hitTest(sc, sc.sx[3] + r * 0.5, sc.sy[3], r), 3);
-  const old = orbitPos("security", 0, 1, RING_PHASE.security * RING_PERIOD_S.security, 1, { x: 0, y: 0 });
-  assert.equal(hitTest(sc, 640 + old.x * 0.5, 420 + old.y * 0.5, r), -1); // where it was at t=0
-  assert.equal(hitTest(sc, 641, 421, r), SUN);
-  assert.equal(hitTest(sc, 5, 5, r), -1);
+  assert.equal(sc.sx[n], 640);
+  assert.equal(sc.sy[n], 420);
+  assert.equal(sc.sz[n], 0);
+  assert.ok(sc.rad[3] > 0 && sc.rad[3] < sc.rad[0], "outer bodies are smaller");
+  assert.equal(hitTest(sc, sc.sx[3] + sc.rad[3] * 0.5, sc.sy[3]), 3);
+  assert.equal(hitTest(sc, 640, 420), SUN);
+  assert.equal(hitTest(sc, 5, 5), -1);
+  sc.orbitT = 0;
+  const x = sc.sx[3];
+  placeScene(sc, view);
+  assert.notEqual(sc.sx[3], x); // moved with the clock: hit-test follows
 });
 
-test("fitView shows the whole outer ring with labels in a 1280x800 window", () => {
+test("order is far -> near by depth and includes the sun", () => {
+  const sc = makeScene(buildSlots(mods));
+  placeScene(sc, { tx: 0, ty: 0, scale: 1 });
+  const ds = Array.from(sc.order, (i) => sc.sz[i]);
+  assert.equal(sc.order.length, 5);
+  for (let i = 1; i < ds.length; i++) assert.ok(ds[i - 1] >= ds[i]);
+  assert.ok(Array.from(sc.order).includes(4));
+});
+
+test("fitView keeps the projected outer ring inside the window", () => {
   for (const [w, h] of [[1280, 800], [900, 600], [1920, 1080]]) {
-    const v = fitView(w, h);
-    const ext = OUTER_EXTENT * v.scale + planetRadius(v.scale) + 24;
-    assert.ok(v.tx - ext >= 0 && v.tx + ext <= w, `x ${w}x${h}`);
-    assert.ok(v.ty - ext >= 40 && v.ty + ext <= h, `y ${w}x${h}`);
-    assert.ok(planetRadius(v.scale) >= 14);
+    const v = fitView(w, h), sc = makeScene(buildSlots([m("hub.a", "security")]));
+    assert.ok(v.scale > 0);
+    for (let k = 0; k < 12; k++) {
+      sc.orbitT = (k * RING_PERIOD_S.security) / 12;
+      placeScene(sc, v);
+      assert.ok(sc.sx[0] >= 0 && sc.sx[0] <= w && sc.sy[0] >= 40 && sc.sy[0] <= h, `${w}x${h} k=${k}: ${sc.sx[0]},${sc.sy[0]}`);
+    }
   }
   assert.deepEqual(fitView(0, 0).scale > 0, true);
+  assert.ok(RING_RADIUS.security > 0 && planetRadius(1) >= 14);
 });

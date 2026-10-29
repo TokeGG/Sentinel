@@ -2,12 +2,29 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "Capability for the main window",
-  "windows": ["main"],
-  "webviews": ["panel-*", "chrome-*"],
+  "windows": [
+    "main"
+  ],
+  "webviews": [
+    "panel-*",
+    "chrome-*",
+    "grip-*"
+  ],
   "permissions": [
     "core:default",
     "core:webview:allow-set-webview-focus",
+    "core:window:allow-minimize",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-toggle-maximize",
+    "core:window:allow-close",
+    "core:window:allow-start-dragging",
+    "core:window:allow-is-maximized",
     "opener:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "steam://rungameid/*" }, { "url": "com.epicgames.launcher://apps/*" }]
+    },
     "dialog:default",
     "clipboard-manager:default",
     "updater:default",
@@ -16,9 +33,26 @@
     "sql:allow-load",
     "sql:allow-execute",
     "sql:allow-select",
+    "core:window:allow-show",
+    "core:window:allow-hide",
+    "core:window:allow-set-focus",
+    "core:window:allow-unminimize",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-set-position",
+    "core:window:allow-set-size",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
     {
       "identifier": "http:default",
-      "allow": [{ "url": "https://*" }, { "url": "http://*" }]
+      "allow": [
+        {
+          "url": "https://*"
+        },
+        {
+          "url": "http://*"
+        }
+      ]
     }
   ]
 }

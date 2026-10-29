@@ -55,3 +55,11 @@ export function splitRows(rows: Row[]): { launch: Launcher[]; clips: Clip[] } {
 export function dedupeConsecutive<T extends { text: string }>(clips: T[]): T[] {
   return clips.filter((c, i) => i === 0 || c.text !== clips[i - 1].text);
 }
+
+/** Pinned clips first; order inside each group is kept. */
+export function pinFirst<T extends { id: string }>(clips: T[], pinned: ReadonlySet<string>): T[] {
+  return [...clips.filter((c) => pinned.has(c.id)), ...clips.filter((c) => !pinned.has(c.id))];
+}
+
+/** Ids of rows the DB marks pinned (clip_pins). */
+export const pinnedIds = (rows: Row[]): Set<string> => new Set(rows.filter((r) => r.pinned === true || r.pinned === 1).map((r) => String(r.id)));

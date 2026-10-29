@@ -12,7 +12,11 @@ pub struct MailAcct {
     /// "ssl" (implicit TLS, e.g. 993) or "starttls" (e.g. 143). Never plaintext.
     pub tls: String,
     pub username: String,
+    /// Password / app password, or (auth = "xoauth2") a fresh OAuth access token.
     pub password: String,
+    /// "" / "password" = LOGIN; "xoauth2" = AUTHENTICATE XOAUTH2.
+    #[serde(default)]
+    pub auth: String,
 }
 
 pub type Sess = imap::Session<native_tls::TlsStream<TcpStream>>;
@@ -26,6 +30,10 @@ pub fn connect(a: &MailAcct) -> Result<Sess, String> {
         imap::connect(addr, &a.host, &tls)
     }
     .map_err(|e| e.to_string())?;
+    if a.auth == "xoauth2" {
+        let x = super::mail_xoauth::XOAuth2::new(&a.username, &a.password);
+        return client.authenticate("XOAUTH2", &x).map_err(|e| e.0.to_string());
+    }
     client.login(&a.username, &a.password).map_err(|e| e.0.to_string())
 }
 

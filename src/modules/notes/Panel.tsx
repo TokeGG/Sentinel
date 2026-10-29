@@ -1,71 +1,70 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
-import { Chip, EmptyState, ErrorLine, Row, Tile } from "../../ui/kit";
+import { Chip, EmptyState, ErrorLine, Row } from "../../ui/kit";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { QuickAdd } from "../../ui/QuickAdd";
+import { useSectionTabs } from "../../ui/SectionTabs";
 import { Section, Sections } from "../../ui/useCustomize";
-import { useModule, type ModuleState } from "../../ui/useModule";
-import { rowAge } from "../news/panelLogic";
-import { splitFiled } from "./panelLogic";
-
-const TARGETS = ["Work", "Ideas", "Later"];
-
-function NoteTile({ note, busy, run }: { note: Record<string, unknown>; busy: boolean; run: ModuleState["run"] }) {
-  const [text, setText] = useState("");
-  const file = (to: string) => to.trim() && void run("file_note", { id: note.id, filed_to: to.trim() });
-  return (
-    <Tile>
-      <p className="ui-tile-body">{String(note.body)}</p>
-      <div className="ui-tile-foot">
-        <span className="ui-meta">{rowAge(note)}</span>
-        {TARGETS.map((t) => (
-          <button key={t} type="button" className="kit-chip" disabled={busy} onClick={() => file(t)}>{t}</button>
-        ))}
-        <input
-          className="ui-file-text"
-          value={text}
-          placeholder="file to…"
-          disabled={busy}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && file(text)}
-        />
-      </div>
-    </Tile>
-  );
-}
+import { useModule } from "../../ui/useModule";
+import { CardsTab } from "./CardsTab";
+import { ClipTab } from "./ClipTab";
+import { GraphTab } from "./GraphTab";
+import { JournalTab, useDailyNote } from "./JournalTab";
+import { NotebookTab } from "./NotebookTab";
+import { NoteTile } from "./NoteTile";
+import { SnippetsTab } from "./SnippetsTab";
+import { VaultTab } from "./VaultTab";
+import { NOTES_TABS, splitFiled } from "./panelLogic";
+import { useNotes } from "./useNotes";
+import "./notes.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
-  const { rows, busy, error, run } = useModule(module);
+  const { rows, busy, error, run, refresh } = useModule(module);
   const { unfiled, filed } = splitFiled(rows);
+  const store = useNotes();
+  const [tab, bar, setTab] = useSectionTabs(NOTES_TABS);
+  const [openId, setOpenId] = useState<number | null>(null);
+  useDailyNote(store);
+  useEffect(() => { void store.reload(); }, [tab]); // eslint-disable-line react-hooks/exhaustive-deps
+  const open = (id: number) => { void store.reload(); void refresh(); setOpenId(id); setTab("notebook"); };
   return (
-    <>
+    <div className="nt">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
-        <span className="ui-count">{unfiled.length} unfiled</span>
+        <span className="nt-pill">{unfiled.length} unfiled</span>
       </h2>
-      <Sections>
-        <Section id="capture"><QuickAdd module={module} busy={busy} run={run} /></Section>
-        <Section id="inbox">
+      {bar}
+      <Sections className={tab === "inbox" ? "nt-grid" : "nt-tab"}>
+        {tab === "inbox" && <Section id="capture"><QuickAdd module={module} busy={busy} run={run} /></Section>}
+        {tab === "inbox" && <Section id="inbox">
           {error && <ErrorLine message={error} />}
           {unfiled.length ? (
-            <div className="ui-tiles">
+            <div className="nt-list">
               {unfiled.map((n) => <NoteTile key={String(n.id)} note={n} busy={busy} run={run} />)}
             </div>
           ) : (
             <EmptyState title="Inbox is clear" hint="Capture a note above." />
           )}
-        </Section>
-        <Section id="filed">
+        </Section>}
+        {tab === "inbox" && <Section id="filed">
           <div className="ui-chips"><Chip on>{filed.length} filed</Chip></div>
-          <div className="ui-list">
+          <div className="nt-filed">
             {filed.map((n) => (
-              <Row key={String(n.id)} end={<span className="ui-src">{String(n.filed_to)}</span>}>
-                <span className="ui-link">{String(n.body)}</span>
+              <Row key={String(n.id)} end={<><span className="nt-tag">{String(n.filed_to)}</span><ConfirmButton label="Delete" className="ui-btn ui-sm" disabled={busy} onConfirm={() => void run("delete_note", { id: n.id })} /></>}>
+                <button type="button" className="ui-link" onClick={() => open(Number(n.id))}>{String(n.body)}</button>
               </Row>
             ))}
           </div>
-        </Section>
+        </Section>}
+        {tab === "notebook" && <Section id="editor"><NotebookTab store={store} openId={openId} setOpenId={setOpenId} /></Section>}
+        {tab === "journal" && <Section id="journal"><JournalTab store={store} open={open} /></Section>}
+        {tab === "graph" && <Section id="graph"><GraphTab notes={store.data} open={open} /></Section>}
+        {tab === "cards" && <Section id="cards"><CardsTab /></Section>}
+        {tab === "snippets" && <Section id="snippets"><SnippetsTab /></Section>}
+        {tab === "vault" && <Section id="vault"><VaultTab /></Section>}
+        {tab === "clip" && <Section id="clipper"><ClipTab onSaved={open} /></Section>}
       </Sections>
-    </>
+    </div>
   );
 }

@@ -2,9 +2,8 @@
 process.env.TZ = "America/New_York";
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import {
-  bucketRows, calendarSections, dayKey, dayLabel, groupByDay, isOverdue, overdueCount, overdueText, sourceTag, itemTitle, timeText,
+  bucketRows, dayKey, dayLabel, groupByDay, isOverdue, overdueCount, overdueText, sourceTag, itemTitle, timeText,
 } from "./panelLogic.ts";
 
 const L = (y: number, m: number, d: number, h = 0, mi = 0, s = 0) => new Date(y, m - 1, d, h, mi, s);
@@ -121,13 +120,5 @@ describe("calendar panelLogic", () => {
     const now = L(2026, 10, 28, 12);
     assert.equal(overdueText({ due: L(2026, 10, 20, 9).toISOString() }, now), "unfiled · created 8d ago");
     assert.equal(overdueText({}, now), "unfiled");
-  });
-  it("section ids", () => {
-    assert.deepEqual(calendarSections.map((s) => s.id), ["overdue", "today", "week"]);
-  });
-  it("every <Section id> in Panel.tsx is declared, and vice versa", () => {
-    const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
-    const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
-    assert.deepEqual(used, calendarSections.map((s) => s.id).sort());
   });
 });

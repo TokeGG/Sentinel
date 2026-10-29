@@ -1,5 +1,6 @@
 mod bot;
 mod commands;
+mod desktop;
 mod migrations;
 mod gamemode;
 mod panels;
@@ -14,8 +15,12 @@ pub fn run() {
         .manage(Mcp::default())
         .manage(bot::BotBrowser::default())
         .manage(gamemode::GameMode::default())
+        .manage(desktop::hotkeys::Hotkeys::default())
         .setup(|app| {
             gamemode::start_poll(app.handle().clone());
+            if let Err(e) = desktop::tray::create(app.handle()) {
+                eprintln!("tray icon unavailable: {e}");
+            }
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())
@@ -24,6 +29,9 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
+        .plugin(desktop::hotkeys::plugin())
+        // Start with Windows: registered only when the user enables it in Settings (off by default).
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations("sqlite:sentinel.db", migrations::all())
@@ -33,6 +41,9 @@ pub fn run() {
             get_pc_metrics,
             get_network_devices,
             clone_repo,
+            project_info,
+            open_cloned,
+            delete_cloned_dir,
             oauth_listen_once,
             mail_list_folders,
             mail_fetch_headers,
@@ -41,12 +52,47 @@ pub fn run() {
             mail_move,
             mail_delete,
             mail_send,
+            mail_fetch_attachment,
+            mail_save_attachment,
+            mail_append_draft,
             backup_database,
+            delete_backup,
             restore_database,
             tcp_port_scan,
+            tcp_banner_grab,
+            dns_lookup,
+            web_check,
             write_text_file,
             preview_temp_cleanup,
             apply_temp_cleanup,
+            scan_folder,
+            hash_file,
+            find_duplicates,
+            trash_files,
+            kill_process,
+            list_processes,
+            list_sensors,
+            power_plans,
+            set_power_plan,
+            list_startup,
+            set_startup_enabled,
+            pending_updates,
+            permission_audit,
+            wifi_report,
+            listening_ports,
+            apply_moves,
+            list_dir_files,
+            browser_caches,
+            clear_browser_cache,
+            default_gateway,
+            ping_hosts,
+            wake_on_lan,
+            git_status,
+            scan_secrets,
+            game_manifests,
+            steam_app_manifests,
+            read_image_data,
+            now_playing,
             search_files,
             set_credential,
             get_credential,
@@ -64,6 +110,8 @@ pub fn run() {
             move_panel,
             resize_panel,
             focus_panel,
+            panels::embed::embed_show,
+            panels::embed::embed_hide,
             get_panel,
             toggle_full_window,
             restore_layout,
@@ -73,7 +121,10 @@ pub fn run() {
             bot::bot_show,
             bot::bot_close,
             gamemode::set_game_mode,
-            gamemode::set_game_mode_auto
+            gamemode::set_game_mode_auto,
+            desktop::tray::set_tray_unread,
+            desktop::hotkeys::set_hotkeys,
+            desktop::io::read_text_file
         ])
         .build(tauri::generate_context!())
         .expect("error while building tauri application")

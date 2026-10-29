@@ -23,8 +23,10 @@ export function toWatchRow(r: WatchRow): Record<string, unknown> {
     id: `w-${r.id}`,
     title: `${r.symbol.toUpperCase()} (${r.kind}): ${r.last_price != null ? `$${r.last_price.toFixed(2)}` : "—"}`,
     kind: "watch",
+    dbId: r.id,
     symbol: r.symbol,
     asset: r.kind,
+    group: typeof r.grp === "string" ? r.grp : "",
     price: r.last_price,
     last_checked: r.last_checked,
   };

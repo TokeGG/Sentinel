@@ -1,10 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
 import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { fetch } from "@tauri-apps/plugin-http";
-import { getDb, logActivity } from "../../core/db";
-import { getCredential } from "../../core/credentials";
+import { logActivity } from "../../core/db";
+import { authHeaders } from "./auth";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { clonedUrls, recordClone } from "./clones";
 import { githubSections } from "./panelLogic";
+import { failingCount } from "./devLogic";
+import { lastCi } from "./ghApi";
 
 const MODULE_ID = "hub.github";
 const API = "https://api.github.com";
@@ -17,10 +20,6 @@ interface RepoHit extends Record<string, unknown> {
   language?: string | null;
 }
 
-async function authHeaders(): Promise<Record<string, string>> {
-  const token = await getCredential(MODULE_ID, "pat");
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
 
 let lastResults: RepoHit[] = [];
 let lastSource: "trending" | "starred" = "trending"; // which fetch filled lastResults (panel tabs)
@@ -56,7 +55,7 @@ async function fetchStarred() {
   return { ok: true, count: lastResults.length };
 }
 
-// "Install" = clone to a folder you pick. Never executed automatically —
+// "Install" = clone into a folder you pick (git creates <folder>/<repo>). Never executed automatically —
 // see the plan doc's GitHub Discovery section for why that line is firm.
 async function cloneRepo(args?: Record<string, unknown>) {
   const url = String(args?.url ?? "");
@@ -66,10 +65,16 @@ async function cloneRepo(args?: Record<string, unknown>) {
   if (!dir || Array.isArray(dir)) return { ok: false, cancelled: true };
 
   const destDir = await invoke<string>("clone_repo", { url, destDir: dir });
-  const d = await getDb();
-  await d.execute("INSERT INTO cloned_repos (repo, dest_dir) VALUES ($1, $2)", [url, destDir]);
+  await recordClone(url, destDir);
   await logActivity("github", "clone_repo", url, `cloned to ${destDir}`);
   return { ok: true, destDir };
+}
+
+// Drops a repo from the current results list (they are not stored; the list returns on the next fetch).
+async function dismissRepo(args?: Record<string, unknown>) {
+  const name = String(args?.name ?? "");
+  lastResults = lastResults.filter((r) => r.full_name !== name);
+  return { ok: true };
 }
 
 // Extra fields beyond id/title/link/label (kept for the generic list) feed the
@@ -78,8 +83,7 @@ async function cloneRepo(args?: Record<string, unknown>) {
 async function loadRows(): Promise<Record<string, unknown>[]> {
   let cloned = new Set<string>();
   try {
-    const d = await getDb();
-    cloned = new Set((await d.select<{ repo: string }[]>("SELECT repo FROM cloned_repos")).map((r) => r.repo));
+    cloned = await clonedUrls();
   } catch {
     // the list still works without the "cloned" marker
   }
@@ -100,20 +104,23 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const githubModule: ModuleManifest = {
   id: MODULE_ID,
   name: "GitHub Discovery",
-  accent: "#b18cff",
+  accent: "#bd6ece",
   ring: "security",
   icon: "github",
   description:
     "Browse trending/starred repos. \"Install\" clones to a folder you pick — never auto-run.",
   panel: "custom",
   ui: () => import("./Panel"),
-  customize: { sections: githubSections },
+  customize: { sections: githubSections, options: [{ key: "taste", label: "For you ordering", type: "toggle", default: true }] },
   skills: [
     { name: "fetch_trending", run: fetchTrending },
     { name: "fetch_starred", run: fetchStarred },
     { name: "clone_repo", run: cloneRepo },
+    { name: "dismiss_repo", run: dismissRepo },
   ],
   load: loadRows,
+  // Failing CI runs from the last manual "Check CI" (in memory; no background calls).
+  badge: async () => failingCount(lastCi()),
   actions: [
     { label: "Trending", skill: "fetch_trending" },
     { label: "My Starred", skill: "fetch_starred" },

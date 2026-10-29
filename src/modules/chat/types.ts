@@ -18,7 +18,12 @@ export interface Message extends Incoming { id: string; deleted?: boolean }
 
 export type Status = "connecting" | "open" | "closed" | "error";
 
+/** Per-room state for the tab dot; "embed" = showing the embed (by choice or fallback). */
+export interface RoomState { status: Status | "embed"; detail?: string }
+
 export interface Handlers {
+  /** Connection-log line (never a secret). */
+  log?(line: string): void;
   onMessage(m: Incoming): void;
   onStatus(s: Status, detail?: string): void;
   /** Twitch room-id etc., used to load channel emote sets. */
@@ -47,5 +52,9 @@ export interface Connector {
   parseRoom(input: string): RoomRef | null;
   /** Absent for `embed`: the site renders its own chat in an iframe. */
   connect?(room: RoomRef, h: Handlers): Promise<Connection>;
+  /** Embed-only sites whose room target is not itself a URL: iframe src and own-panel URL. */
+  urls?(room: RoomRef, host: string): { frame: string; panel: string };
+  /** Popout/embed URL to show when the socket connection cannot be made. */
+  embedFallback?(room: RoomRef): string;
   auth?: { credentialKey: string; help: string };
 }

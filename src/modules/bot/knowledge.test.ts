@@ -96,6 +96,6 @@ test("learnFromEpisode: credits the variant, adds a capped lesson variant, drift
   assert.ok(la.waitAfterAction.weight >= 96 && la.loopPatience);
   const lesson = a.pop.variants.find((v) => v.id.startsWith("l"));
   assert.ok(lesson, "a lesson variant joined");
-  assert.ok(lesson.brain.waitAfterAction > 900 && lesson.brain.waitAfterAction <= 900 + 0.2 * 4800 + 1e-6);
+  assert.ok(lesson.brain.waitAfterAction > 1100 && lesson.brain.waitAfterAction <= 1100 + 0.2 * 4800 + 1e-6);
   assert.equal(a.pop.variants.length, 6);
 });

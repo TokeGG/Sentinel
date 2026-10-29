@@ -3,9 +3,11 @@ import { invoke } from "@tauri-apps/api/core";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Action, Observation } from "./actions";
 import { pushLog, type LogEntry } from "./logging";
-import { runBot, type RunResult } from "./runner";
+import { runBot, type LabHooks, type RunResult } from "./runner";
+import type { Workflow } from "./workflow";
 
-export interface ConfirmReq { action: Action; obs: Observation; answer(ok: boolean): void }
+export interface ConfirmReq { action: Action; obs: Observation; answer(ok: boolean): void; /** Step approval (every action) rather than the irreversible-action confirm. */ step?: boolean; why?: string }
+export interface StartOpts { preApproved: boolean; dryRun?: boolean; stepApproval?: boolean; workflow?: Workflow }
 
 export function useBotRun(onFinished: () => void) {
   const [log, setLog] = useState<LogEntry[]>([]);
@@ -18,15 +20,17 @@ export function useBotRun(onFinished: () => void) {
   const live = useRef(true);
   useEffect(() => { live.current = true; return () => { live.current = false; ac.current?.abort(); }; }, []); // closing the panel stops the run
 
-  const start = useCallback(async (goal: string, preApproved: boolean) => {
+  const ask = (q: Omit<ConfirmReq, "answer">) => new Promise<boolean>((res) => { if (live.current) setConfirm({ ...q, answer: (ok) => { setConfirm(null); res(ok); } }); else res(false); });
+  const start = useCallback(async (goal: string, opts: StartOpts, lab?: LabHooks) => {
     if (ac.current) return;
     const c = (ac.current = new AbortController());
     setLog([]); setResult(null); setError(null); setRunning(true);
     const add = (kind: LogEntry["kind"], text: string) => live.current && setLog((l) => pushLog(l, { kind, text, at: Date.now() }));
     try {
       const r = await runBot({
-        goal, preApproved, showWindow: visible, signal: c.signal, log: add,
-        confirm: (action, obs) => new Promise<boolean>((res) => { if (live.current) setConfirm({ action, obs, answer: (ok) => { setConfirm(null); res(ok); } }); else res(false); }),
+        goal, preApproved: opts.preApproved, dryRun: opts.dryRun, workflow: opts.workflow, lab, showWindow: visible, signal: c.signal, log: add,
+        confirm: (action, obs) => ask({ action, obs }),
+        approve: opts.stepApproval ? (action, obs, why) => ask({ action, obs, step: true, why }) : undefined,
       });
       if (live.current) setResult(r);
     } catch (e) {

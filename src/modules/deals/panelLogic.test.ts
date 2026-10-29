@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { feedSections } from "../news/panelLogic.ts";
-import { priceOf, sourcesOf } from "./panelLogic.ts";
+import { percentOff, priceOf, sourcesOf } from "./panelLogic.ts";
 
 describe("deals panelLogic", () => {
   it("priceOf parses common price shapes", () => {
@@ -40,5 +40,13 @@ describe("deals feed section parity", () => {
     assert.equal(panelId, "deals", "deals/Panel.tsx listId");
     assert.equal(indexId, "deals", "deals/index.ts feedSections first argument");
     assert.equal(panelId, indexId, "deals: Panel.tsx listId vs index.ts feedSections id");
+  });
+});
+
+describe("percentOff", () => {
+  it("reads N% off", () => {
+    assert.equal(percentOff("SSD 25% off today"), "-25%");
+    assert.equal(percentOff("Save 100% off"), null);
+    assert.equal(percentOff("no discount"), null);
   });
 });

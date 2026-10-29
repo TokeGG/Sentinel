@@ -1,10 +1,13 @@
 import { useRef, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
-import { EmptyState, ErrorLine, Spark, Table, Tabs } from "../../ui/kit";
+import { Chip, EmptyState, ErrorLine, Spark, Table, Tabs } from "../../ui/kit";
+import { ConfirmButton } from "../../ui/ConfirmButton";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
+import "./finance.css";
+import { Tools } from "./Tools";
 import { changeInfo, emptyHistory, fmtPrice, pctText, shownParts, sortTrades, priceKey, trackPrices, tradeView } from "./panelLogic";
 
 type Part = "watchlist" | "congress";
@@ -17,7 +20,10 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
   const ids = useSections();
   const [chosen, setChosen] = useState<Part>("watchlist");
-  const watch = rows.filter((r) => r.kind === "watch");
+  const allWatch = rows.filter((r) => r.kind === "watch");
+  const [grp, setGrp] = useState<string | null>(null);
+  const groups = [...new Set(allWatch.map((r) => String(r.group ?? "")).filter(Boolean))].sort();
+  const watch = grp && groups.includes(grp) ? allWatch.filter((r) => r.group === grp) : allWatch;
   const trades = sortTrades(rows.filter((r) => r.kind === "trade").map((r) => ({ ...r, date: r.date ?? r.label })));
   // The DB keeps only the latest price + its check time: this panel builds a
   // per-session series (one point per refresh) for the change figure and sparkline.
@@ -29,11 +35,11 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const hasAdd = ids.includes("add");
   const hasActions = ids.includes("actions");
   return (
-    <>
+    <div className="fin-root">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
-        <span className="ui-count">{watch.length} watched</span>
+        <span className="ui-count">{allWatch.length} watched</span>
       </h2>
       {error && <ErrorLine message={error} />}
       <Sections>
@@ -42,24 +48,32 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         </Section>
         {show.watchlist && (
           <Section id="watchlist">
+            {groups.length > 0 && (
+              <div className="ui-chips">
+                <Chip on={!grp} onClick={() => setGrp(null)}>All</Chip>
+                {groups.map((g) => <Chip key={g} on={grp === g} onClick={() => setGrp(g)}>{g}</Chip>)}
+              </div>
+            )}
             {watch.length ? (
-              <ul className="ui-quotes">
+              <ul className="fin-tiles">
                 {watch.map((r) => {
                   const series = hist.current.series[priceKey(r)] ?? [];
                   const { pct: chg, caption } = changeInfo(series, now);
                   const tone = chg === null || chg === 0 ? "flat" : chg > 0 ? "up" : "down";
                   return (
-                    <li key={String(r.id)} className="ui-quote">
-                      <span className="ui-quote-sym">
-                        {String(r.symbol).toUpperCase()}
-                        <small>{String(r.asset ?? "")}</small>
-                      </span>
-                      <span className="ui-quote-spark">{series.length > 1 && <Spark points={series.map((p) => p.price)} tone={tone} />}</span>
-                      <span className="ui-quote-price">{fmtPrice(r.price)}</span>
-                      <span className={`ui-chg ${tone}`}>
-                        {chg === null ? "" : pctText(chg)}
+                    <li key={String(r.id)} className={`fin-tile ${tone}`}>
+                      <div className="fin-top">
+                        <span className="fin-sym">{String(r.symbol).toUpperCase()}</span>
+                        <span className="fin-spark">{series.length > 1 && <Spark points={series.map((p) => p.price)} tone={tone} />}</span>
+                      </div>
+                      <div className="fin-price">{fmtPrice(r.price)}</div>
+                      <div className="fin-chg">
+                        {chg !== null && <span className={`fin-pill ${tone}`}>{tone === "up" ? "▲" : tone === "down" ? "▼" : "•"} {pctText(chg)}</span>}
                         {caption && <small>{caption}</small>}
-                      </span>
+                        {r.asset === "crypto" && <span className="fin-kind">crypto</span>}
+                      </div>
+                      <input className="fin-grp" defaultValue={String(r.group ?? "")} placeholder="group" aria-label="Group" onBlur={(e) => e.target.value !== String(r.group ?? "") && void run("set_group", { id: r.dbId, group: e.target.value })} />
+                      <ConfirmButton label="Remove" className="ui-btn ui-sm" disabled={busy} onConfirm={() => void run("remove_symbol", { id: r.dbId })} />
                     </li>
                   );
                 })}
@@ -100,7 +114,10 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             <ScheduleToggle module={module} />
           </div>
         </Section>
+        <Section id="tools">
+          <Tools watch={allWatch} busy={busy} run={run} />
+        </Section>
       </Sections>
-    </>
+    </div>
   );
 }

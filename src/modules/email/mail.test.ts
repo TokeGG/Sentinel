@@ -5,7 +5,7 @@ import { checkRecipients, formatAddr, isEmail, parseAddressList } from "./addres
 import { PRESETS, draftFromPreset, presetById, savesSentCopy, validateDraft } from "./presets.ts";
 import { decodeFolderName, folderLabel, folderOfRole, folderRole, sortFolders } from "./folders.ts";
 import { buildDraft, quoteText } from "./composeLogic.ts";
-import { dateLabel, emailSections, previewLine, searchMessages, sortMessages, staleUids, urlsIn } from "./panelLogic.ts";
+import { avatarHue, dateLabel, emailSections, initialOf, previewLine, searchMessages, sortMessages, staleUids, urlsIn } from "./panelLogic.ts";
 import type { Body, Msg } from "./types.ts";
 
 const msg = (o: Partial<Msg> = {}): Msg => ({ accountId: "a", folder: "INBOX", uid: 1, fromName: "Ann", fromAddr: "ann@x.com", to: "me@x.com", subject: "Hello", preview: "pv", dateTs: 1700000000, seen: false, starred: false, answered: false, hasAttach: false, ...o });
@@ -95,4 +95,12 @@ test("manifest section ids match Panel.tsx <Section id>", () => {
   const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
   const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((m) => m[1]).sort();
   assert.deepEqual(used, emailSections.map((s) => s.id).sort());
+});
+
+test("avatar hue is stable and in range; initial skips punctuation and falls back", () => {
+  assert.equal(avatarHue("Ada"), avatarHue("Ada"));
+  for (const x of ["", "Ada", "grace@navy.mil", "日本"]) assert.ok(avatarHue(x) >= 0 && avatarHue(x) < 360);
+  assert.equal(initialOf("  ada"), "A");
+  assert.equal(initialOf("<hedy>"), "H");
+  assert.equal(initialOf("!!"), "?");
 });

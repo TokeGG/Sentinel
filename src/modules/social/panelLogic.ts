@@ -26,6 +26,7 @@ export const socialSections = [
   { id: "composer", label: "Composer" },
   { id: "filters", label: "Filters & search" },
   { id: "feed", label: "Feed" },
+  { id: "lists", label: "Lists & mutes", default: false },
   { id: "accounts", label: "Accounts" },
 ];
 
@@ -34,6 +35,7 @@ export const socialOptions: OptionDef[] = [
   { key: "showMedia", label: "Show media", type: "toggle", default: true },
   { key: "showCounts", label: "Show counts", type: "toggle", default: true },
   { key: "showActions", label: "Show actions (like, boost, reply)", type: "toggle", default: true },
+  { key: "taste", label: "For you ordering", type: "toggle", default: true },
 ];
 
 export const PLATFORM_COLORS: Record<string, string> = {
@@ -43,6 +45,9 @@ export const PLATFORM_COLORS: Record<string, string> = {
   x: "#8899a6",
 };
 export const platformColor = (id: string) => PLATFORM_COLORS[id] ?? "#8899a6";
+
+/** Stable 0-359 hue for an initial avatar. */
+export const nameHue = (s: string) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) % 360, 7);
 
 /** Max post length per platform (Mastodon's is the common default; instances vary). */
 export const POST_LIMITS: Record<string, number> = { bluesky: 300, mastodon: 500 };

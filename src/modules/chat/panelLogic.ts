@@ -6,6 +6,8 @@ import type { Incoming, Message, Room } from "./types.ts";
 export const chatSections = [
   { id: "tabs", label: "Room tabs & add room" },
   { id: "rooms", label: "Chat" },
+  { id: "filters", label: "Ignore list, word filters, highlights", default: false },
+  { id: "logs", label: "Chat logs & mention log", default: false },
   { id: "login", label: "Twitch login (to send)", default: false },
 ];
 export const chatOptions: OptionDef[] = [
@@ -13,6 +15,9 @@ export const chatOptions: OptionDef[] = [
   { key: "columns", label: "Columns (columns layout)", type: "number", default: 2, min: 2, max: 3 },
   { key: "timestamps", label: "Show timestamps", type: "toggle", default: false },
   { key: "cap", label: "Messages kept per room", type: "number", default: 500, min: 50, max: 2000 },
+  { key: "players", label: "Stream multiview (Twitch/Kick players above their chats)", type: "toggle", default: false },
+  { key: "logs", label: "Keep searchable chat logs on this PC", type: "toggle", default: false },
+  { key: "logCap", label: "Log lines kept", type: "number", default: 5000, min: 100, max: 50000 },
 ];
 
 type Row = Record<string, unknown>;

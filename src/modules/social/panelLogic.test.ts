@@ -2,7 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import {
-  composeError, dividerIndex, filterPosts, linkify, mergePosts, postAge, rowToPost, socialOptions, socialSections,
+  composeError, dividerIndex, nameHue, filterPosts, linkify, mergePosts, postAge, rowToPost, socialOptions, socialSections,
   unreadCount, type FeedPost,
 } from "./panelLogic.ts";
 import { customizeError } from "../../core/customizeChecks.ts";
@@ -76,5 +76,12 @@ describe("social panelLogic", () => {
     const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
     assert.deepEqual(used, socialSections.map((s) => s.id).sort());
     for (const o of socialOptions) assert.ok(src.includes(`"${o.key}"`), `Panel reads option ${o.key}`);
+  });
+});
+
+describe("nameHue", () => {
+  it("is stable and within 0-359", () => {
+    assert.equal(nameHue("Mara"), nameHue("Mara"));
+    assert.ok(nameHue("") >= 0 && nameHue("Tomás") < 360);
   });
 });

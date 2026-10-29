@@ -1,0 +1,18 @@
+/* Desktop batch: palette, briefing, help, capture, tour. Tokens only. */
+.pal { display: flex; flex-direction: column; gap: var(--sp-2); height: 100%; min-height: 0; }
+.pal-in { font: inherit; font-size: 1.05em; padding: 10px 12px; border-radius: var(--radius); border: 1px solid var(--accent-line, var(--line)); background: var(--surface); color: var(--text); }
+.pal-list { list-style: none; margin: 0; padding: 0; overflow: auto; flex: 1; }
+.pal-list li { display: grid; grid-template-columns: 6em 1fr; gap: 2px 8px; padding: var(--sp-1) var(--sp-2); border-radius: var(--r-sm); cursor: pointer; }
+.pal-list li.on { background: var(--accent-soft); }
+.pal-kind { color: var(--accent-text); font-size: 0.8em; text-transform: uppercase; }
+.pal-sub { grid-column: 2; color: var(--text-dim); opacity: 0.75; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pal-msg, .pal-empty { margin: 0; padding: 4px 8px; }
+.brf h3, .hlp h3 { margin: var(--sp-3) 0 4px; font-size: 1em; }
+.brf ul, .hlp ul { margin: 0; padding-left: 1.2em; }
+.brf-count { color: var(--accent-text); margin-left: 6px; }
+.hlp-item { margin-bottom: var(--sp-2); }
+.hlp-in, .cap-in { font: inherit; width: 100%; box-sizing: border-box; padding: 8px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--surface); color: var(--text); }
+.cap-in { min-height: 110px; resize: vertical; }
+.tour { position: absolute; right: var(--sp-4); bottom: var(--sp-4); max-width: 340px; padding: var(--sp-3); border-radius: var(--radius); background: var(--overlay); border: 1px solid var(--line); box-shadow: var(--elev-2); z-index: 5; }
+.tour-acts { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+.sky-tint { position: absolute; inset: 0; pointer-events: none; transition: background 2s; }

@@ -64,3 +64,16 @@ export function resultsOf(rows: Row[]): { id: string; path: string; name: string
       return { id: String(r.id), path, name: nameOf(path), folder: folderOf(path) };
     });
 }
+
+/** Name split around the first case-insensitive match of `q` (for highlighting); no match -> whole name first. */
+export function splitMatch(name: string, q: string): [string, string, string] {
+  const needle = String(q ?? "").trim().toLowerCase();
+  const i = needle ? name.toLowerCase().indexOf(needle) : -1;
+  return i < 0 ? [name, "", ""] : [name.slice(0, i), name.slice(i, i + needle.length), name.slice(i + needle.length)];
+}
+
+/** Upper-case file extension for the result badge ("report.final.pdf" -> "PDF"); "" for none or a dotfile. */
+export function extOf(name: string): string {
+  const i = String(name ?? "").lastIndexOf(".");
+  return i <= 0 || i === name.length - 1 ? "" : name.slice(i + 1, i + 5).toUpperCase();
+}

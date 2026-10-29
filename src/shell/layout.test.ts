@@ -1,6 +1,6 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
-import { clampToScreen, tile, cascade, dragRect, resizeRect, clientRect, type Rect } from "./layout.ts";
+import { clampToScreen, tile, cascade, dragRect, resizeRect, clientRect, reclamp, TITLEBAR_H, type Rect } from "./layout.ts";
 
 const S: Rect = { x: 0, y: 0, w: 1000, h: 800 };
 const inside = (r: Rect, s: Rect) =>
@@ -131,5 +131,39 @@ describe("clientRect", () => {
     assert.deepEqual(clientRect(0, 800, 1, fb), fb);
     assert.deepEqual(clientRect(800, 600, 0, fb), fb);
     assert.deepEqual(clientRect(NaN, 600, 1, fb), fb);
+  });
+});
+
+describe("title bar inset", () => {
+  const fb: Rect = { x: 0, y: 0, w: 1920, h: 1080 };
+  it("panels start below the title bar and lose its height", () => {
+    assert.deepEqual(clientRect(2400, 1500, 1.5, fb, TITLEBAR_H), { x: 0, y: 32, w: 1600, h: 968 });
+  });
+  it("an absurd inset cannot go negative", () => {
+    assert.equal(clientRect(100, 100, 1, fb, 500).h, 0);
+    assert.equal(clientRect(100, 100, 1, fb, NaN).y, 0);
+  });
+  it("a panel dragged up over the title bar is pushed below it", () => {
+    const screen = clientRect(1600, 1000, 1, fb, TITLEBAR_H);
+    const r = dragRect({ x: 10, y: 40, w: 300, h: 200 }, 0, -500, screen, { w: 240, h: 160 });
+    assert.equal(r.y, TITLEBAR_H);
+  });
+});
+
+describe("reclamp (maximise / restore)", () => {
+  const min = { w: 240, h: 160 };
+  const big: Rect = { x: 0, y: 32, w: 1900, h: 1000 };
+  const small: Rect = { x: 0, y: 32, w: 800, h: 568 };
+  it("leaves in-bounds panels alone", () => {
+    assert.deepEqual(reclamp([{ id: "a", rect: { x: 10, y: 40, w: 300, h: 300 }, min }], big), []);
+  });
+  it("pulls panels back in after restoring from maximised", () => {
+    const [m] = reclamp([{ id: "a", rect: { x: 1500, y: 700, w: 400, h: 300 }, min }], small);
+    assert.ok(inside(m.rect, small));
+    assert.equal(m.id, "a");
+  });
+  it("shrinks a full-window panel to the smaller window", () => {
+    const [m] = reclamp([{ id: "w", rect: big, min }], small);
+    assert.deepEqual(m.rect, small);
   });
 });

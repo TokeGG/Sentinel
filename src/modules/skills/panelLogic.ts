@@ -3,6 +3,7 @@ export const skillsSections = [
   { id: "skills", label: "Skills" },
   { id: "servers", label: "MCP servers" },
   { id: "install", label: "Install from GitHub" },
+  { id: "market", label: "Marketplace (suggested)" },
   { id: "model", label: "Local model" },
 ];
 

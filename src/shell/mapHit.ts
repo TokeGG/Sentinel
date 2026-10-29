@@ -1,17 +1,13 @@
-// Pure hit-testing against the planets' CURRENT screen positions (placeScene).
+// Pure 3D hit-testing against the bodies' CURRENT screen positions (placeScene):
+// of all discs under the pointer the NEAREST one wins, planets and sun alike.
 import type { Scene } from "./mapLayout.ts";
+import { pickNearest } from "./depth.ts";
 
 export const SUN = -2;
-const SLOP = 4; // px of forgiveness around a planet or the sun
+const SLOP = 4; // px of forgiveness around a body
 
-/** Nearest planet within its radius (+slop), else SUN if over the sun, else -1. */
-export function hitTest(s: Scene, x: number, y: number, r: number): number {
-  let best = -1, bestD = (r + SLOP) * (r + SLOP);
-  for (let i = 0; i < s.slots.length; i++) {
-    const dx = s.sx[i] - x, dy = s.sy[i] - y, d = dx * dx + dy * dy;
-    if (d <= bestD) { best = i; bestD = d; }
-  }
-  if (best >= 0) return best;
-  const dx = s.sunX - x, dy = s.sunY - y, sr = s.sunR + SLOP;
-  return dx * dx + dy * dy <= sr * sr ? SUN : -1;
+/** Planet index, SUN if the sun is the nearest body under (x, y), else -1. */
+export function hitTest(s: Scene, x: number, y: number): number {
+  const i = pickNearest(x, y, s.sx, s.sy, s.rad, s.sz, SLOP);
+  return i < 0 ? -1 : i === s.slots.length ? SUN : i;
 }

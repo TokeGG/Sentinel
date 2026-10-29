@@ -6,6 +6,8 @@ export const homenetSections = [
   { id: "devices", label: "Devices" },
   { id: "scan", label: "Scan network" },
   { id: "tag", label: "Tag editor" },
+  { id: "map", label: "Network map" },
+  { id: "events", label: "Changes" },
 ];
 
 /** IPv4 as a sortable number; Infinity for anything that is not a dotted quad. */
@@ -39,4 +41,11 @@ export function newDevices<T extends Row>(rows: T[], knownIds: Set<string>): T[]
 /** The only name the data holds is the user's tag; null = unknown device. */
 export function deviceName(r: Row): string | null {
   return typeof r.tag === "string" && r.tag.trim() ? r.tag.trim() : null;
+}
+
+export type DeviceState = "new" | "known" | "unknown";
+
+/** Status dot for a device: new this session, tagged by the user, or unknown. */
+export function deviceState(d: { isNew: boolean; unknown: boolean }): DeviceState {
+  return d.isNew ? "new" : d.unknown ? "unknown" : "known";
 }

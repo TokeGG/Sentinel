@@ -1,12 +1,21 @@
 import { useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import type { ModuleManifest } from "../../core/module";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { EmptyState, ErrorLine, Tabs } from "../../ui/kit";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
+import { ClonedSection } from "./ClonedSection";
 import { TokenField } from "./TokenField";
-import { activeTab, repoView, rowsForTab, skillForTab, tabForSkill, type Tab } from "./panelLogic";
+import { GistSection } from "./GistSection";
+import { InboxSection } from "./InboxSection";
+import { ProjectTools } from "./ProjectTools";
+import "./github.css";
+import { TasteBar } from "../../ui/TasteBar";
+import { useOption } from "../../ui/useOption";
+import { useTasteView } from "../../ui/useTasteView";
+import { repoTaste } from "./taste";
+import { RepoCard } from "./RepoCard";
+import { activeTab, rowsForTab, skillForTab, tabForSkill, type Tab } from "./panelLogic";
 
 const TABS = [
   { id: "trending", label: "Trending" },
@@ -18,6 +27,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const ids = useSections();
   const [chosen, setChosen] = useState<Tab | null>(null);
   const tab = activeTab(chosen, rows);
+  const { taste, forYou, setForYou } = useTasteView(module.id, useOption("taste", true));
   const shown = rowsForTab(rows, tab);
   const ra = module.rowAction!;
   // Same as the generic buttons: a tab or button runs its fetch skill.
@@ -31,7 +41,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       ? "Pick a tab to load repositories."
       : "Re-enable “Fetch repos” or the tabs in Customize to load repositories.";
   return (
-    <>
+    <div className="gh-root">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
@@ -43,51 +53,31 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           <TokenField module={module} recheck={busy} />
         </Section>
         <Section id="tabs">
+          <TasteBar taste={taste} name="GitHub" forYou={forYou} onForYou={setForYou} />
           <Tabs tabs={TABS} active={tab} onChange={(id) => pick(id as Tab)} disabled={busy} />
         </Section>
         <Section id="repos">
           {shown.length ? (
-            <ul className="ui-repos">
-              {shown.map((r) => {
-                const v = repoView(r);
-                return (
-                  <li key={String(r.id)} className="ui-repo">
-                    <div className="ui-repo-top">
-                      {v.link ? (
-                        <button type="button" className="ui-link ui-repo-name" title={v.name} onClick={() => void openUrl(v.link!)}>
-                          {v.name}
-                        </button>
-                      ) : (
-                        <span className="ui-repo-name">{v.name}</span>
-                      )}
-                      <span className="ui-stars">★ {v.stars}</span>
-                    </div>
-                    {v.description && <p className="ui-repo-desc">{v.description}</p>}
-                    <div className="ui-tile-foot">
-                      {v.language && (
-                        <span className="ui-lang">
-                          <i style={{ background: v.color ?? undefined }} />
-                          {v.language}
-                        </span>
-                      )}
-                      {v.cloned && <span className="ui-cloned">Cloned ✓</span>}
-                      <button
-                        type="button"
-                        className="ui-btn"
-                        style={{ marginLeft: "auto" }}
-                        disabled={busy}
-                        onClick={() => void run(ra.skill, { [ra.argName]: r[ra.fromField] })}
-                      >
-                        {v.cloned ? "Clone again…" : ra.label}
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
+            <ul className="gh-grid">
+              {taste.order(shown, repoTaste, forYou).map((rk) => { const r = rk.item; return (
+                <RepoCard key={String(r.id)} r={r} taste={taste} ranked={forYou ? rk : undefined} label={ra.label} busy={busy} onClone={() => void run(ra.skill, { [ra.argName]: r[ra.fromField] })} onDismiss={() => void run("dismiss_repo", { name: r.name })} />
+              ); })}
             </ul>
           ) : (
             <EmptyState title={tab === "starred" ? "No starred repos loaded" : "No repositories yet"} hint={hint} />
           )}
+        </Section>
+        <Section id="cloned">
+          <ClonedSection refresh={busy} />
+        </Section>
+        <Section id="inbox">
+          <InboxSection />
+        </Section>
+        <Section id="projects">
+          <ProjectTools />
+        </Section>
+        <Section id="gists">
+          <GistSection />
         </Section>
         <Section id="actions">
           <div className="ui-controls">
@@ -109,6 +99,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           </div>
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

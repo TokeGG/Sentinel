@@ -9,7 +9,7 @@ import { skillsSections } from "./panelLogic";
 export const skillsModule: ModuleManifest = {
   id: "hub.skills",
   name: "Skills & MCP",
-  accent: "#c28cff",
+  accent: "#fd93e5",
   ring: "system",
   icon: "skills",
   description: "Skills and MCP servers: bundled examples plus anything you install from GitHub after confirming the exact files and command. Nothing runs until you switch it on.",

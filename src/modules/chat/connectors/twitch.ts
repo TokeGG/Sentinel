@@ -1,5 +1,6 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import { getCredential } from "../../../core/credentials";
+import { getAccessToken, primaryAccount } from "../../../core/connect";
 import type { Connection, Connector, Handlers, RoomRef } from "../types";
 import { parseTwitch } from "./rooms";
 import { openSocket } from "./socket";
@@ -7,7 +8,7 @@ import { clearTarget, parseLine, toIncoming } from "./twitchIrc";
 
 export const TWITCH_CRED = "twitch_oauth";
 const HELP =
-  "To send, paste a Twitch OAuth token with the chat:read and chat:edit scopes. " +
+  "To send, connect Twitch in Settings > Accounts (one click). Or paste a Twitch OAuth token with the chat:read and chat:edit scopes. " +
   "Easiest: generate one at twitchtokengenerator.com (a third-party tool: choose 'Bot Chat Token'); " +
   "or register your own app at dev.twitch.tv/console and use its implicit-grant URL. " +
   "It is stored in your OS keychain only. Without it, chat is read-only.";
@@ -20,10 +21,19 @@ async function whoami(token: string): Promise<{ login: string } | null> {
   return j.login && j.scopes?.includes("chat:edit") ? { login: j.login } : null;
 }
 
+/** Connected account (Settings > Accounts) first, then the pasted token fallback. */
+async function sendToken(): Promise<string> {
+  if (await primaryAccount("twitch").catch(() => null)) {
+    const t = await getAccessToken("twitch").catch(() => "");
+    if (t) return t;
+  }
+  return ((await getCredential("hub.chat", TWITCH_CRED).catch(() => null)) ?? "").trim().replace(/^oauth:/i, "");
+}
+
 async function connect(room: RoomRef, h: Handlers): Promise<Connection> {
-  const raw = ((await getCredential("hub.chat", TWITCH_CRED).catch(() => null)) ?? "").trim().replace(/^oauth:/i, "");
+  const raw = await sendToken();
   const me = raw ? await whoami(raw).catch(() => null) : null;
-  const note = raw && !me ? "Saved Twitch token is invalid, expired or lacks chat:edit: read-only." : "Read-only: add a Twitch OAuth token (Login section) to send.";
+  const note = raw && !me ? "Saved Twitch token is invalid, expired or lacks chat:edit: read-only." : "Read-only: connect Twitch in Settings > Accounts (or paste a token in Login) to send.";
   const nick = me?.login ?? `justinfan${Math.floor(10000 + Math.random() * 89999)}`;
   const chan = `#${room.target}`;
   const sock = openSocket(

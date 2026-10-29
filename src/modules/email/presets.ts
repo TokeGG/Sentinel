@@ -1,4 +1,4 @@
-// Provider presets and account validation. Pure. No OAuth: Gmail/iCloud need an app password.
+// Provider presets and account validation. Pure. Gmail/Outlook may also use OAuth (mailAuth.ts).
 import type { Account, Tls } from "./types.ts";
 import { isEmail } from "./addresses.ts";
 
@@ -23,7 +23,7 @@ export const PRESETS: Preset[] = [
     note: "Enter your provider's IMAP and SMTP details. Use an app password if the provider offers one." },
 ];
 
-export const presetById = (id: string): Preset => PRESETS.find((p) => p.id === id) ?? PRESETS[PRESETS.length - 1];
+export const presetById = (id: string): Preset => PRESETS.find((p) => p.id === id.split(":")[0]) ?? PRESETS[PRESETS.length - 1];
 export const savesSentCopy = (presetId: string) => presetById(presetId).savesSent;
 
 export type AccountDraft = Omit<Account, "id"> & { password: string };
@@ -41,7 +41,7 @@ export function validateDraft(d: AccountDraft): string[] {
   const e: string[] = [];
   if (!isEmail(d.email)) e.push("Enter a valid email address");
   if (!d.username.trim()) e.push("Username is required");
-  if (!d.password) e.push("Password / app password is required");
+  if (!d.password && !d.preset.endsWith(":oauth")) e.push("Password / app password is required");
   if (!HOST.test(d.imapHost.trim())) e.push("IMAP host is invalid");
   if (!HOST.test(d.smtpHost.trim())) e.push("SMTP host is invalid");
   if (!port(d.imapPort) || !port(d.smtpPort)) e.push("Ports must be 1-65535");

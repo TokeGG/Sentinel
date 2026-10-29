@@ -22,12 +22,14 @@ export function BrainPane({ state, run, busy, reload }: { state: LearnState | nu
       <table className="bot-table"><thead><tr><th>Variant</th><th>Wins / runs</th><th>Win rate</th></tr></thead><tbody>
         {variantRows(state.pop).map((v) => <tr key={v.id}><td className="bot-mono">{v.id}{v.best ? " (best)" : ""}</td><td>{v.wins} / {v.games}</td><td>{v.winRate}</td></tr>)}
       </tbody></table>
-      <textarea className="ui-file-text" rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="botbrain.json text: Export fills this; paste or pick a file to Import" aria-label="Brain JSON" />
+      <textarea className="ui-file-text" rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder="botbrain.json text (normal + lab brains): Export fills this; paste or pick a file to Import" aria-label="Brain JSON" />
       <div className="ui-actions">
         <button type="button" className="ui-btn" disabled={busy} onClick={() => void exp()}>Export...</button>
         <label className="ui-btn">Pick file...<input type="file" accept=".json,application/json" hidden onChange={(e) => void pickFile(e.target.files?.[0])} /></label>
         <button type="button" className="ui-btn" disabled={busy || !text.trim()} onClick={() => void go("import_brain", { text })}>Import</button>
         <button type="button" className="ui-btn" disabled={busy} onClick={() => setConfirmReset(true)}>Reset to shipped...</button>
+        <button type="button" className="ui-btn" disabled={busy} title="The Lab bot starts from this brain" onClick={() => void go("share_brain", { direction: "toLab" }).then((r) => r && setMsg("Copied to the Lab brain."))}>Copy to Lab</button>
+        <button type="button" className="ui-btn" disabled={busy} title="This brain starts from the Lab bot's brain" onClick={() => void go("share_brain", { direction: "toNormal" }).then((r) => r && setMsg("Copied from the Lab brain."))}>Copy from Lab</button>
       </div>
       {msg && <p className="ui-meta">{msg}</p>}
       {confirmReset && (

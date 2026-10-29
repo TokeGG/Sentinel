@@ -6,19 +6,23 @@ import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { Chip, EmptyState, ErrorLine } from "../../ui/kit";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
-import { useModule, type ModuleRow } from "../../ui/useModule";
+import { useModule, type ModuleRow, type ModuleState } from "../../ui/useModule";
+import { FeedManage } from "./FeedManage";
 import { filterBySource, sourcesOf } from "./panelLogic";
+import "./news.css";
 
 export function FeedPanel({
   module,
   listId,
   empty,
   list,
+  toolbar,
 }: {
   module: ModuleManifest;
   listId: string; // the section id of the item list ("headlines" / "deals")
   empty: string;
-  list: (rows: ModuleRow[], busy: boolean) => ReactNode;
+  list: (rows: ModuleRow[], busy: boolean, run: ModuleState["run"]) => ReactNode;
+  toolbar?: (s: { rows: ModuleRow[]; busy: boolean; run: ModuleState["run"] }) => ReactNode; // above the list, always shown
 }) {
   const { rows, busy, error, run } = useModule(module);
   const [source, setSource] = useState<string | null>(null);
@@ -26,13 +30,13 @@ export function FeedPanel({
   const sources = sourcesOf(rows);
   const shown = filterBySource(rows, sources.includes(source ?? "") ? source : null);
   return (
-    <>
+    <div className={`feed feed-${listId}`}>
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
         <span className="ui-count">{rows.length}</span>
       </h2>
-      <Sections>
+      <Sections className="feed-sections">
         <Section id="add">
           <QuickAdd module={module} busy={busy} run={run} />
         </Section>
@@ -45,8 +49,9 @@ export function FeedPanel({
           </div>
         </Section>
         <Section id={listId}>
+          {toolbar?.({ rows, busy, run })}
           {error && !rows.length && <ErrorLine message={error} />}
-          {shown.length ? list(shown, busy) : <EmptyState title={empty} hint={hasAdd ? "Add a feed to get started." : "Add a feed to get started (re-enable “Add feed” in Customize)."} />}
+          {shown.length ? list(shown, busy, run) : <EmptyState title={empty} hint={hasAdd ? "Add a feed to get started." : "Add a feed to get started (re-enable “Add feed” in Customize)."} />}
         </Section>
         <Section id="status">
           <div className="ui-controls">
@@ -57,8 +62,9 @@ export function FeedPanel({
             ))}
             <ScheduleToggle module={module} />
           </div>
+          <FeedManage module={module} busy={busy} run={run} version={rows} />
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

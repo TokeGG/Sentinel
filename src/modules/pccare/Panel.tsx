@@ -1,10 +1,29 @@
-import { useRef } from "react";
+import { useRef, type CSSProperties } from "react";
 import type { ModuleManifest } from "../../core/module";
-import { EmptyState, ErrorLine, Gauge, Tile } from "../../ui/kit";
+import { EmptyState, ErrorLine, Tile, gaugeTone } from "../../ui/kit";
 import { Section, Sections } from "../../ui/useCustomize";
 import { useOption } from "../../ui/useOption";
 import { useModule } from "../../ui/useModule";
 import { pctOf, previewSummary, splitRows, usageText } from "./panelLogic";
+import { ToolsSection } from "./tools/ToolsSection";
+import "./pccare.css";
+
+// Ring (CPU/RAM) or bar (disk) with the tone from the shared gauge thresholds.
+function Meter({ label, value, sub, warnAt, ring }: { label: string; value: number; sub?: string; warnAt: number; ring?: boolean }) {
+  const tone = gaugeTone(value, 100, warnAt);
+  return (
+    <div className={`pc-meter ${tone} ${ring ? "ring" : "bar"}`} style={{ "--p": Math.min(100, Math.max(0, value)) } as CSSProperties}>
+      <div className="pc-meter-viz" role="meter" aria-label={label} aria-valuemin={0} aria-valuemax={100} aria-valuenow={value}>
+        {ring ? <b>{Math.round(value)}%</b> : <i />}
+      </div>
+      <div className="pc-meter-txt">
+        <span className="pc-label">{label}</span>
+        {sub && <span className="pc-sub">{sub}</span>}
+        {!ring && <span className="pc-pct">{Math.round(value)}%</span>}
+      </div>
+    </div>
+  );
+}
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
@@ -16,7 +35,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const m = last.current;
   const sum = previewSummary(now.files);
   return (
-    <>
+    <div className="pc">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
@@ -27,22 +46,18 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           {m.cpu === null && !m.ram ? (
             <EmptyState title="No metrics yet" hint="Use Refresh to read CPU and RAM." />
           ) : (
-            <div className="ui-gauges">
-              {m.cpu !== null && <Gauge label="CPU" value={m.cpu} warnAt={warnAt} />}
+            <div className="pc-rings">
+              {m.cpu !== null && <Meter ring label="CPU" value={m.cpu} warnAt={warnAt} />}
               {m.ram && (
-                <Gauge
-                  label={`RAM · ${usageText(m.ram.used, m.ram.total, "mb")}`}
-                  value={pctOf(m.ram.used, m.ram.total)}
-                  warnAt={warnAt}
-                />
+                <Meter ring label="RAM" sub={usageText(m.ram.used, m.ram.total, "mb")} value={pctOf(m.ram.used, m.ram.total)} warnAt={warnAt} />
               )}
             </div>
           )}
         </Section>
         <Section id="disks">
-          <div className="ui-disks">
+          <div className="pc-disks">
             {m.disks.map((d) => (
-              <Gauge key={d.mount} label={`${d.mount} · ${usageText(d.used, d.total, "gb")}`} value={pctOf(d.used, d.total)} warnAt={warnAt} />
+              <Meter key={d.mount} label={d.mount} sub={usageText(d.used, d.total, "gb")} value={pctOf(d.used, d.total)} warnAt={warnAt} />
             ))}
             {m.disks.length === 0 && <EmptyState title="No drives reported" />}
           </div>
@@ -72,6 +87,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             )}
           </Tile>
         </Section>
+        <Section id="tools">
+          <ToolsSection />
+        </Section>
         <Section id="actions">
           <div className="ui-actions">
             <button type="button" className="ui-btn primary" disabled={busy} onClick={() => void run("get_metrics")}>
@@ -80,6 +98,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           </div>
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

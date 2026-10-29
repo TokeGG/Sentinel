@@ -47,7 +47,7 @@ test("brain rows compare active to shipped and flag moved numbers", () => {
   const rows = brainRows({ ...DEFAULT_BROWSER_BRAIN, temperature: 0.5 });
   assert.equal(rows.length, BROWSER_SPECS.length);
   const t = rows.find((r) => r.name === "temperature")!;
-  assert.deepEqual([t.active, t.shipped, t.moved], ["0.5", "0.2", true]);
+  assert.deepEqual([t.active, t.shipped, t.moved], ["0.5", "0.1", true]);
   assert.equal(rows.filter((r) => r.moved).length, 1);
 });
 

@@ -15,6 +15,16 @@ async function addRoot() {
   return { ok: true };
 }
 
+async function removeRoot(args?: Record<string, unknown>) {
+  const path = String(args?.path ?? "");
+  if (!path) throw new Error("folder path missing");
+  const d = await getDb();
+  await d.execute("DELETE FROM search_roots WHERE path = $1", [path]);
+  lastResults = lastResults.filter((r) => !r.path.startsWith(path));
+  await logActivity("filesearch", "remove_root", "removed a search folder", "ok");
+  return { ok: true };
+}
+
 async function search(args?: Record<string, unknown>) {
   const query = String(args?.query ?? "").trim();
   if (!query) throw new Error("query is empty");
@@ -47,7 +57,7 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const fileSearchModule: ModuleManifest = {
   id: "hub.filesearch",
   name: "Local File Search",
-  accent: "#6ad0ff",
+  accent: "#03c0d8",
   ring: "system",
   icon: "filesearch",
   description:
@@ -58,6 +68,7 @@ export const fileSearchModule: ModuleManifest = {
   skills: [
     { name: "add_root", run: addRoot },
     { name: "search", run: search },
+    { name: "remove_root", run: removeRoot },
     { name: "open_result", run: async (args) => { await openPath(String(args?.path ?? "")); return { ok: true }; } },
   ],
   load: loadRows,

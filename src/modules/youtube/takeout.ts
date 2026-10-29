@@ -1,3 +1,5 @@
+import { mergeWatched, type Watched } from "./library.ts";
+
 // Pure: Google Takeout "watch-history.json" -> watched items.
 export interface TakeoutItem {
   videoId: string;
@@ -33,3 +35,7 @@ export function parseTakeout(text: string): TakeoutItem[] {
   }
   return out;
 }
+
+/** One entry per video (Takeout lists every replay): latest time wins, count = plays. */
+export const mergeTakeout = (items: TakeoutItem[]): Watched[] =>
+  mergeWatched(items.map((i) => ({ videoId: i.videoId, channelId: i.channelId, title: i.title, watchedAt: i.watchedAt, firstAt: i.watchedAt, count: 1 })));

@@ -6,12 +6,19 @@ import { initScheduler, setTimersOwner, syncModule, SCHEDULE_CHANGED } from "./c
 import { listen } from "@tauri-apps/api/event";
 import { StarMap } from "./shell/StarMap";
 import { GameHud } from "./shell/GameHud";
+import { TitleBar } from "./shell/TitleBar";
 import { PanelRoute, panelIdFromHash } from "./shell/PanelRoute";
 import { restore, LAYOUT_COMMIT, LAYOUT_DELETE, type SavedPanel } from "./shell/panelApi";
 import { saveLayout, deleteLayout } from "./shell/layoutStore";
 import { SETTINGS_CHANGED } from "./shell/generalSettings";
 import { useBadges } from "./shell/useBadges";
+import { useNotifLog } from "./shell/useNotifLog";
 import { ChromeRoute, chromeIdFromHash } from "./shell/ChromeRoute";
+import { GripRoute, gripIdFromHash } from "./shell/GripRoute";
+import { useShellCommands } from "./shell/desk/useShellCommands";
+import { useDesktopSync } from "./shell/desk/useDesktopSync";
+import { useAppKeys } from "./shell/desk/useAppKeys";
+import { Tour } from "./shell/desk/Tour";
 import "./modules/notes"; // self-registers into `registry` on import
 import "./modules/news";
 import "./modules/pccare";
@@ -24,18 +31,19 @@ import "./modules/deals";
 import "./modules/email";
 import "./modules/social";
 import "./modules/calendar";
+import "./modules/congress";
 import "./modules/backup";
 import "./modules/pentest";
 import "./modules/clipboard";
 import "./modules/filesearch";
 import "./modules/discord";
-import "./modules/x";
-import "./modules/facebook";
-import "./modules/instagram";
 import "./modules/chat";
 import "./modules/skills";
 import "./modules/bot";
+import "./modules/games";
+import "./modules/media";
 import "./App.css";
+import "./shell/desk/desk.css";
 
 // Child panel webviews load this same bundle at #/panel/<id>; they render only
 // that module and never start the scheduler, restore layout, or listen.
@@ -43,6 +51,11 @@ function MainShell() {
   const [error, setError] = useState<string | null>(null);
   const [settingsTick, setSettingsTick] = useState(0);
   const onPanelClosed = useBadges(registry, setError);
+  useNotifLog(setError);
+  const deskFail = (e: unknown) => setError(String(e));
+  useShellCommands(deskFail); // palette / keys / tray commands, nav history, pins
+  useAppKeys();
+  const skyTint = useDesktopSync(deskFail);
   useEffect(() => {
     getDb()
       .then(() => {
@@ -80,9 +93,21 @@ function MainShell() {
     };
   }, []);
   return (
-    <div className="starmap">
-      <StarMap modules={registry} onError={setError} />
-      <GameHud error={error} setError={setError} refresh={settingsTick} />
+    <div className="shell">
+      <TitleBar onError={setError}>
+        <GameHud setError={setError} refresh={settingsTick} />
+      </TitleBar>
+      <div className="starmap">
+        <StarMap modules={registry} onError={setError} />
+        <div className="sky-tint" style={{ background: skyTint }} />
+        <Tour />
+        {error && (
+          <div className="hud-error" role="alert">
+            <span>{error}</span>
+            <button onClick={() => setError(null)} aria-label="Dismiss">x</button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -91,8 +116,10 @@ function App() {
   const panelId = panelIdFromHash(window.location.hash);
   const chromeId = chromeIdFromHash(window.location.hash);
   // Child webviews (#/panel/, #/chrome/) never own scheduler timers.
-  setTimersOwner(panelId === null && chromeId === null);
+  const gripId = gripIdFromHash(window.location.hash);
+  setTimersOwner(panelId === null && chromeId === null && gripId === null);
   if (chromeId !== null) return <ChromeRoute id={chromeId} />;
+  if (gripId !== null) return <GripRoute id={gripId} />;
   return panelId !== null ? <PanelRoute id={panelId} /> : <MainShell />;
 }
 

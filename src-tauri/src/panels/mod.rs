@@ -7,3 +7,4 @@ pub mod webview;
 pub mod restore;
 pub mod webguard;
 pub mod fullwindow;
+pub mod embed;

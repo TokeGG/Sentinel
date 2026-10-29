@@ -9,7 +9,7 @@ use crate::panels::manager::{create, destroy, e, resume_panels, rollback, set_vi
 use crate::panels::state::Panels;
 mod decide;
 mod fullscreen;
-use decide::{decide, transition, Transition};
+use decide::{confirm_fullscreen, decide, transition, Transition};
 use fullscreen::fullscreen_foreground;
 use std::sync::Mutex;
 use std::time::Duration;
@@ -29,6 +29,7 @@ struct Flags {
     manual: bool,
     auto: bool,
     active: bool,
+    streak: u8,
 }
 
 #[derive(Clone, serde::Serialize)]
@@ -38,7 +39,7 @@ struct Payload {
 
 /// Re-evaluate; on a transition update panels/webviews. Always emits
 /// `game-mode`; a failure also emits `game-mode-error` (message string).
-async fn evaluate(app: &AppHandle, manual: Option<bool>, auto: Option<bool>) -> Result<(), String> {
+async fn evaluate(app: &AppHandle, manual: Option<bool>, auto: Option<bool>, poll: bool) -> Result<(), String> {
     let gm = app.state::<GameMode>();
     let auto_on = {
         let mut f = gm.0.lock().map_err(e)?;
@@ -51,9 +52,16 @@ async fn evaluate(app: &AppHandle, manual: Option<bool>, auto: Option<bool>) -> 
         f.auto
     };
     // No Win32 work at all unless the user opted in to auto-detection.
-    let fullscreen = auto_on && fullscreen_foreground();
+    let raw = auto_on && fullscreen_foreground();
     let (t, active) = {
         let mut f = gm.0.lock().map_err(e)?;
+        // Only polls advance the debounce; toggles re-use the last confirmed state.
+        let fullscreen = if poll {
+            let a = f.active;
+            confirm_fullscreen(&mut f.streak, raw, a)
+        } else {
+            raw && (f.active || f.streak >= decide::ENTER_POLLS)
+        };
         let t = transition(f.active, decide(f.auto, fullscreen, f.manual));
         if t.is_some() {
             f.active = !f.active;
@@ -113,12 +121,12 @@ fn exit(app: &AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 pub async fn set_game_mode(app: AppHandle, manual: bool) -> Result<(), String> {
-    evaluate(&app, Some(manual), None).await
+    evaluate(&app, Some(manual), None, false).await
 }
 
 #[tauri::command]
 pub async fn set_game_mode_auto(app: AppHandle, enabled: bool) -> Result<(), String> {
-    evaluate(&app, None, Some(enabled)).await
+    evaluate(&app, None, Some(enabled), false).await
 }
 
 /// Started from `setup()`; runs only while the app runs.
@@ -127,6 +135,6 @@ pub fn start_poll(app: AppHandle) {
     std::thread::spawn(move || loop {
         std::thread::sleep(POLL);
         // Errors are already logged and emitted as `game-mode-error`.
-        let _ = tauri::async_runtime::block_on(evaluate(&app, None, None));
+        let _ = tauri::async_runtime::block_on(evaluate(&app, None, None, true));
     });
 }
