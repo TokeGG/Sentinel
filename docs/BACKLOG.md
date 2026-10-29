@@ -24,3 +24,20 @@ Habit/streak tracker; focus timer; floating reminders; contacts; expense/subscri
 Game launcher; performance overlay (opt-in); update watcher; disk treemap; duplicate finder; screenshot organizer; download sorter; power-plan switch; speed-test history; backup health check; note backlinks; voice memos; PDF/web clipper; flashcards; snippet library; local chat over notes (Ollama); notes digest; podcast player; now-playing widget; Twitch live list; YouTube not-interested training; image board viewer; show tracker; game news; sports ticker; deal price history; wishlist; crypto portfolio; budgets; bill reminders; receipt vault; coupon finder; PR/issue inbox; CI moons; project launcher; gist sync; commit stats; README writer (local model); breach checker (k-anonymity); own-PC port audit; Wi-Fi report; browser profile cleaner; permission audit; hash checker; secret scanner; themes + day/night sky; panel snapping/tiling; multi-monitor placement; ambient audio (off by default); first-run tour + help panel.
 
 Principles that still apply to everything above: local-first, no hosted AI, nothing runs in the background without opt-in, secrets only in the OS keychain, Pentest Lab stays engagement-gated.
+
+## Lab ideas (all accepted; every one runs through the engagement scope gate)
+1. Scope importer (paste a client's scope document, review, then create the engagement)
+2. Per-engagement checklist templates (recon, web, network, wifi, reporting)
+3. Evidence locker: attach screenshots/output to findings, hashed with timestamps
+4. Run replay: re-run any logged run with the same arguments (gate re-checked)
+5. Service fingerprint notes: banner/version history per host with change highlights
+6. Credential-free web checks: security headers, cookie flags, TLS and cert expiry
+7. DNS toolbox: records, zone hints, subdomain list from certificate transparency (in-scope domains only)
+8. Port-scan profiles (quick / common / full) with rate limit and polite delay
+9. CVE lookup from a local offline dataset by product+version (user-fed, no cloud)
+10. Timeline view of an engagement (runs, findings, notes) for the report
+11. Report templates: executive summary, technical detail, remediation table; export Markdown/HTML
+12. Remediation tracker with retest button that re-runs the original check
+13. Lab notebook with tagged commands and snippets per engagement
+14. Scope drift alerts: a discovered host outside scope is listed but never touched
+15. Bot-assisted triage: the local bot summarises run output and drafts findings for review (never runs tools out of scope)
