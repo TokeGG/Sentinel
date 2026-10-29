@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { deviceName, homenetSections, ipKey, newDevices, sortDevices } from "./panelLogic.ts";
+import { deviceName, deviceState, homenetSections, ipKey, newDevices, sortDevices } from "./panelLogic.ts";
 
 describe("homenet panelLogic", () => {
   it("ipKey orders numerically, invalid last", () => {
@@ -35,5 +35,13 @@ describe("homenet panelLogic", () => {
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
     const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
     assert.deepEqual(used, homenetSections.map((s) => s.id).sort());
+  });
+});
+
+describe("deviceState", () => {
+  it("new wins, then unknown, else known", () => {
+    assert.equal(deviceState({ isNew: true, unknown: true }), "new");
+    assert.equal(deviceState({ isNew: false, unknown: true }), "unknown");
+    assert.equal(deviceState({ isNew: false, unknown: false }), "known");
   });
 });

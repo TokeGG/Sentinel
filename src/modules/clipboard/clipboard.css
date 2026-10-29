@@ -1,0 +1,32 @@
+/* Clipboard & Quick-Launch: launcher tiles + history list with pin. Tokens only. */
+.clip-root { container-type: inline-size; display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.clip-root .ui-head { font-size: 1.05em; }
+.clip-root .ui-head .ui-count { background: var(--accent-soft); color: var(--accent-text); border-radius: 999px; padding: 1px 9px; }
+.clip-root .ui-btn.sm { padding: 3px 12px; font-size: 0.85em; }
+.clip-root .kit-tile { box-shadow: none; }
+
+.clip-launch { display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); margin-bottom: var(--gap); }
+.clip-launch:empty { display: none; }
+.clip-tile { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; padding: calc(10px * var(--density)) 6px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); color: var(--text); font: inherit; cursor: pointer; transition: border-color 0.12s, background 0.12s, transform 0.12s; }
+.clip-tile:hover:not(:disabled) { border-color: var(--accent-line); background: var(--accent-soft); transform: translateY(-1px); }
+.clip-tile:focus-visible { outline: none; box-shadow: var(--focus); }
+.clip-glyph { width: 34px; height: 34px; display: grid; place-items: center; border-radius: var(--radius); background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent-text); font-size: 1.1em; }
+.clip-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.85em; }
+
+.clip-controls { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
+.clip-controls .schedule-toggle { color: var(--text-dim); font-size: 0.85em; display: flex; align-items: center; gap: 6px; order: 2; }
+.clip-controls .schedule-toggle input { accent-color: var(--accent); }
+
+.clip-list { list-style: none; margin: var(--gap) 0 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.clip-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--gap); padding: 4px 4px 4px var(--pad); background: var(--surface); border: 1px solid transparent; border-left: 2px solid var(--line); border-radius: var(--r-sm); }
+.clip-item:hover { background: var(--accent-soft); }
+.clip-item.pinned { border-left-color: var(--accent); background: color-mix(in srgb, var(--accent-soft) 60%, var(--surface)); }
+.clip-text { min-width: 0; background: none; border: 0; padding: 4px 0; color: var(--text); font: 0.88em var(--font-mono); text-align: left; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.clip-text.open { white-space: pre-wrap; overflow-wrap: anywhere; overflow: visible; }
+.clip-age { font-size: 0.75em; color: var(--text-faint); white-space: nowrap; }
+.clip-pin { background: none; border: 0; padding: 2px 6px; border-radius: var(--r-sm); color: var(--text-faint); cursor: pointer; font-size: 1em; opacity: 0.6; }
+.clip-item:hover .clip-pin, .clip-pin[aria-pressed="true"], .clip-pin:focus-visible { opacity: 1; }
+.clip-pin[aria-pressed="true"] { color: var(--accent-text); }
+.clip-pin:hover { background: var(--hover); color: var(--accent-text); }
+.clip-pin:focus-visible { outline: none; box-shadow: var(--focus); }
+.clip-note { grid-column: 1 / -1; font-size: 0.75em; color: var(--text-dim); }

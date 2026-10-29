@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { conditionText, isSevere, placeView, severePlaces, tempText, toC, toF, weatherSections } from "./panelLogic.ts";
+import { conditionGlyph, conditionText, isSevere, placeView, severePlaces, tempText, toC, toF, weatherSections } from "./panelLogic.ts";
 
 describe("weather panelLogic", () => {
   it("toF/toC convert and round-trip", () => {
@@ -41,6 +41,12 @@ describe("weather panelLogic", () => {
     assert.equal(sparse.name, "Oslo");
     assert.equal(sparse.temp, "—");
     assert.equal(sparse.range, "");
+  });
+  it("conditionGlyph maps WMO codes", () => {
+    assert.equal(conditionGlyph(0), "☀️");
+    assert.equal(conditionGlyph(63), "🌧️");
+    assert.equal(conditionGlyph(95), "⛈️");
+    assert.equal(conditionGlyph(null), "");
   });
   it("severePlaces lists names of severe rows", () => {
     assert.deepEqual(severePlaces([{ place: "A", severe: true }, { place: "B" }]), ["A"]);

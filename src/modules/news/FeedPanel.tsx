@@ -8,6 +8,7 @@ import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule, type ModuleRow } from "../../ui/useModule";
 import { filterBySource, sourcesOf } from "./panelLogic";
+import "./news.css";
 
 export function FeedPanel({
   module,
@@ -26,13 +27,13 @@ export function FeedPanel({
   const sources = sourcesOf(rows);
   const shown = filterBySource(rows, sources.includes(source ?? "") ? source : null);
   return (
-    <>
+    <div className={`feed feed-${listId}`}>
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
         <span className="ui-count">{rows.length}</span>
       </h2>
-      <Sections>
+      <Sections className="feed-sections">
         <Section id="add">
           <QuickAdd module={module} busy={busy} run={run} />
         </Section>
@@ -59,6 +60,6 @@ export function FeedPanel({
           </div>
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

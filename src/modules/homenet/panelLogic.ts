@@ -40,3 +40,10 @@ export function newDevices<T extends Row>(rows: T[], knownIds: Set<string>): T[]
 export function deviceName(r: Row): string | null {
   return typeof r.tag === "string" && r.tag.trim() ? r.tag.trim() : null;
 }
+
+export type DeviceState = "new" | "known" | "unknown";
+
+/** Status dot for a device: new this session, tagged by the user, or unknown. */
+export function deviceState(d: { isNew: boolean; unknown: boolean }): DeviceState {
+  return d.isNew ? "new" : d.unknown ? "unknown" : "known";
+}

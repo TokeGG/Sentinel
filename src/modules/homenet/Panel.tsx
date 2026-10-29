@@ -1,9 +1,10 @@
 import { useRef, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
-import { Chip, EmptyState, ErrorLine, Table } from "../../ui/kit";
+import { Chip, EmptyState, ErrorLine } from "../../ui/kit";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
-import { deviceName, newDevices, sortDevices } from "./panelLogic";
+import { deviceName, deviceState, newDevices, sortDevices } from "./panelLogic";
+import "./homenet.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, updated, run } = useModule(module);
@@ -25,7 +26,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   }));
   const selected = mac || String(devices[0]?.mac ?? "");
   return (
-    <>
+    <div className="hn">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
@@ -40,16 +41,24 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           </div>
         </Section>
         <Section id="devices">
-          <Table
-            empty={hasScan ? "No devices yet — run a scan." : "No devices yet."}
-            columns={[
-              { key: "name", label: "Name", cellClass: (r) => (r.isNew ? "new" : r.unknown ? "dim" : undefined) },
-              { key: "ip", label: "IP" },
-              { key: "mac", label: "MAC" },
-              { key: "tag", label: "Tag", cellClass: () => "dim" },
-            ]}
-            rows={devices.map((d) => ({ ...d, name: d.isNew ? `${d.name} · new` : d.name }))}
-          />
+          {devices.length ? (
+            <ul className="hn-list">
+              <li className="hn-head" aria-hidden="true"><span /><span>Name</span><span>IP</span><span>MAC</span></li>
+              {devices.map((d) => {
+                const st = deviceState(d);
+                return (
+                  <li key={String(d.id)} className={`hn-dev ${st}`}>
+                    <i className="hn-dot" title={st} />
+                    <span className="hn-name">{d.name}{d.isNew && <em className="hn-new">NEW</em>}</span>
+                    <span className="hn-ip">{String(d.ip)}</span>
+                    <span className="hn-mac">{String(d.mac)}</span>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <EmptyState title={hasScan ? "No devices yet — run a scan." : "No devices yet."} />
+          )}
         </Section>
         <Section id="scan">
           <div className="ui-actions">
@@ -82,6 +91,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           )}
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

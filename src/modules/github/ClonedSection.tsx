@@ -42,38 +42,41 @@ export function ClonedSection({ refresh }: { refresh: unknown }) {
     reload();
   };
 
-  if (!items.length && !err) return <EmptyState title="No cloned repos yet" hint="Clone a repository and it shows up here." />;
+  const head = <h3 className="gh-sub">Cloned<span>{items.length}</span></h3>;
+  if (!items.length && !err) return <>{head}<EmptyState title="No cloned repos yet" hint="Clone a repository and it shows up here." /></>;
   return (
     <>
+      {head}
       {err && <ErrorLine message={err} />}
-      <ul className="ui-repos">
+      <ul className="gh-clones">
         {items.map((c) => {
           const i = info[c.id];
           const missing = i ? !i.exists : false;
           const types = i && !missing ? projectTypes(i) : [];
           return (
-            <li key={c.id} className="ui-repo">
-              <div className="ui-repo-top">
-                <span className="ui-repo-name" title={c.local_path}>{c.full_name}</span>
-                {missing && <span className="ui-cloned">Folder missing</span>}
+            <li key={c.id} className={`gh-clone${missing ? " missing" : ""}`}>
+              <div className="gh-top">
+                <span className="gh-mono" aria-hidden="true">▣</span>
+                <span className="gh-name" title={c.local_path}>{c.full_name}</span>
+                {missing && <span className="gh-chip warn">Folder missing</span>}
+                {types.map((t) => <span key={t} className="gh-chip">{t}</span>)}
               </div>
-              <p className="ui-repo-desc" title={c.local_path}>{c.local_path}</p>
-              <p className="ui-repo-desc">
-                Cloned {shortDate(c.cloned_at)} · last opened {shortDate(c.last_opened)}
-                {types.length ? ` · ${types.join(" · ")}` : ""}
-              </p>
+              <p className="gh-path" title={c.local_path}>{c.local_path}</p>
+              <p className="gh-desc">Cloned {shortDate(c.cloned_at)} · last opened {shortDate(c.last_opened)}</p>
               {confirm === c.id ? (
-                <div className="ui-actions">
-                  <p className="ui-repo-desc">{deletePreview(c.local_path, i)}</p>
-                  <button type="button" className="ui-btn primary" onClick={() => void act(() => deleteCloneFiles(c))}>Delete these files</button>
-                  <button type="button" className="ui-btn" onClick={() => setConfirm(null)}>Cancel</button>
+                <div className="gh-confirm">
+                  <p className="gh-desc">{deletePreview(c.local_path, i)}</p>
+                  <div className="gh-acts">
+                    <button type="button" className="ui-btn sm danger" onClick={() => void act(() => deleteCloneFiles(c))}>Delete these files</button>
+                    <button type="button" className="ui-btn sm" onClick={() => setConfirm(null)}>Cancel</button>
+                  </div>
                 </div>
               ) : (
-                <div className="ui-actions">
-                  <button type="button" className="ui-btn" disabled={missing} onClick={() => void act(() => openClone(c, "folder"))}>Open folder</button>
-                  <button type="button" className="ui-btn" disabled={missing} onClick={() => void act(() => openClone(c, "editor"))}>Open in VS Code</button>
-                  <button type="button" className="ui-btn" onClick={() => void act(() => forgetClone(c.id))}>Remove from list</button>
-                  <button type="button" className="ui-btn" disabled={missing} onClick={() => setConfirm(c.id)}>Delete files…</button>
+                <div className="gh-acts">
+                  <button type="button" className="ui-btn sm" disabled={missing} onClick={() => void act(() => openClone(c, "folder"))}>Open folder</button>
+                  <button type="button" className="ui-btn sm" disabled={missing} onClick={() => void act(() => openClone(c, "editor"))}>VS Code</button>
+                  <button type="button" className="ui-btn sm" onClick={() => void act(() => forgetClone(c.id))}>Remove from list</button>
+                  <button type="button" className="ui-btn sm danger" disabled={missing} onClick={() => setConfirm(c.id)}>Delete files…</button>
                 </div>
               )}
             </li>

@@ -1,11 +1,12 @@
 import type { ModuleManifest } from "../../core/module";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
-import { EmptyState, ErrorLine, Tile } from "../../ui/kit";
+import { EmptyState, ErrorLine } from "../../ui/kit";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useOption } from "../../ui/useOption";
 import { useModule } from "../../ui/useModule";
 import { placeView, severePlaces, type Units } from "./panelLogic";
+import "./weather.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
@@ -13,7 +14,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const hasAdd = useSections().includes("add");
   const severe = severePlaces(rows);
   return (
-    <>
+    <div className="wx">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
@@ -30,15 +31,17 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         </Section>
         <Section id="places">
           {rows.length ? (
-            <div className="ui-tiles">
+            <div className="wx-grid">
               {rows.map((r) => {
                 const v = placeView(r, units);
                 return (
-                  <Tile key={String(r.id)} title={v.name}>
-                    <div className="ui-temp">{v.temp}</div>
-                    <p className="ui-tile-body">{v.condition}{v.severe ? " ⚠" : ""}</p>
-                    {v.range && <span className="ui-meta">{v.range}</span>}
-                  </Tile>
+                  <article key={String(r.id)} className={`wx-card${v.severe ? " severe" : ""}`}>
+                    <h3 className="wx-name">{v.name}</h3>
+                    <span className="wx-glyph" aria-hidden="true">{v.glyph}</span>
+                    <div className="wx-temp">{v.temp}</div>
+                    <p className="wx-cond">{v.condition}{v.severe ? " ⚠" : ""}</p>
+                    {v.range && <span className="wx-range">{v.range}</span>}
+                  </article>
                 );
               })}
             </div>
@@ -60,6 +63,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           </div>
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

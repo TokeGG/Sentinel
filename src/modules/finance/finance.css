@@ -1,0 +1,33 @@
+/* Finance: ticker tiles with sparklines + congress table. Tokens only. */
+.fin-root { container-type: inline-size; display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.fin-root .ui-head { font-size: 1.05em; }
+.fin-root .ui-head .ui-count { background: var(--accent-soft); color: var(--accent-text); border-radius: 999px; padding: 1px 9px; }
+.fin-root .kit-tabs { border: 0; gap: 2px; padding: 3px; background: var(--base); border-radius: var(--radius); width: fit-content; }
+.fin-root .kit-tab { border: 0; margin: 0; border-radius: var(--r-sm); padding: 4px 14px; }
+.fin-root .kit-tab.on { background: var(--accent-soft); color: var(--accent-text); box-shadow: inset 0 0 0 1px var(--accent-line); }
+
+.fin-tiles { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--gap); grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+@container (min-width: 700px) { .fin-tiles { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); } }
+.fin-tile {
+  --tone: var(--text-faint);
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  background: var(--surface-2); border: 1px solid var(--line); border-top: 2px solid var(--tone);
+  border-radius: var(--radius); padding: var(--pad);
+}
+.fin-tile.up { --tone: var(--ok); }
+.fin-tile.down { --tone: var(--bad); }
+.fin-top { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.fin-sym { font-weight: 700; letter-spacing: 0.04em; overflow: hidden; text-overflow: ellipsis; }
+.fin-kind { margin-left: auto; font-size: 0.65em; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent-text); background: var(--accent-soft); border-radius: 999px; padding: 1px 6px; }
+.fin-spark { margin-left: auto; flex: none; line-height: 0; }
+.fin-price { font: 600 1.35em var(--font-mono); color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fin-chg { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-height: 1.6em; }
+.fin-chg small { color: var(--text-faint); font-size: 0.75em; }
+.fin-pill { font: 600 0.8em var(--font-mono); color: var(--tone); background: color-mix(in srgb, var(--tone) 16%, transparent); border-radius: 999px; padding: 1px 8px; }
+.fin-pill.up { color: var(--ok); } .fin-pill.down { color: var(--bad); }
+
+.fin-root .kit-table-wrap { max-height: none; }
+.fin-root .kit-table td, .fin-root .kit-table th { padding-block: 7px; }
+.fin-root .kit-table td:nth-child(2) { font-weight: 600; font-family: var(--font-mono); }
+.fin-root .kit-table td.up, .fin-root .kit-table td.down { font-weight: 600; }
+.fin-root .kit-table td.dim { font-style: normal; font-family: var(--font-mono); font-size: 0.9em; }

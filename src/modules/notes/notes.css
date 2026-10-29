@@ -1,0 +1,24 @@
+/* Notes: capture on top, inbox cards, filed list beside them when wide. */
+.nt { container-type: inline-size; display: flex; flex-direction: column; gap: var(--gap); }
+.nt-pill { margin-left: auto; font-size: 0.75em; padding: 1px 10px; border-radius: 999px; background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--accent-text); }
+.nt .nt-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); align-items: start; }
+.nt .ui-quickadd { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px; }
+.nt .ui-quickadd input { border: 0; background: transparent; padding-left: 8px; }
+.nt-list, .nt-filed { display: flex; flex-direction: column; gap: var(--gap); }
+.nt-filed { gap: 2px; margin-top: var(--gap); }
+.nt-note { background: var(--surface-2); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: var(--radius); padding: var(--pad); display: flex; flex-direction: column; gap: var(--gap); }
+.nt-note:hover { border-color: var(--accent-line); border-left-color: var(--accent); }
+.nt-body { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.5; }
+.nt-foot { margin-top: auto; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; padding-top: var(--gap); border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent); }
+.nt-file { margin-left: auto; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+.nt-foot .ui-file-text { flex: 0 1 110px; }
+.nt-tag { font-size: 0.78em; padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-text); }
+.nt .kit-row { padding: 2px 8px; border-radius: var(--r-sm); }
+.nt .kit-row:hover { background: var(--hover); }
+@container (min-width: 640px) {
+  .nt .nt-grid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+  .nt-grid > [data-section="capture"] { grid-column: 1 / -1; }
+  .nt-grid > [data-section="inbox"]:last-child { grid-column: 1 / -1; }
+  .nt-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); }
+  .nt-filed { margin-top: var(--gap); padding-left: var(--gap); border-left: 1px solid var(--line); }
+}

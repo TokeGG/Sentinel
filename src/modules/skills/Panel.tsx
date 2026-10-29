@@ -22,7 +22,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
     return () => void un.then((f) => f());
   }, [refresh]);
   return (
-    <>
+    <div className="sk-root">
       <h2 className="ui-head"><span className="ui-dot" />{module.name}<span className="ui-count">{items.length}</span></h2>
       {error && <ErrorLine message={error} />}
       {plan && (
@@ -35,6 +35,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="install"><Tile title="Install from GitHub"><InstallPane module={module} busy={busy} run={run} onPlan={setPlan} /></Tile></Section>
         <Section id="model"><Tile title="Local model (for the future bot)"><ModelPane busy={busy} run={run} /></Tile></Section>
       </Sections>
-    </>
+    </div>
   );
 }

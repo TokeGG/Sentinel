@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import type { ModuleManifest } from "../../core/module";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { EmptyState, ErrorLine, Tabs } from "../../ui/kit";
@@ -7,7 +6,9 @@ import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import { ClonedSection } from "./ClonedSection";
 import { TokenField } from "./TokenField";
-import { activeTab, repoView, rowsForTab, skillForTab, tabForSkill, type Tab } from "./panelLogic";
+import "./github.css";
+import { RepoCard } from "./RepoCard";
+import { activeTab, rowsForTab, skillForTab, tabForSkill, type Tab } from "./panelLogic";
 
 const TABS = [
   { id: "trending", label: "Trending" },
@@ -32,7 +33,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       ? "Pick a tab to load repositories."
       : "Re-enable “Fetch repos” or the tabs in Customize to load repositories.";
   return (
-    <>
+    <div className="gh-root">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
@@ -48,43 +49,10 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         </Section>
         <Section id="repos">
           {shown.length ? (
-            <ul className="ui-repos">
-              {shown.map((r) => {
-                const v = repoView(r);
-                return (
-                  <li key={String(r.id)} className="ui-repo">
-                    <div className="ui-repo-top">
-                      {v.link ? (
-                        <button type="button" className="ui-link ui-repo-name" title={v.name} onClick={() => void openUrl(v.link!)}>
-                          {v.name}
-                        </button>
-                      ) : (
-                        <span className="ui-repo-name">{v.name}</span>
-                      )}
-                      <span className="ui-stars">★ {v.stars}</span>
-                    </div>
-                    {v.description && <p className="ui-repo-desc">{v.description}</p>}
-                    <div className="ui-tile-foot">
-                      {v.language && (
-                        <span className="ui-lang">
-                          <i style={{ background: v.color ?? undefined }} />
-                          {v.language}
-                        </span>
-                      )}
-                      {v.cloned && <span className="ui-cloned">Cloned ✓</span>}
-                      <button
-                        type="button"
-                        className="ui-btn"
-                        style={{ marginLeft: "auto" }}
-                        disabled={busy}
-                        onClick={() => void run(ra.skill, { [ra.argName]: r[ra.fromField] })}
-                      >
-                        {v.cloned ? "Clone again…" : ra.label}
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
+            <ul className="gh-grid">
+              {shown.map((r) => (
+                <RepoCard key={String(r.id)} r={r} label={ra.label} busy={busy} onClone={() => void run(ra.skill, { [ra.argName]: r[ra.fromField] })} />
+              ))}
             </ul>
           ) : (
             <EmptyState title={tab === "starred" ? "No starred repos loaded" : "No repositories yet"} hint={hint} />
@@ -113,6 +81,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           </div>
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

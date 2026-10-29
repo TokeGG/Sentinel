@@ -1,10 +1,10 @@
 import { openUrl } from "@tauri-apps/plugin-opener";
 import type { ModuleManifest } from "../../core/module";
-import { Tile } from "../../ui/kit";
 import { FeedPanel } from "../news/FeedPanel";
 import { rowAge, sourceLabel } from "../news/panelLogic";
 import { safeLink } from "../../ui/safeLink";
-import { priceOf } from "./panelLogic";
+import { percentOff, priceOf } from "./panelLogic";
+import "./deals.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   return (
@@ -13,25 +13,33 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       listId="deals"
       empty="No deals yet"
       list={(rows) => (
-        <div className="ui-tiles">
+        <div className="dl-grid">
           {rows.map((r) => {
             const title = String(r.title);
             const price = priceOf(title);
+            const off = percentOff(title);
             const link = safeLink(r.link);
+            const src = sourceLabel(r);
             return (
-              <Tile key={String(r.id)}>
-                {price && <div className="ui-price">{price}</div>}
-                <p className="ui-tile-body">{title}</p>
-                <div className="ui-tile-foot">
-                  {sourceLabel(r) ? <span className="ui-src">{sourceLabel(r)}</span> : null}
-                  <span className="ui-meta">{rowAge(r)}</span>
-                  {link && (
-                    <button type="button" className="ui-btn" style={{ marginLeft: "auto" }} onClick={() => void openUrl(link)}>
-                      Open
-                    </button>
-                  )}
+              <article key={String(r.id)} className="dl-card">
+                <div className="dl-thumb" aria-hidden="true">{(src || "?").charAt(0).toUpperCase()}</div>
+                <div className="dl-main">
+                  <p className="dl-title" title={title}>{title}</p>
+                  <div className="dl-meta">
+                    {src ? <span className="ui-src">{src}</span> : null}
+                    <span className="ui-meta">{rowAge(r)}</span>
+                    {link && (
+                      <button type="button" className="dl-open" onClick={() => void openUrl(link)}>Open</button>
+                    )}
+                  </div>
                 </div>
-              </Tile>
+                {(price || off) && (
+                  <div className="dl-price">
+                    {price && <b>{price}</b>}
+                    {off && <span className="dl-off">{off}</span>}
+                  </div>
+                )}
+              </article>
             );
           })}
         </div>

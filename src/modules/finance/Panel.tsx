@@ -5,6 +5,7 @@ import { EmptyState, ErrorLine, Spark, Table, Tabs } from "../../ui/kit";
 import { QuickAdd } from "../../ui/QuickAdd";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
+import "./finance.css";
 import { changeInfo, emptyHistory, fmtPrice, pctText, shownParts, sortTrades, priceKey, trackPrices, tradeView } from "./panelLogic";
 
 type Part = "watchlist" | "congress";
@@ -29,7 +30,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const hasAdd = ids.includes("add");
   const hasActions = ids.includes("actions");
   return (
-    <>
+    <div className="fin-root">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
@@ -43,23 +44,23 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         {show.watchlist && (
           <Section id="watchlist">
             {watch.length ? (
-              <ul className="ui-quotes">
+              <ul className="fin-tiles">
                 {watch.map((r) => {
                   const series = hist.current.series[priceKey(r)] ?? [];
                   const { pct: chg, caption } = changeInfo(series, now);
                   const tone = chg === null || chg === 0 ? "flat" : chg > 0 ? "up" : "down";
                   return (
-                    <li key={String(r.id)} className="ui-quote">
-                      <span className="ui-quote-sym">
-                        {String(r.symbol).toUpperCase()}
-                        <small>{String(r.asset ?? "")}</small>
-                      </span>
-                      <span className="ui-quote-spark">{series.length > 1 && <Spark points={series.map((p) => p.price)} tone={tone} />}</span>
-                      <span className="ui-quote-price">{fmtPrice(r.price)}</span>
-                      <span className={`ui-chg ${tone}`}>
-                        {chg === null ? "" : pctText(chg)}
+                    <li key={String(r.id)} className={`fin-tile ${tone}`}>
+                      <div className="fin-top">
+                        <span className="fin-sym">{String(r.symbol).toUpperCase()}</span>
+                        <span className="fin-spark">{series.length > 1 && <Spark points={series.map((p) => p.price)} tone={tone} />}</span>
+                      </div>
+                      <div className="fin-price">{fmtPrice(r.price)}</div>
+                      <div className="fin-chg">
+                        {chg !== null && <span className={`fin-pill ${tone}`}>{tone === "up" ? "▲" : tone === "down" ? "▼" : "•"} {pctText(chg)}</span>}
                         {caption && <small>{caption}</small>}
-                      </span>
+                        {r.asset === "crypto" && <span className="fin-kind">crypto</span>}
+                      </div>
                     </li>
                   );
                 })}
@@ -101,6 +102,6 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           </div>
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

@@ -1,0 +1,24 @@
+/* PC Care: ring gauges for CPU/RAM, bar cards for drives. */
+.pc { container-type: inline-size; display: flex; flex-direction: column; gap: var(--gap); }
+.pc-rings { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); }
+.pc-disks { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 210px), 1fr)); gap: var(--gap); }
+.pc-meter { --tone: var(--ok); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad); display: flex; gap: var(--pad); min-width: 0; }
+.pc-meter.warn { --tone: var(--warn); }
+.pc-meter.bad { --tone: var(--bad); }
+.pc-meter.ring { flex-direction: column; align-items: center; text-align: center; }
+.pc-meter.bar { flex-direction: column; gap: 6px; }
+.pc-meter.bar .pc-meter-viz { order: 2; }
+.pc-meter-viz i { display: block; height: 6px; width: calc(var(--p) * 1%); background: var(--tone); border-radius: 3px; }
+.pc-meter.bar .pc-meter-viz { height: 6px; border-radius: 3px; background: var(--base); border: 1px solid var(--line); overflow: hidden; box-sizing: content-box; }
+.pc-meter.ring .pc-meter-viz { width: 92px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: radial-gradient(closest-side, var(--surface-2) 78%, transparent 80%), conic-gradient(var(--tone) calc(var(--p) * 1%), var(--base) 0); }
+.pc-meter.ring b { font-family: var(--font-display); font-size: 1.35em; }
+.pc-meter-txt { display: flex; flex-direction: column; min-width: 0; }
+.pc-meter.bar .pc-meter-txt { flex-direction: row; align-items: baseline; gap: var(--gap); }
+.pc-label { font-weight: 600; }
+.pc-sub { color: var(--text-dim); font-size: 0.85em; font-family: var(--font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-pct { margin-left: auto; font-family: var(--font-mono); color: var(--tone); }
+@container (min-width: 640px) {
+  .pc-rings { grid-template-columns: repeat(2, minmax(0, 260px)); }
+  .pc-meter.ring { flex-direction: row; text-align: left; justify-content: flex-start; }
+}
+@container (max-width: 340px) { .pc-rings { grid-template-columns: minmax(0, 1fr); } }

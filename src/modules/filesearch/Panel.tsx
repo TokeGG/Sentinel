@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
-import { Chip, EmptyState, ErrorLine, Row } from "../../ui/kit";
+import { EmptyState, ErrorLine } from "../../ui/kit";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useDebounced } from "../../ui/useDebounced";
 import { useModule } from "../../ui/useModule";
-import { DEBOUNCE_MS, SHOW_MAX, resultsOf, rootsOf, shortPath, shouldSearch } from "./panelLogic";
+import "./filesearch.css";
+import { DEBOUNCE_MS, SHOW_MAX, extOf, resultsOf, rootsOf, shortPath, shouldSearch, splitMatch } from "./panelLogic";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
@@ -28,20 +29,21 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const addFolder = (
     <button
       type="button"
-      className="ui-btn"
+      className="fs-chip add"
       disabled={busy}
       onClick={async () => {
         await run("add_root");
         searched.current = ""; // re-run the current query over the new folder
       }}
     >
-      Add folder
+      + Add folder
     </button>
   );
   const hasSearch = ids.includes("search");
   const rootsHome = ids.includes("roots");
   const searchBox = (
-    <div className="ui-quickadd">
+    <div className="fs-bar">
+      <span className="fs-glyph" aria-hidden="true">⌕</span>
       <input
         type="search"
         value={query}
@@ -55,7 +57,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   // If both search and folders are hidden, results hosts the box so the panel is never control-less.
   const boxInResults = !hasSearch && !rootsHome;
   return (
-    <>
+    <div className="fs-root">
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
@@ -67,13 +69,13 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           {searchBox}
         </Section>
         <Section id="roots">
-          <div className="ui-chips" aria-label="Search folders">
+          <div className="fs-chips" aria-label="Search folders">
             {roots.map((r) => (
-              <Chip key={r}>{shortPath(r, 32)}</Chip>
+              <span key={r} className="fs-chip" title={r}>{shortPath(r, 32)}</span>
             ))}
             {addFolder}
           </div>
-          <p className="ui-meta">Folders can be added but not removed from this panel.</p>
+          <p className="fs-hint">Folders can be added but not removed from this panel.</p>
         </Section>
         <Section id="results">
           {boxInResults && searchBox}
@@ -86,20 +88,26 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           ) : results.length === 0 ? (
             <EmptyState title={busy ? "Searching…" : "No matches"} hint={roots.length === 0 ? "Add a folder to search first." : undefined} />
           ) : (
-            <div className="ui-list">
-              {results.slice(0, SHOW_MAX).map((r) => (
-                <Row key={r.id}>
-                  <button type="button" className="ui-link" onClick={() => void run("open_result", { path: r.path })}>
-                    {r.name}
-                  </button>
-                  <span className="ui-meta ui-path" title={r.path}>{shortPath(r.folder, 40)}</span>
-                </Row>
-              ))}
-              {results.length > SHOW_MAX && <p className="ui-meta">Showing the first {SHOW_MAX} of {results.length} matches.</p>}
-            </div>
+            <ul className="fs-results">
+              {results.slice(0, SHOW_MAX).map((r) => {
+                const [pre, hit, post] = splitMatch(r.name, debounced);
+                return (
+                  <li key={r.id}>
+                    <button type="button" className="fs-row" title={r.path} onClick={() => void run("open_result", { path: r.path })}>
+                      <span className="fs-ext">{extOf(r.name) || "·"}</span>
+                      <span className="fs-main">
+                        <span className="fs-file">{pre}<mark>{hit}</mark>{post}</span>
+                        <span className="fs-folder">{shortPath(r.folder, 48)}</span>
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+              {results.length > SHOW_MAX && <li className="fs-hint">Showing the first {SHOW_MAX} of {results.length} matches.</li>}
+            </ul>
           )}
         </Section>
       </Sections>
-    </>
+    </div>
   );
 }

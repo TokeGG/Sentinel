@@ -11,3 +11,10 @@ const PRICE = new RegExp(String.raw`\$\s?${NUM}|USD\s?${NUM}`);
 export function priceOf(title: string): string | null {
   return PRICE.exec(title)?.[0] ?? null;
 }
+
+/** "-25%" when the title says "25% off" (1-99); null otherwise. */
+export function percentOff(title: string): string | null {
+  const m = /\b(\d{1,2})\s?%\s*off\b/i.exec(title);
+  const n = m ? Number(m[1]) : 0;
+  return n >= 1 && n <= 99 ? `-${n}%` : null;
+}

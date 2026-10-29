@@ -1,0 +1,16 @@
+/* Deals: product cards with a source thumb, title, and price + discount. */
+.dl-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--gap); }
+.dl-card { display: flex; align-items: center; gap: var(--pad); min-width: 0; padding: var(--pad); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); transition: border-color 0.12s; }
+.dl-card:hover { border-color: var(--accent-line); }
+.dl-thumb { flex: none; width: 48px; height: 48px; border-radius: var(--r-sm); display: grid; place-items: center; font-family: var(--font-display); font-weight: 700; font-size: 1.3em; color: var(--accent-text); background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 45%, var(--base)), var(--surface)); border: 1px solid var(--accent-line); }
+.dl-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.dl-title { margin: 0; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.dl-meta { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
+.dl-open { margin-left: auto; font: inherit; font-size: 0.8em; padding: 1px 10px; border-radius: 999px; background: none; color: var(--accent-text); border: 1px solid var(--accent-line); cursor: pointer; }
+.dl-open:hover { background: var(--accent-soft); }
+.dl-open:focus-visible { outline: none; box-shadow: var(--focus); }
+.dl-price { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.dl-price b { font-family: var(--font-display); font-size: 1.35em; color: var(--accent-text); }
+.dl-off { font-size: 0.72em; font-weight: 700; padding: 0 7px; border-radius: 999px; background: var(--ok-soft); color: var(--ok); }
+@container (min-width: 640px) { .dl-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (max-width: 380px) { .dl-thumb { display: none; } }

@@ -1,0 +1,19 @@
+/* Weather: the first place is a large hero card, the rest are compact cards. */
+.wx { container-type: inline-size; display: flex; flex-direction: column; gap: var(--gap); }
+.wx .ui-banner { display: flex; gap: 6px; }
+.wx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr)); gap: var(--gap); }
+.wx-card { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "name glyph" "temp glyph" "cond cond" "range range"; align-items: center; column-gap: var(--gap); padding: var(--pad); min-width: 0; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); }
+.wx-card.severe { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 8%, var(--surface-2)); }
+.wx-name { grid-area: name; margin: 0; font-size: 0.8em; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wx-glyph { grid-area: glyph; font-size: 1.8em; line-height: 1; }
+.wx-temp { grid-area: temp; font-family: var(--font-display); font-size: 2.2em; font-weight: 600; line-height: 1.1; color: var(--accent-text); }
+.wx-cond { grid-area: cond; margin: 0; }
+.wx-range { grid-area: range; font-family: var(--font-mono); font-size: 0.8em; color: var(--text-dim); margin-top: 2px; }
+.wx-card:first-child { grid-column: 1 / -1; background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 24%, var(--surface-2)), var(--surface-2) 75%); border-color: var(--accent-line); padding: calc(var(--pad) * 1.5); }
+.wx-card:first-child.severe { border-color: var(--warn); }
+.wx-card:first-child .wx-temp { font-size: 4em; font-weight: 500; color: var(--text); }
+.wx-card:first-child .wx-glyph { font-size: 4em; }
+.wx-card:first-child .wx-cond { font-size: 1.15em; }
+.wx .ui-quickadd { background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 6px; }
+.wx .ui-quickadd input { border: 0; background: transparent; padding-left: 8px; }
+@container (max-width: 340px) { .wx-card:first-child .wx-temp, .wx-card:first-child .wx-glyph { font-size: 2.8em; } }

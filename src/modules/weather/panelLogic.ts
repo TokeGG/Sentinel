@@ -42,6 +42,21 @@ export function isSevere(r: Row): boolean {
   return (num(r.code) ?? 0) >= 95;
 }
 
+/** Emoji for a WMO code (display only); "" when unknown. */
+export function conditionGlyph(code: unknown): string {
+  const n = num(code);
+  if (n === null) return "";
+  if (n === 0 || n === 1) return "☀️";
+  if (n === 2) return "⛅";
+  if (n === 3) return "☁️";
+  if (n === 45 || n === 48) return "🌫️";
+  if (n >= 71 && n <= 77) return "❄️";
+  if (n === 85 || n === 86) return "❄️";
+  if (n >= 95) return "⛈️";
+  if ((n >= 51 && n <= 67) || (n >= 80 && n <= 82)) return "🌧️";
+  return "";
+}
+
 export function placeName(r: Row): string {
   if (typeof r.place === "string" && r.place.trim()) return r.place.trim();
   const t = typeof r.title === "string" ? r.title : "";
@@ -60,6 +75,7 @@ export function placeView(r: Row, units: Units) {
     name: placeName(r),
     temp: tempText(r.temp_c, units),
     condition: conditionText(r.code),
+    glyph: conditionGlyph(r.code),
     range: hi !== null && lo !== null ? `H ${tempText(hi, units)} · L ${tempText(lo, units)}` : "",
     severe: isSevere(r),
   };

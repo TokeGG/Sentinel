@@ -1,7 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { clipboardSections, dedupeConsecutive, glyphFor, kindFor, previewText, splitRows } from "./panelLogic.ts";
+import { clipboardSections, dedupeConsecutive, glyphFor, kindFor, pinFirst, previewText, splitRows } from "./panelLogic.ts";
 
 describe("clipboard panelLogic", () => {
   it("previewText is single line, collapsed and ellipsised", () => {
@@ -46,5 +46,10 @@ describe("clipboard panelLogic", () => {
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
     const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
     assert.deepEqual(used, clipboardSections.map((s) => s.id).sort());
+  });
+  it("pinFirst moves pinned clips up and keeps the rest in order", () => {
+    const c = ["a", "b", "c", "d"].map((id) => ({ id }));
+    assert.deepEqual(pinFirst(c, new Set(["c", "b"])).map((x) => x.id), ["b", "c", "a", "d"]);
+    assert.deepEqual(pinFirst(c, new Set()).map((x) => x.id), ["a", "b", "c", "d"]);
   });
 });
