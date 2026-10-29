@@ -84,6 +84,10 @@ export async function getOrbitSpeed(): Promise<number> {
   return v === null ? 1 : clampSpeed(Number(v));
 }
 // Planet notification moons/bubble: default ON (anything but an explicit "0").
+// Default on: Windows "Animation effects: off" makes WebView2 report reduced motion,
+// which silently froze the map; the user opts back in to honouring it.
+export const getIgnoreReduced = async (): Promise<boolean> => (await readSetting("ignore_reduced_motion")) !== "0";
+export const setIgnoreReduced = (on: boolean) => writeSetting("ignore_reduced_motion", on ? "1" : "0");
 export const getNotifMoons = async (): Promise<boolean> => (await readSetting("notif_moons")) !== "0";
 export const setNotifMoons = (on: boolean) => writeSetting("notif_moons", on ? "1" : "0");
 export const setOrbitSpeed = (v: number) => writeSetting("orbit_speed", String(clampSpeed(v)));

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { getNotifMoons, getOrbitMotion, getOrbitSpeed } from "./layoutStore";
+import { getIgnoreReduced, getNotifMoons, getOrbitMotion, getOrbitSpeed } from "./layoutStore";
 import { saveNotifMoons, saveOrbitMotion, saveOrbitSpeed } from "./generalSettings";
-import { setNotifMoons as shareMoons, setOrbitMotion as shareMotion, setOrbitSpeed as shareSpeed } from "./motionStore";
+import { setIgnoreReduced as shareIgnore, setNotifMoons as shareMoons, setOrbitMotion as shareMotion, setOrbitSpeed as shareSpeed } from "./motionStore";
 import { SPEED_MAX, SPEED_MIN } from "./orbit";
 
 // HUD orbit controls: on/off button + speed slider. Loads the saved values on
@@ -13,6 +13,7 @@ export function OrbitControls({ refresh, fail }: { refresh: number; fail: (e: un
   useEffect(() => {
     getOrbitMotion().then((v) => { setOn(v); shareMotion(v); }).catch((e) => { setOn(true); fail(e); });
     getNotifMoons().then((v) => { setMoons(v); shareMoons(v); }).catch((e) => { setMoons(true); fail(e); }); // fail-open: on
+    getIgnoreReduced().then(shareIgnore).catch(fail);
     getOrbitSpeed().then((v) => { setSpeed(v); shareSpeed(v); }).catch(fail);
   }, [refresh]);
   const toggle = async () => {

@@ -70,8 +70,8 @@ src/
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..19 strictly ascending
-                        (19 = panel_prefs; 17-19 idempotent `IF NOT EXISTS`); loaded by
+  migrations/NN_<module>.sql — numbered SQL, versions 1..21 strictly ascending
+                        (21 = youtube_watched; 17-21 idempotent `IF NOT EXISTS`); loaded by
                         src/migrations.rs (order must match version)
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
@@ -96,7 +96,7 @@ Star and orbit motion obey one motion policy (`motionPolicy.ts`): both stop in
 game mode, when the window is hidden, or with reduced motion. Settings is a
 panel with id `hub.settings` (`SettingsPanel`, opened from the HUD), not a
 module. `app_settings` keys: `game_mode_auto`, `star_motion`, `orbit_motion`,
-`orbit_speed`, `notif_moons`, `restore_panels`, `appearance_defaults`. Layout
+`orbit_speed`, `notif_moons`, `ignore_reduced_motion`, `restore_panels`, `appearance_defaults`. Layout
 is persisted from the TS side in SQLite `panel_layout` / `app_settings` (Rust
 returns `SavedPanel`, the frontend writes; call `clampToScreen` before
 move/resize). **Game mode** (manual button or auto detection) pauses the
@@ -129,8 +129,8 @@ reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
 **Custom panels** exist for notes, news, deals, pccare, weather, homenet,
-github, finance, calendar, backup, clipboard, filesearch. email, pentest,
-social, youtube still use the generic panel (redesigns planned). To add one:
+github, finance, calendar, backup, clipboard, filesearch, youtube. email, pentest,
+social still use the generic panel (redesigns planned). To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
 3. Wrap each user-hideable part in `<Section id="...">` inside `<Sections>`.
@@ -152,8 +152,7 @@ that migrate fails (later loads succeed without migrating).
   `news/index.ts` (fetch/store). `deals/index.ts` reuses `news/rss.ts`
   directly rather than duplicating a parser — do the same for any future
   feed-based module.
-- **OAuth2 + PKCE, no client secret**: `youtube/pkce.ts` (pure, tested) +
-  `youtube/index.ts`. The loopback-redirect catcher is a *generic* Rust
+- **OAuth2 loopback redirect**: The loopback-redirect catcher is a *generic* Rust
   command, `oauth_listen_once(port, timeout_secs)` — reused as-is by
   `social/connectors.ts` for Mastodon/Reddit on different ports. A new OAuth
   connector should reuse this command, not write a new one.
@@ -168,7 +167,7 @@ that migrate fails (later loads succeed without migrating).
 - **Pure logic extracted for testability**: when a module's core decision
   (not its I/O) can be unit-tested without Tauri/DB, pull it into its own
   file and test it there — `pentest/scope.ts`, `news/rss.ts`,
-  `youtube/pkce.ts` are the examples. The `index.ts` stays thin and
+  `youtube/channelUrl.ts` are the examples. The `index.ts` stays thin and
   Tauri-coupled; the extracted file stays pure and gets a `.test.ts`.
 
 ## Build & verify
@@ -184,14 +183,14 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-326 TS tests + 4 size-guard tests + 48 Rust tests as of this commit. Run the
+364 TS tests + 4 size-guard tests + 48 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
 **File-size rule:** no .ts/.tsx/.rs file over ~150 lines (`*.test.ts` and Rust
 code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
 `scripts/check-file-size.mjs` has an ALLOW list of files awaiting their own
-split (finance, pentest, social connectors, youtube). Never add to it; shrink it.
+split (finance, pentest, social connectors). Never add to it; shrink it.
 
 **Updates:** Settings > Updates (`shell/updater.ts`) checks GitHub releases
 only on a button press (no background call). Releases are tag-driven (`v*`):
@@ -221,7 +220,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Rust `restore_database` copies only the files present in the backup, leaves
   stale `-wal`/`-shm` next to the restored db, copies over an open DB, and does
   no validation; needs its own fix.
-- email, pentest, social, youtube are not yet redesigned (generic panel).
+- email, pentest, social are not yet redesigned (generic panel).
 - Specified in `docs/superpowers/specs/` but not built: Discord panel (embedded
   web app; Go Live must work), multi-site chat, skills/MCP hub, browser bot.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
