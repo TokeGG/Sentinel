@@ -20,7 +20,7 @@ let opened = 0; // cascade slot only; main window's own counter
 // swaps the shared pool); they ask the main window to persist instead.
 export const LAYOUT_COMMIT = "layout-commit";
 export const LAYOUT_DELETE = "layout-delete";
-const inChrome = () => window.location.hash.startsWith("#/chrome/");
+const inChrome = () => /^#\/(chrome|grip)\//.test(window.location.hash);
 
 // Panel rects are relative to the MAIN window's client area. In any child
 // webview (chrome strip, Settings panel) window.inner* is that webview's own
@@ -87,9 +87,9 @@ export const getPanel = (id: string) => invoke<SavedPanel>("get_panel", { id });
 
 // During a pointer drag: invoke only, no persistence (commit on pointerup).
 export const dragMove = (id: string, x: number, y: number) =>
-  invoke<SavedPanel>("move_panel", { id, x, y });
+  invoke<void>("move_panel", { id, x, y });
 export const dragResize = (id: string, w: number, h: number) =>
-  invoke<SavedPanel>("resize_panel", { id, w, h });
+  invoke<void>("resize_panel", { id, w, h });
 
 export const commit = (p: SavedPanel): Promise<void> =>
   inChrome() ? emit(LAYOUT_COMMIT, p) : saveLayout(p.id, p.rect, p.z, p.state);

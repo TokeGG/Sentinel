@@ -15,6 +15,10 @@ pub fn label(id: &str) -> String {
 pub fn chrome_label(id: &str) -> String {
     format!("chrome-{}", id.replace('.', "_"))
 }
+/// Label of the panel's bottom-right resize-grip webview; injective like `label()`.
+pub fn grip_label(id: &str) -> String {
+    format!("grip-{}", id.replace('.', "_"))
+}
 /// Only http/https URLs may be loaded into a web panel.
 pub fn parse_web_url(u: &str) -> Result<tauri::Url, String> {
     let url: tauri::Url = u.parse().map_err(|e| format!("{e}"))?;

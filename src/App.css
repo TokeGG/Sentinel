@@ -331,9 +331,13 @@ body {
 }
 .panel-chrome-gear:hover { color: #fff; background: #23305e; }
 .panel-chrome-gear:focus-visible, .panel-chrome-close:focus-visible { outline: 2px solid var(--space-accent); outline-offset: -2px; }
-.panel-chrome-grip {
-  width: 16px;
-  height: 28px;
+/* Resize grip: 16px child webview at the panel's bottom-right corner. */
+html:has(.panel-grip), html:has(.panel-grip) body { background: #0d1430; margin: 0; overflow: hidden; }
+.panel-grip {
+  position: fixed;
+  inset: 0;
   cursor: nwse-resize;
-  background: linear-gradient(135deg, transparent 50%, var(--space-dim) 50%, transparent 70%);
+  touch-action: none;
+  user-select: none;
+  background: #0d1430 linear-gradient(135deg, transparent 50%, #7c86a6 50%, #7c86a6 58%, transparent 58%, transparent 72%, #7c86a6 72%, #7c86a6 80%, transparent 80%);
 }

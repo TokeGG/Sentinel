@@ -3,7 +3,7 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "webviews": ["panel-*", "chrome-*"],
+  "webviews": ["panel-*", "chrome-*", "grip-*"],
   "permissions": [
     "core:default",
     "core:webview:allow-set-webview-focus",

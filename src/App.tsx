@@ -12,6 +12,7 @@ import { saveLayout, deleteLayout } from "./shell/layoutStore";
 import { SETTINGS_CHANGED } from "./shell/generalSettings";
 import { useBadges } from "./shell/useBadges";
 import { ChromeRoute, chromeIdFromHash } from "./shell/ChromeRoute";
+import { GripRoute, gripIdFromHash } from "./shell/GripRoute";
 import "./modules/notes"; // self-registers into `registry` on import
 import "./modules/news";
 import "./modules/pccare";
@@ -91,8 +92,10 @@ function App() {
   const panelId = panelIdFromHash(window.location.hash);
   const chromeId = chromeIdFromHash(window.location.hash);
   // Child webviews (#/panel/, #/chrome/) never own scheduler timers.
-  setTimersOwner(panelId === null && chromeId === null);
+  const gripId = gripIdFromHash(window.location.hash);
+  setTimersOwner(panelId === null && chromeId === null && gripId === null);
   if (chromeId !== null) return <ChromeRoute id={chromeId} />;
+  if (gripId !== null) return <GripRoute id={gripId} />;
   return panelId !== null ? <PanelRoute id={panelId} /> : <MainShell />;
 }
 

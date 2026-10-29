@@ -10,8 +10,9 @@
 //! would just call `set_focus` and never re-create.
 //!
 //! Chrome (Task 9b): every panel is TWO child webviews — content
-//! (`label()`) and a 28px chrome strip (`chrome_label()`, route
-//! `#/chrome/<id>`) created after it so it stacks on top. Every path below
+//! (`label()`), a 28px chrome strip (`chrome_label()`, route
+//! `#/chrome/<id>`) and a 16px bottom-right resize grip (`grip_label()`, route
+//! `#/grip/<id>`), created after it so they stack on top. Every path below
 //! (create/destroy/move/resize/raise/show/hide) acts on both; `Spec.rect` is
 //! the OUTER rect and `geometry()` derives both webview rects from it.
 //!
@@ -20,7 +21,7 @@
 //! `panel_layout` (see persist.rs header).
 pub use super::ids::{label, parse_web_url, validate};
 pub(crate) use super::webview::{create, destroy, set_visible};
-pub(super) use super::webview::place;
+pub(super) use super::webview::{place, place_pos};
 pub use super::restore::*;
 pub use super::fullwindow::*;
 use super::persist::{self, Rect, SavedPanel};
@@ -93,18 +94,17 @@ fn update_rect(specs: &Specs, id: &str, f: impl FnOnce(&mut Rect)) -> Result<Rec
     Ok(s.rect)
 }
 
+/// Drag hot paths: sync, position-only moves, no reply payload; persisted on drag end.
 #[tauri::command]
-pub async fn move_panel(app: AppHandle, id: String, x: f64, y: f64) -> Result<SavedPanel, String> {
+pub fn move_panel(app: AppHandle, id: String, x: f64, y: f64) -> Result<(), String> {
     let rect = update_rect(&app.state::<Specs>(), &id, |r| (r.x, r.y) = (x, y))?;
-    place(&app, &id, rect)?;
-    saved(&id, rect, &app.state::<Mutex<Panels>>())
+    place_pos(&app, &id, rect)
 }
 
 #[tauri::command]
-pub async fn resize_panel(app: AppHandle, id: String, w: f64, h: f64) -> Result<SavedPanel, String> {
+pub fn resize_panel(app: AppHandle, id: String, w: f64, h: f64) -> Result<(), String> {
     let rect = update_rect(&app.state::<Specs>(), &id, |r| (r.w, r.h) = (w, h))?;
-    place(&app, &id, rect)?;
-    saved(&id, rect, &app.state::<Mutex<Panels>>())
+    place(&app, &id, rect)
 }
 
 /// The only function to change for fallback "A" (see header).

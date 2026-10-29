@@ -11,6 +11,35 @@ pub fn decide(auto: bool, fullscreen_foreground: bool, manual: bool) -> bool {
     should_enter(auto && fullscreen_foreground, GPU_PERCENT_UNAVAILABLE, manual)
 }
 
+/// Polls in a row a fullscreen foreground must persist before auto mode ENTERS
+/// (so an alt-tab flicker or the task switcher never counts). Exit is immediate.
+pub const ENTER_POLLS: u8 = 2;
+
+/// Debounce the raw fullscreen reading: `streak` counts consecutive true polls.
+/// While already `active`, a true reading holds the mode; a false one ends it.
+pub fn confirm_fullscreen(streak: &mut u8, raw: bool, active: bool) -> bool {
+    *streak = if raw { streak.saturating_add(1).min(ENTER_POLLS) } else { 0 };
+    raw && (active || *streak >= ENTER_POLLS)
+}
+
+pub type Edges = (i32, i32, i32, i32); // left, top, right, bottom
+
+/// A foreground window is "a game" only if it covers its whole monitor AND has
+/// no caption/frame. A maximized normal window overflows the monitor by the
+/// resize border (~8px) but has a caption, so it must NOT count.
+pub fn is_fullscreen_game(win: Edges, mon: Edges, framed: bool) -> bool {
+    !framed && win.0 <= mon.0 && win.1 <= mon.1 && win.2 >= mon.2 && win.3 >= mon.3
+}
+
+/// Shell / task-switcher windows that cover the screen during alt-tab.
+pub fn is_shell_class(class: &str) -> bool {
+    matches!(
+        class,
+        "Progman" | "WorkerW" | "Shell_TrayWnd" | "XamlExplorerHostIslandWindow" | "MultitaskingViewFrame"
+            | "ForegroundStaging" | "Windows.UI.Core.CoreWindow" | "TaskSwitcherWnd" | "TaskListThumbnailWnd"
+    )
+}
+
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Transition {
     Enter,
@@ -38,6 +67,30 @@ mod tests {
     #[test] fn auto_off_ignores_fullscreen() { assert!(!decide(false, true, false)); }
     #[test] fn auto_off_manual_still_enters() { assert!(decide(false, false, true)); }
     #[test] fn auto_on_fullscreen_enters() { assert!(decide(true, true, false)); }
+    #[test] fn maximized_framed_window_is_not_a_game() {
+        assert!(!is_fullscreen_game((-8, -8, 1928, 1088), (0, 0, 1920, 1080), true));
+    }
+    #[test] fn borderless_cover_is_a_game() {
+        assert!(is_fullscreen_game((0, 0, 1920, 1080), (0, 0, 1920, 1080), false));
+        assert!(!is_fullscreen_game((0, 0, 1920, 1040), (0, 0, 1920, 1080), false));
+    }
+    #[test] fn switcher_and_shell_classes_are_ignored() {
+        assert!(is_shell_class("MultitaskingViewFrame") && is_shell_class("WorkerW"));
+        assert!(!is_shell_class("UnrealWindow"));
+    }
+    #[test] fn alt_tab_flicker_never_enters() {
+        let mut n = 0;
+        assert!(!confirm_fullscreen(&mut n, true, false)); // one poll
+        assert!(!confirm_fullscreen(&mut n, false, false)); // switched back
+        assert!(!confirm_fullscreen(&mut n, true, false)); // streak restarted
+        assert!(confirm_fullscreen(&mut n, true, false)); // sustained
+    }
+    #[test] fn active_holds_then_exits_immediately() {
+        let mut n = 0;
+        assert!(confirm_fullscreen(&mut n, true, true));
+        assert!(!confirm_fullscreen(&mut n, false, true));
+        assert_eq!(n, 0);
+    }
     #[test] fn transitions_are_edge_triggered() {
         assert_eq!(transition(false, true), Some(Transition::Enter));
         assert_eq!(transition(true, true), None);

@@ -4,6 +4,15 @@ use super::persist::Rect;
 /// Height of the chrome strip stacked above every panel's content webview.
 pub const CHROME_H: f64 = 28.0;
 
+/// Side of the square resize-grip overlay webview at the panel's bottom-right.
+pub const GRIP: f64 = 16.0;
+
+/// Grip rect: bottom-right corner of the outer rect (never above the chrome strip).
+pub fn grip_rect(outer: Rect) -> Rect {
+    let side = GRIP.min(outer.w.max(0.0)).min((outer.h - CHROME_H).max(0.0));
+    Rect { x: outer.x + outer.w - side, y: outer.y + outer.h - side, w: side, h: side }
+}
+
 /// Outer rect (chrome included; the one stored/persisted/returned) ->
 /// (chrome rect, content rect).
 pub fn geometry(outer: Rect) -> (Rect, Rect) {
@@ -47,6 +56,17 @@ mod tests {
         let (c, b) = geometry(r(0.0, 0.0, 0.0, 0.0));
         assert_eq!((c.w, c.h), (0.0, CHROME_H));
         assert_eq!((b.y, b.w, b.h), (CHROME_H, 0.0, 0.0));
+    }
+    #[test]
+    fn grip_sits_at_bottom_right() {
+        let g = grip_rect(r(10.0, 20.0, 300.0, 200.0));
+        assert_eq!((g.x, g.y, g.w, g.h), (294.0, 204.0, GRIP, GRIP));
+    }
+    #[test]
+    fn grip_shrinks_in_tiny_panels() {
+        let g = grip_rect(r(0.0, 0.0, 100.0, 30.0));
+        assert_eq!((g.w, g.h), (2.0, 2.0));
+        assert_eq!(grip_rect(r(0.0, 0.0, 0.0, 0.0)).w, 0.0);
     }
     #[test]
     fn full_window_round_trips() {

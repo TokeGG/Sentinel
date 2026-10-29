@@ -1,8 +1,8 @@
 //! Webview pair handling for one panel (Task 9b): content (`label()`) +
 //! chrome strip (`chrome_label()`), always created, placed, shown, hidden
 //! and closed together. Pure split of the outer rect lives in geometry.rs.
-use super::geometry::geometry;
-use super::ids::{chrome_label, label, parse_web_url};
+use super::geometry::{geometry, grip_rect};
+use super::ids::{chrome_label, grip_label, label, parse_web_url};
 use super::manager::{e, Spec};
 use super::persist::Rect;
 use super::webguard::{allowed_host, permission_granted, unread_from_title};
@@ -39,7 +39,10 @@ fn create_both(app: &AppHandle, id: &str, s: &Spec) -> Result<(), String> {
     let (chrome, content) = geometry(s.rect);
     add(app, b, content)?;
     let cb = WebviewBuilder::new(chrome_label(id), WebviewUrl::App(format!("index.html#/chrome/{id}").into()));
-    add(app, cb, chrome)
+    add(app, cb, chrome)?;
+    // Grip last = topmost: a small overlay in the bottom-right corner of the content.
+    let gb = WebviewBuilder::new(grip_label(id), WebviewUrl::App(format!("index.html#/grip/{id}").into()));
+    add(app, gb, grip_rect(s.rect))
 }
 /// Web panel guards: https allow-list navigation (other links go to the
 /// system browser), media permissions for allowed pages only, and the unread
@@ -66,14 +69,20 @@ fn external(app: &AppHandle, u: &tauri::Url) -> bool {
     }
     false
 }
-/// Both webviews of a panel that currently exist: (webview, is_chrome).
-pub(crate) fn webviews(app: &AppHandle, id: &str) -> Vec<(tauri::Webview, bool)> {
-    [(label(id), false), (chrome_label(id), true)]
+#[derive(Clone, Copy, PartialEq)]
+pub(crate) enum Part {
+    Content,
+    Chrome,
+    Grip,
+}
+/// The webviews of a panel that currently exist.
+pub(crate) fn webviews(app: &AppHandle, id: &str) -> Vec<(tauri::Webview, Part)> {
+    [(label(id), Part::Content), (chrome_label(id), Part::Chrome), (grip_label(id), Part::Grip)]
         .into_iter()
-        .filter_map(|(l, c)| app.get_webview(&l).map(|w| (w, c)))
+        .filter_map(|(l, p)| app.get_webview(&l).map(|w| (w, p)))
         .collect()
 }
-/// Close both webviews; tries both even if the first fails.
+/// Close all webviews; tries all even if the first fails.
 pub(crate) fn destroy(app: &AppHandle, id: &str) -> Result<(), String> {
     let mut first = Ok(());
     for (w, _) in webviews(app, id) {
@@ -83,7 +92,7 @@ pub(crate) fn destroy(app: &AppHandle, id: &str) -> Result<(), String> {
     }
     first
 }
-/// Show (true) or hide (false) both webviews.
+/// Show (true) or hide (false) all webviews.
 pub(crate) fn set_visible(app: &AppHandle, id: &str, visible: bool) -> Result<(), String> {
     for (w, _) in webviews(app, id) {
         let r = if visible { w.show() } else { w.hide() };
@@ -91,13 +100,28 @@ pub(crate) fn set_visible(app: &AppHandle, id: &str, visible: bool) -> Result<()
     }
     Ok(())
 }
-/// Re-apply `geometry(outer)` to both webviews.
-pub(super) fn place(app: &AppHandle, id: &str, outer: Rect) -> Result<(), String> {
+fn part_rect(outer: Rect, p: Part) -> Rect {
     let (chrome, content) = geometry(outer);
-    for (w, is_chrome) in webviews(app, id) {
-        let r = if is_chrome { chrome } else { content };
+    match p {
+        Part::Content => content,
+        Part::Chrome => chrome,
+        Part::Grip => grip_rect(outer),
+    }
+}
+/// Re-apply the geometry of `outer` to every webview (position + size).
+pub(super) fn place(app: &AppHandle, id: &str, outer: Rect) -> Result<(), String> {
+    for (w, p) in webviews(app, id) {
+        let r = part_rect(outer, p);
         w.set_position(LogicalPosition::new(r.x, r.y)).map_err(e)?;
         w.set_size(LogicalSize::new(r.w, r.h)).map_err(e)?;
+    }
+    Ok(())
+}
+/// Drag hot path: sizes are unchanged, so only reposition (no size, no allocation of rects beyond the stack).
+pub(super) fn place_pos(app: &AppHandle, id: &str, outer: Rect) -> Result<(), String> {
+    for (w, p) in webviews(app, id) {
+        let r = part_rect(outer, p);
+        w.set_position(LogicalPosition::new(r.x, r.y)).map_err(e)?;
     }
     Ok(())
 }
