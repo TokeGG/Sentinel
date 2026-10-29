@@ -14,6 +14,7 @@ export const insertEpisode = (e: Episode): Q => ({
   sql: "INSERT INTO bot_episodes (goal, outcome, steps, thumbs, json) VALUES ($1,$2,$3,$4,$5)",
   params: [e.goal.slice(0, 500), e.outcome, e.steps.length, e.thumbs ?? null, JSON.stringify(e)],
 });
+export const episodeJson = (id: number): Q => ({ sql: "SELECT json, thumbs FROM bot_episodes WHERE id = $1", params: [id] });
 export const setThumbs = (id: number, thumbs: "up" | "down"): Q => ({ sql: "UPDATE bot_episodes SET thumbs = $2 WHERE id = $1", params: [id, thumbs] });
 export const recentEpisodes = (limit = 20): Q => ({ sql: "SELECT id, goal, outcome, steps, thumbs, created_at FROM bot_episodes ORDER BY id DESC LIMIT $1", params: [Math.max(1, Math.min(200, Math.floor(limit)))] });
 export const pruneEpisodes = (keep = 500): Q => ({ sql: "DELETE FROM bot_episodes WHERE id NOT IN (SELECT id FROM bot_episodes ORDER BY id DESC LIMIT $1)", params: [keep] });

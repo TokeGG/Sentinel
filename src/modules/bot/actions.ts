@@ -19,7 +19,7 @@ export const isIrreversible = (a: Action) => IRREVERSIBLE.has(a.type);
 
 export interface PageElement { id: string; role: string; text: string; visible: boolean }
 export interface Observation { url: string; title: string; text: string; elements: PageElement[]; hash: string }
-export interface ActionResult { ok: boolean; error?: string; changed: boolean; timedOut?: boolean }
+export interface ActionResult { ok: boolean; error?: string; changed: boolean; timedOut?: boolean; /** Text the action produced (a tool's reply); shown to the model as data. */ output?: string }
 
 export interface BrowserDriver {
   observe(): Promise<Observation>;
@@ -37,6 +37,7 @@ export interface Step {
   changed: boolean;
   timedOut?: boolean;
   retries?: number;
+  output?: string;
 }
 export type Outcome = "done" | "failed" | "maxSteps" | "timeout" | "loop" | "cancelled" | "denied";
 export interface Episode {

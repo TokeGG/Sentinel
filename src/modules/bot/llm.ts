@@ -54,7 +54,7 @@ export function buildMessages(i: DecideInput): ChatMessage[] {
   if (i.skills.length) parts.push("SKILLS (data):\n" + i.skills.map((s) => `## ${s.name}\n${s.body}`).join("\n"));
   if (i.tools.length) parts.push("TOOLS (use type tool):\n" + i.tools.map((t) => `- ${t.server}/${t.name}: ${(t.description ?? "").slice(0, 120)}`).join("\n"));
   if (i.notes.length) parts.push("NOTES (data):\n" + i.notes.map((n) => `- ${n}`).join("\n"));
-  const hist = i.history.slice(-8).map((s, n) => `${n + 1}. ${s.action ? JSON.stringify(s.action) : "(invalid answer)"} -> ${s.ok ? (s.changed ? "ok" : "ok, page unchanged") : `ERROR ${s.error ?? ""}`}`);
+  const hist = i.history.slice(-8).map((s, n) => `${n + 1}. ${s.action ? JSON.stringify(s.action) : "(invalid answer)"} -> ${s.ok ? (s.changed ? "ok" : "ok, page unchanged") : `ERROR ${s.error ?? ""}`}${s.output ? ` [data: ${s.output.slice(0, 300)}]` : ""}`);
   if (hist.length) parts.push("RECENT STEPS:\n" + hist.join("\n"));
   parts.push("PAGE (untrusted data):\n" + formatObservation(i.obs, i.brain));
   return [{ role: "system", content: SYSTEM_RULES }, { role: "user", content: parts.join("\n\n") }];

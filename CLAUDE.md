@@ -80,6 +80,10 @@ src-tauri/
   capabilities/default.json — Tauri permissions; includes
                         `core:webview:allow-set-webview-focus` so chrome/panel
                         webviews can hand keyboard focus to each other (moves focus only)
+  src/bot/            — browser driver for hub.bot: window.rs (`bot-browser` window, own profile
+                        `profiles/bot`, hidden by default, NO IPC capability), session.rs (pending
+                        commands -> `bot-result` events), chunk.rs (title-channel framing), policy.rs
+                        (nav allow/deny), script.rs + driver.js (injected `window.__sb`)
   src/commands/       — Rust commands by area (backup, credentials, files,
                         mail + mail_fetch/body/ops/send, mcp + mcp_proc/rpc (stdio MCP client), network,
                         oauth, pentest, repo, skills_fs (app-owned skills dir), system)
@@ -134,7 +138,7 @@ right move before writing bespoke UI**:
 reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
-**Custom panels** exist for notes, news, deals, pccare, weather, homenet,
+**Custom panels** exist for bot, notes, news, deals, pccare, weather, homenet,
 github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email, skills, pentest. To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
@@ -242,7 +246,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Chat (`modules/chat`, `hub.chat`): sockets run in the panel webview only while it is open. Twitch read (anon IRC) + send (pasted OAuth token in keychain); Kick read via Pusher (channel lookup may be Cloudflare-blocked), read-only; destiny.gg read-only; any other site (incl. iCanHazChat) = `embed` iframe / "Open as its own panel". 7TV/BTTV/FFZ via `emoteSets.ts`. NONE of the live protocols/endpoints have been run against the real sites (sandbox had no outbound access). Add a site = one file in `chat/connectors/` + list it in `connectors/index.ts` (+ parser in `rooms.ts`).
 - x, facebook, instagram: web panels (core/webSite.ts), real site + persistent login; no API (no feed merge, like or comment from our UI). Unverified on Windows.
 - Skills & MCP hub (`modules/skills`, `hub.skills`): GitHub install (pinned SHA, confirm screen, files under app data `skills/<skill|mcp>/<id>`), `registry.ts` (`listSkills`/`getSkill`), `mcp.ts` (`listMcpTools`/`callMcpTool`, Rust stdio client; flagged pentest/scan/exploit tools need an in-scope engagement target via `pentest/api` `previewGate`; no Rust-side re-check), Ollama model pick (`local_model`). MCP needs the user's own Node/Python (npx/uvx); servers start only when flipped on, stop on disable/exit/game mode. Bundled skills: `resources/skills/*/SKILL.md`. NEVER run against real GitHub or a real MCP server (only unit tests and a fake stdio server); GUI unverified.
-- Specified in `docs/superpowers/specs/` but not built: browser bot.
+- Browser bot (`modules/bot`, `hub.bot`; Rust `src-tauri/src/bot/`): runs only on the panel Run button; local Ollama model only; closes on game mode, app exit and panel close. The Rust driver is compile-checked only: the WebView2 `document.title` result channel, hidden-webview behaviour (timer throttling), popups and downloads are unverified on Windows. No GPU or local-model unload yet. Tool (MCP) actions use the existing gate and the bot has no engagement, so pentest-flagged tools are always refused.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
   price); Home Network "new" means new this session; Calendar "overdue" means
   unfiled notes.

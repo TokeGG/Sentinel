@@ -1,3 +1,4 @@
+mod bot;
 mod commands;
 mod migrations;
 mod gamemode;
@@ -11,6 +12,7 @@ pub fn run() {
         .manage(std::sync::Mutex::new(panels::state::Panels::new()))
         .manage(Specs::default())
         .manage(Mcp::default())
+        .manage(bot::BotBrowser::default())
         .manage(gamemode::GameMode::default())
         .setup(|app| {
             gamemode::start_poll(app.handle().clone());
@@ -65,6 +67,11 @@ pub fn run() {
             get_panel,
             toggle_full_window,
             restore_layout,
+            bot::bot_open,
+            bot::bot_navigate,
+            bot::bot_run,
+            bot::bot_show,
+            bot::bot_close,
             gamemode::set_game_mode,
             gamemode::set_game_mode_auto
         ])
@@ -73,6 +80,7 @@ pub fn run() {
         .run(|app, event| {
             if let tauri::RunEvent::Exit = event {
                 commands::mcp::stop_all(app);
+                bot::stop(app, "app exit");
             }
         });
 }

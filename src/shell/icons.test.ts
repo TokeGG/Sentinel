@@ -5,8 +5,8 @@ import { ICONS, isPathData, drawIcon } from "./icons.ts";
 import { RINGS } from "../core/customizeChecks.ts";
 
 const MODULE_ICONS = ["notes", "news", "pccare", "weather", "homenet", "github", "youtube", "finance", "deals",
-  "email", "social", "calendar", "backup", "pentest", "clipboard", "filesearch", "discord", "chat", "x", "facebook", "instagram", "skills"];
-const EXTRA = ["core", "bot"];
+  "email", "social", "calendar", "backup", "pentest", "clipboard", "filesearch", "discord", "chat", "x", "facebook", "instagram", "skills", "bot"];
+const EXTRA = ["core"];
 
 test("isPathData accepts SVG path data and rejects anything else", () => {
   for (const ok of ["M3 3h18v18H3z", "M12 2a10 10 0 1 0 .01 0", "M1,2 L3,4 c-1.5.5-2 1 -2 1Z", "m0 0l1e1 2"])
@@ -26,7 +26,7 @@ test("every ICONS entry parses as a non-empty path string and starts with M", ()
 // Manifests are the single source of truth; read their static ring/icon
 // literals (the index files import Tauri, so they cannot load under node).
 const dir = new URL("../modules/", import.meta.url);
-// (a folder without index.ts, e.g. modules/bot before its manifest exists, is not a module yet)
+// (a folder without index.ts is not a module yet)
 const meta = readdirSync(dir).filter((name) => existsSync(new URL(`${name}/index.ts`, dir))).map((name) => {
   const src = readFileSync(new URL(`${name}/index.ts`, dir), "utf8");
   return { name, ring: src.match(/^\s*ring: "([^"]*)",/m)?.[1], icon: src.match(/^\s*icon: "([^"]*)",/m)?.[1] };

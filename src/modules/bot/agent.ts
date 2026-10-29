@@ -92,7 +92,7 @@ export async function runAgent(d: AgentDeps, o: RunOpts): Promise<Episode> {
       res = verify(await d.driver.act(action));
     }
     await d.clock.sleep(d.brain.waitAfterAction ?? 900);
-    steps.push({ obs: obs.hash, action, ok: res.ok, error: res.error, changed: res.changed, timedOut: res.timedOut, retries });
+    steps.push({ obs: obs.hash, action, ok: res.ok, error: res.error, changed: res.changed, timedOut: res.timedOut, retries, output: res.output?.slice(0, 600) });
   }
 
   const ep: Episode = { goal: o.goal, variantId: d.variantId, steps, outcome, maxSteps, startedAt, endedAt: d.clock.now(), result };
