@@ -8,8 +8,8 @@ export const financeSections = [
   { id: "congress", label: "Congress trades" },
   { id: "add", label: "Add symbol" },
   { id: "actions", label: "Refresh & sync" },
+  { id: "tools", label: "Portfolio, alerts, budgets, bills, vault" },
 ];
-
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
 

@@ -1,6 +1,7 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { addCoupon, addWish, markWishesSeen, onNewOffer, removeCoupon, removeWish, unseenWishHits } from "./extraStore";
 import { addSource, listDealSources, loadDeals, setSource } from "./store";
 import { feedOps } from "../news/feedOps";
 import { feedSections } from "../news/panelLogic";
@@ -19,11 +20,13 @@ async function fetchDeals() {
       const items = parseFeed(xml);
       for (const item of items) {
         const result = await d.execute(
-          `INSERT OR IGNORE INTO deal_offers (source_id, guid, title, link, published_at)
-           VALUES ($1, $2, $3, $4, $5)`,
+          `INSERT OR IGNORE INTO deal_offers (source_id, guid, title, link, published_at) VALUES ($1, $2, $3, $4, $5)`,
           [source.id, item.guid, item.title, item.link, item.publishedAt]
         );
-        if (result.rowsAffected > 0) added++;
+        if (result.rowsAffected > 0) {
+          added++;
+          await onNewOffer(d, Number(result.lastInsertId), item.title, item.summary ?? "", source.label ?? source.url);
+        }
       }
     } catch {
       failed++;
@@ -57,9 +60,16 @@ export const dealsModule: ModuleManifest = {
     { name: "fetch_deals", run: fetchDeals },
     { name: "deal_sources", run: listDealSources },
     { name: "set_source", run: setSource },
+    { name: "add_wish", run: addWish },
+    { name: "remove_wish", run: removeWish },
+    { name: "mark_wishes_seen", run: markWishesSeen },
+    { name: "add_coupon", run: addCoupon },
+    { name: "remove_coupon", run: removeCoupon },
     ...feedOps("deals", "deal_sources", "deal_offers"),
   ],
   load: loadDeals,
+  // New deals matching a wishlist entry (counts only).
+  badge: unseenWishHits,
   quickAdd: { skill: "check_source", argName: "url", placeholder: "Add a deal feed URL…" },
   actions: [{ label: "Check sources", skill: "fetch_deals" }],
   schedule: { skill: "fetch_deals", intervalMinutes: 60 },

@@ -9,6 +9,7 @@ import { useTasteView } from "../../ui/useTasteView";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import { BillList } from "./BillList";
+import { MyReps } from "./MyReps";
 import { MemberList, VoteList } from "./OtherLists";
 import "./congress.css";
 import { TABS, filterBills, filterMembers, filterVotes, shownTab, splitRows, type Tab } from "./panelLogic";
@@ -80,6 +81,11 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         {tab === "members" && (
           <Section id="members">
             {none ? <EmptyState title="Nothing synced yet" /> : <MemberList members={filterMembers(members, q, followed, party)} busy={busy} run={run} taste={taste} forYou={forYou} />}
+          </Section>
+        )}
+        {tab === "mine" && (
+          <Section id="mine">
+            <MyReps members={members} busy={busy} run={run} />
           </Section>
         )}
       </Sections>

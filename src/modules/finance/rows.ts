@@ -26,6 +26,7 @@ export function toWatchRow(r: WatchRow): Record<string, unknown> {
     dbId: r.id,
     symbol: r.symbol,
     asset: r.kind,
+    group: typeof r.grp === "string" ? r.grp : "",
     price: r.last_price,
     last_checked: r.last_checked,
   };

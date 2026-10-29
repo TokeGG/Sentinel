@@ -25,3 +25,9 @@
 .cg-party.p-D { color: #6ab0ff; }
 .cg-party.p-R { color: #ff7b7b; }
 .cg-party.p-I { color: #c8c8c8; }
+.cg-diff { margin: 0; padding-left: var(--sp-3, 12px); font-size: var(--fs-xs); color: var(--accent-text); }
+.cg-diff s { opacity: 0.6; }
+.cg-mine { display: flex; flex-direction: column; gap: var(--sp-2); }
+.cg-pos { font-weight: 700; font-size: 0.8em; }
+.cg-pos.yea, .cg-pos.aye { color: var(--ok); }
+.cg-pos.nay, .cg-pos.no { color: var(--bad, inherit); }

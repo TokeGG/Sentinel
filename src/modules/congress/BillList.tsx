@@ -37,6 +37,11 @@ export function BillList({ bills, busy, run, taste, forYou }: { bills: BillRow[]
                 {b.history.slice(-3).map((h) => <li key={h.date + h.text}><span className="ui-meta">{h.date}</span> {h.text}</li>)}
               </ul>
             )}
+            {b.followed && (b.changes?.length ?? 0) > 0 && (
+              <ul className="cg-diff" aria-label="What changed">
+                {b.changes!.map((c) => <li key={c.field}><b>{c.field}:</b> <s>{c.from || "—"}</s> → {c.to || "—"}</li>)}
+              </ul>
+            )}
             <div className="cg-foot">
               {b.sponsor && <span className="ui-meta">Sponsor: {b.sponsor}</span>}
               <span className="cg-acts">

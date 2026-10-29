@@ -3,18 +3,21 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import type { ModuleManifest } from "../../core/module";
 import { FeedPanel } from "../news/FeedPanel";
 import { rowAge, sourceLabel } from "../news/panelLogic";
-import { Chip } from "../../ui/kit";
+import { Chip, Spark } from "../../ui/kit";
 import { safeLink } from "../../ui/safeLink";
 import { TasteBar } from "../../ui/TasteBar";
 import { TasteButtons } from "../../ui/TasteButtons";
 import { useOption } from "../../ui/useOption";
 import { useTasteView } from "../../ui/useTasteView";
 import { WhyBadge } from "../../ui/WhyBadge";
+import { DealExtras } from "./DealExtras";
 import { DealSources } from "./DealSources";
 import { CATEGORIES } from "./defaults";
 import { percentOff, priceOf } from "./panelLogic";
 import { dealTaste } from "./taste";
 import "./deals.css";
+
+const FAIR: Record<string, string> = { lowest: "Lowest seen", fair: "Fair price", high: "Above usual" };
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { taste, forYou, setForYou } = useTasteView(module.id, useOption("taste", true));
@@ -32,6 +35,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             {CATEGORIES.map((c) => <Chip key={c.id} on={cat === c.id} onClick={() => setCat(cat === c.id ? null : c.id)}>{c.label}</Chip>)}
           </div>
           <DealSources module={module} run={run} busy={busy} version={rows} />
+          <DealExtras run={run} busy={busy} version={rows} />
         </>
       )}
       list={(rows) => (
@@ -48,7 +52,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
               <article key={String(r.id)} className="dl-card">
                 <div className="dl-thumb" aria-hidden="true">{(src || "?").charAt(0).toUpperCase()}</div>
                 <div className="dl-main">
-                  <p className="dl-title" title={title}>{title}</p>
+                  <p className="dl-title" title={title}>{r.wished ? "★ " : ""}{title}</p>
                   <div className="dl-meta">
                     {src ? <span className="ui-src">{src}</span> : null}
                     <span className="ui-meta">{rowAge(r)}</span>
@@ -65,6 +69,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                   <div className="dl-price">
                     {price && <b>{price}</b>}
                     {off && <span className="dl-off">{off}</span>}
+                    {r.fair ? <span className={`dl-fair ${String(r.fair)}`} title="Against earlier prices of this deal">{FAIR[String(r.fair)]}</span> : null}
+                    {Array.isArray(r.history) && r.history.length > 1 && <Spark points={r.history as number[]} />}
                   </div>
                 )}
               </article>

@@ -58,3 +58,9 @@ describe("parseFeed", () => {
     assert.deepEqual(parseFeed("<rss><channel></channel></rss>"), []);
   });
 });
+
+it("enclosure + summary", () => {
+  const [i] = parseFeed(`<rss><channel><item><title>Ep 1</title><guid>g</guid><description>&lt;p&gt;Use code SAVE20&lt;/p&gt;</description><enclosure url="https://x.org/e.mp3" length="1" type="audio/mpeg"/></item></channel></rss>`);
+  assert.deepEqual(i.enclosure, { url: "https://x.org/e.mp3", type: "audio/mpeg" });
+  assert.equal(i.summary, "Use code SAVE20");
+});

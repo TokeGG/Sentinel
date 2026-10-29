@@ -105,7 +105,7 @@ describe("finance panelLogic", () => {
     assert.equal(tradeView({ id: "t-4" }).who, "Unknown");
   });
   it("shownParts: tabs pick one data section; hidden/absent sections never leave nothing", () => {
-    const all = ["tabs", "watchlist", "congress", "add", "actions"];
+    const all = ["tabs", "watchlist", "congress", "add", "actions", "tools"];
     assert.deepEqual(shownParts(all, "watchlist"), { tab: "watchlist", watchlist: true, congress: false });
     assert.deepEqual(shownParts(all, "congress"), { tab: "congress", watchlist: false, congress: true });
     // active tab's section hidden -> fall to the visible one
@@ -116,7 +116,7 @@ describe("finance panelLogic", () => {
     assert.deepEqual(shownParts(["congress"], "watchlist"), { tab: "congress", watchlist: false, congress: true });
   });
   it("section ids", () => {
-    assert.deepEqual(financeSections.map((s) => s.id), ["tabs", "watchlist", "congress", "add", "actions"]);
+    assert.deepEqual(financeSections.map((s) => s.id), ["tabs", "watchlist", "congress", "add", "actions", "tools"]);
   });
   it("every <Section id> in Panel.tsx is declared, and vice versa", () => {
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");

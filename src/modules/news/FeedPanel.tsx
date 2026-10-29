@@ -21,7 +21,7 @@ export function FeedPanel({
   module: ModuleManifest;
   listId: string; // the section id of the item list ("headlines" / "deals")
   empty: string;
-  list: (rows: ModuleRow[], busy: boolean) => ReactNode;
+  list: (rows: ModuleRow[], busy: boolean, run: ModuleState["run"]) => ReactNode;
   toolbar?: (s: { rows: ModuleRow[]; busy: boolean; run: ModuleState["run"] }) => ReactNode; // above the list, always shown
 }) {
   const { rows, busy, error, run } = useModule(module);
@@ -51,7 +51,7 @@ export function FeedPanel({
         <Section id={listId}>
           {toolbar?.({ rows, busy, run })}
           {error && !rows.length && <ErrorLine message={error} />}
-          {shown.length ? list(shown, busy) : <EmptyState title={empty} hint={hasAdd ? "Add a feed to get started." : "Add a feed to get started (re-enable “Add feed” in Customize)."} />}
+          {shown.length ? list(shown, busy, run) : <EmptyState title={empty} hint={hasAdd ? "Add a feed to get started." : "Add a feed to get started (re-enable “Add feed” in Customize)."} />}
         </Section>
         <Section id="status">
           <div className="ui-controls">

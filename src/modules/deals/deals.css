@@ -18,3 +18,9 @@
 .dl-sources { margin-bottom: var(--gap); font-size: var(--fs-xs); }
 .dl-src { display: flex; justify-content: space-between; gap: var(--sp-2); align-items: center; padding: 2px 0; }
 .dl-acts { display: flex; gap: var(--sp-2); align-items: center; margin-left: auto; }
+.dl-extras { display: flex; flex-direction: column; gap: var(--sp-1); margin-bottom: var(--gap); font-size: var(--fs-xs); }
+.dl-num { max-width: 80px; }
+.dl-code { font-family: var(--font-mono, monospace); letter-spacing: 0.05em; }
+.dl-fair { font-size: 0.68em; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line); }
+.dl-fair.lowest { background: var(--ok-soft); color: var(--ok); }
+.dl-fair.high { color: var(--warn, inherit); }

@@ -31,3 +31,12 @@
 .fin-root .kit-table td:nth-child(2) { font-weight: 600; font-family: var(--font-mono); }
 .fin-root .kit-table td.up, .fin-root .kit-table td.down { font-weight: 600; }
 .fin-root .kit-table td.dim { font-style: normal; font-family: var(--font-mono); font-size: 0.9em; }
+.fin-tools { display: flex; flex-direction: column; gap: var(--sp-2); margin-top: var(--gap); }
+.fin-part { display: flex; flex-direction: column; gap: var(--sp-1); font-size: var(--fs-xs); }
+.fin-line { display: flex; align-items: center; gap: var(--sp-2); flex-wrap: wrap; padding: 2px 0; border-bottom: 1px solid var(--line); }
+.fin-line.fired { color: var(--accent-text); }
+.fin-num { max-width: 90px; }
+.fin-grp { width: 80px; font: inherit; font-size: 0.75em; background: transparent; color: inherit; border: 1px solid var(--line); border-radius: var(--r-sm); padding: 0 4px; }
+.fin-bar { flex: 1; min-width: 60px; height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.fin-bar span { display: block; height: 100%; background: var(--accent); }
+.fin-line.fired .fin-bar span { background: var(--bad, var(--accent)); }

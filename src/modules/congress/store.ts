@@ -2,6 +2,7 @@
 import { getDb } from "../../core/db";
 import type { Bill, Member, Vote } from "./parse";
 import { followUpdates, type FollowRow } from "./panelLogic";
+import { loadDiffs } from "./repStore";
 
 export async function saveBills(bills: Bill[]): Promise<void> {
   const d = await getDb();
@@ -74,7 +75,7 @@ export async function markSeen(ref: string | null): Promise<void> {
 /** Deletes cached bills/votes/members; follows are kept (and re-attach on the next sync). */
 export async function clearCache(): Promise<void> {
   const d = await getDb();
-  for (const t of ["congress_bills", "congress_votes", "congress_members"]) await d.execute(`DELETE FROM ${t}`);
+  for (const t of ["congress_bills", "congress_votes", "congress_members", "congress_rep_votes"]) await d.execute(`DELETE FROM ${t}`);
 }
 
 export async function unseenCount(): Promise<number> {
@@ -97,6 +98,7 @@ export async function loadRows(): Promise<Raw[]> {
     `SELECT m.*, f.ref IS NOT NULL AS followed FROM congress_members m
      LEFT JOIN congress_follows f ON f.kind = 'member' AND f.ref = m.id ORDER BY m.name LIMIT 700`
   );
+  const diffs = await loadDiffs();
   const hist = (s: unknown) => {
     try { return JSON.parse(String(s)); } catch { return []; }
   };
@@ -104,7 +106,7 @@ export async function loadRows(): Promise<Raw[]> {
     ...bills.map((b) => ({
       kind: "bill", id: `bill-${b.id}`, title: `${b.number} ${b.title}`, label: b.status_label,
       ref: b.id, number: b.number, congress: b.congress, status: b.status, statusLabel: b.status_label, statusDate: b.status_date,
-      introduced: b.introduced, sponsor: b.sponsor, link: b.link, history: hist(b.history), followed: !!b.followed, unseen: !!b.unseen,
+      introduced: b.introduced, sponsor: b.sponsor, link: b.link, history: hist(b.history), followed: !!b.followed, unseen: !!b.unseen, changes: diffs.get(String(b.id)) ?? [],
     })),
     ...votes.map((v) => ({
       kind: "vote", id: `vote-${v.id}`, title: String(v.question), label: v.result, ref: v.id, chamber: v.chamber, question: v.question,

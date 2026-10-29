@@ -2,6 +2,7 @@ import { registerModule, type ModuleManifest } from "../../core/module";
 import { congressSections } from "./panelLogic";
 import { clearCache, follow, loadRows, markSeen, unfollow, unseenCount } from "./store";
 import { syncCongress } from "./sync";
+import { setSeat } from "./repStore";
 
 const str = (v: unknown) => String(v ?? "").trim();
 
@@ -30,6 +31,7 @@ export const congressModule: ModuleManifest = {
     { name: "follow", run: async (a) => { const t = target(a); await follow(t.kind, t.ref, str(a?.label) || t.ref); return { ok: true }; } },
     { name: "unfollow", run: async (a) => { const t = target(a); await unfollow(t.kind, t.ref); return { ok: true }; } },
     { name: "mark_seen", run: async (a) => { await markSeen(str(a?.ref) || null); return { ok: true }; } },
+    { name: "set_seat", run: setSeat },
     { name: "clear_cache", run: async () => { await clearCache(); return { ok: true }; } },
   ],
   load: loadRows,

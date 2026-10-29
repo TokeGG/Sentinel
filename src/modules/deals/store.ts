@@ -2,6 +2,7 @@
 import { getDb } from "../../core/db";
 import { categoryOk } from "./defaults";
 import { seedIfEmpty } from "./seed";
+import { decorate } from "./extraStore";
 
 export interface DealSource extends Record<string, unknown> { id: number; url: string; label: string | null; category: string; enabled: number }
 
@@ -39,10 +40,10 @@ export async function setSource(args?: Record<string, unknown>) {
 export async function loadDeals(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   await seedIfEmpty(d);
-  return d.select(`
+  return decorate(await d.select(`
     SELECT o.*, s.label, s.url AS source_url, COALESCE(m.category, 'general') AS category
     FROM deal_offers o JOIN deal_sources s ON s.id = o.source_id
     LEFT JOIN deal_source_meta m ON m.url = s.url
     WHERE COALESCE(m.enabled, 1) = 1
-    ORDER BY COALESCE(o.published_at, o.fetched_at) DESC LIMIT 200`);
+    ORDER BY COALESCE(o.published_at, o.fetched_at) DESC LIMIT 200`));
 }

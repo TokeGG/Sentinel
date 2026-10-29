@@ -9,13 +9,15 @@ export const congressSections = [
   { id: "bills", label: "Bills" },
   { id: "votes", label: "Roll-call votes" },
   { id: "members", label: "Members" },
+  { id: "mine", label: "My representatives" },
 ];
 
-export type Tab = "bills" | "votes" | "members";
+export type Tab = "bills" | "votes" | "members" | "mine";
 export const TABS: { id: Tab; label: string }[] = [
   { id: "bills", label: "Bills" },
   { id: "votes", label: "Votes" },
   { id: "members", label: "Members" },
+  { id: "mine", label: "My reps" },
 ];
 
 /** The tab to show: `chosen` if its section is visible, else the first visible one (null if none). */
@@ -26,7 +28,7 @@ export function shownTab(ids: string[], chosen: Tab): Tab | null {
 
 /** A load() row: the parsed record plus `ref` (its database id; `id` is the prefixed row key). */
 type Ref<T> = T & { ref: string };
-export type BillRow = Ref<Bill> & { followed: boolean; unseen: boolean };
+export type BillRow = Ref<Bill> & { followed: boolean; unseen: boolean; changes?: { field: string; from: string; to: string }[] };
 export type VoteRow = Ref<Vote>;
 export type MemberRow = Ref<Member> & { followed: boolean };
 

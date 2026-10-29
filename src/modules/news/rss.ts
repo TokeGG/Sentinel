@@ -7,6 +7,8 @@ export interface FeedItem {
   title: string;
   link: string;
   publishedAt: string | null;
+  enclosure?: { url: string; type: string } | null; // podcast audio etc.
+  summary?: string; // plain text, <= 400 chars
 }
 
 export function tag(block: string, name: string): string | null {
@@ -32,6 +34,13 @@ export function blocks(xml: string, tagName: string): string[] {
   return xml.match(re) ?? [];
 }
 
+const plain = (h: string | null): string => (h ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().slice(0, 400);
+
+function enclosureOf(item: string): { url: string; type: string } | null {
+  const url = attr(item, "enclosure", "url");
+  return url ? { url, type: attr(item, "enclosure", "type") ?? "" } : null;
+}
+
 export function parseFeed(xml: string): FeedItem[] {
   const rssItems = blocks(xml, "item");
   if (rssItems.length > 0) {
@@ -43,6 +52,8 @@ export function parseFeed(xml: string): FeedItem[] {
         title: tag(item, "title") || "(untitled)",
         link,
         publishedAt: tag(item, "pubDate"),
+        enclosure: enclosureOf(item),
+        summary: plain(tag(item, "description")),
       };
     });
   }
@@ -56,6 +67,7 @@ export function parseFeed(xml: string): FeedItem[] {
       title: tag(entry, "title") || "(untitled)",
       link,
       publishedAt: tag(entry, "updated"),
+      summary: plain(tag(entry, "summary") ?? tag(entry, "content")),
     };
   });
 }
