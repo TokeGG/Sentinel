@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { pccareSections } from "./panelLogic";
 
 interface DiskMetric {
   mount: string;
@@ -64,22 +65,33 @@ async function applyCleanup() {
 
 async function loadRows(): Promise<Record<string, unknown>[]> {
   if (previewedFiles) {
+    if (previewedFiles.length === 0) return [{ id: "tmp-none", kind: "tmp-none", title: "Nothing to clean" }];
     return previewedFiles.map((f, i) => ({
       id: `tmp-${i}`,
+      kind: "tmp",
+      path: f.path,
+      size_bytes: f.size_bytes,
       title: `${f.path} (${(f.size_bytes / 1024).toFixed(0)} KB)`,
     }));
   }
   const m = last ?? (await getMetrics());
   const rows: Record<string, unknown>[] = [
-    { id: "cpu", title: `CPU: ${m.cpu_percent.toFixed(1)}%` },
+    { id: "cpu", kind: "cpu", percent: m.cpu_percent, title: `CPU: ${m.cpu_percent.toFixed(1)}%` },
     {
       id: "ram",
+      kind: "ram",
+      used_mb: m.ram_used_mb,
+      total_mb: m.ram_total_mb,
       title: `RAM: ${m.ram_used_mb} / ${m.ram_total_mb} MB (${((m.ram_used_mb / m.ram_total_mb) * 100).toFixed(0)}%)`,
     },
   ];
   for (const d of m.disks) {
     rows.push({
       id: `disk-${d.mount}`,
+      kind: "disk",
+      mount: d.mount,
+      used_gb: d.used_gb,
+      total_gb: d.total_gb,
       title: `${d.mount}: ${d.used_gb.toFixed(1)} / ${d.total_gb.toFixed(1)} GB`,
     });
   }
@@ -89,9 +101,17 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const pcCareModule: ModuleManifest = {
   id: "hub.pccare",
   name: "PC Care",
+  accent: "#4fd6a0",
+  ring: "system",
+  icon: "pccare",
   description:
     'Live CPU/RAM/disk metrics. "Preview temp cleanup" lists your OS temp folder (read-only); "Apply cleanup" deletes exactly what was previewed, nothing else. "Refresh" returns to the metrics view.',
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: {
+    sections: pccareSections,
+    options: [{ key: "warnAt", label: "Gauge warning at (%)", type: "number", default: 85, min: 50, max: 99 }],
+  },
   skills: [
     { name: "get_metrics", run: getMetrics },
     { name: "preview_cleanup", run: previewCleanup },

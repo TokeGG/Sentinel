@@ -4,6 +4,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { getCredential } from "../../core/credentials";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { githubSections } from "./panelLogic";
 
 const MODULE_ID = "hub.github";
 const API = "https://api.github.com";
@@ -13,6 +14,7 @@ interface RepoHit extends Record<string, unknown> {
   html_url: string;
   description: string | null;
   stargazers_count: number;
+  language?: string | null;
 }
 
 async function authHeaders(): Promise<Record<string, string>> {
@@ -21,6 +23,7 @@ async function authHeaders(): Promise<Record<string, string>> {
 }
 
 let lastResults: RepoHit[] = [];
+let lastSource: "trending" | "starred" = "trending"; // which fetch filled lastResults (panel tabs)
 
 // No auth needed: public search, approximating "trending" as most-starred
 // repos created in the last 14 days (GitHub has no official trending API).
@@ -34,6 +37,7 @@ async function fetchTrending() {
   );
   const data = (await res.json()) as { items?: RepoHit[] };
   lastResults = data.items ?? [];
+  lastSource = "trending";
   await logActivity("github", "fetch_trending", "public search, no auth", `${lastResults.length} repo(s)`);
   return { ok: true, count: lastResults.length };
 }
@@ -47,6 +51,7 @@ async function fetchStarred() {
   const res = await fetch(`${API}/user/starred?per_page=50`, { headers });
   if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
   lastResults = (await res.json()) as RepoHit[];
+  lastSource = "starred";
   await logActivity("github", "fetch_starred", "your starred repos", `${lastResults.length} repo(s)`);
   return { ok: true, count: lastResults.length };
 }
@@ -67,21 +72,42 @@ async function cloneRepo(args?: Record<string, unknown>) {
   return { ok: true, destDir };
 }
 
+// Extra fields beyond id/title/link/label (kept for the generic list) feed the
+// custom panel: name, stars, language and description come from the same API
+// response; `cloned` is a read-only lookup in cloned_repos (repo = html_url).
 async function loadRows(): Promise<Record<string, unknown>[]> {
+  let cloned = new Set<string>();
+  try {
+    const d = await getDb();
+    cloned = new Set((await d.select<{ repo: string }[]>("SELECT repo FROM cloned_repos")).map((r) => r.repo));
+  } catch {
+    // the list still works without the "cloned" marker
+  }
   return lastResults.map((r) => ({
     id: r.full_name,
     title: `${r.full_name} ★${r.stargazers_count}`,
     link: r.html_url,
     label: r.description ?? undefined,
+    name: r.full_name,
+    stars: r.stargazers_count,
+    language: r.language ?? null,
+    description: r.description ?? null,
+    source: lastSource,
+    cloned: cloned.has(r.html_url),
   }));
 }
 
 export const githubModule: ModuleManifest = {
   id: MODULE_ID,
   name: "GitHub Discovery",
+  accent: "#b18cff",
+  ring: "security",
+  icon: "github",
   description:
     "Browse trending/starred repos. \"Install\" clones to a folder you pick — never auto-run.",
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: { sections: githubSections },
   skills: [
     { name: "fetch_trending", run: fetchTrending },
     { name: "fetch_starred", run: fetchStarred },

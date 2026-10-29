@@ -2,7 +2,10 @@
 // built-in or later installed from GitHub — declares one of these. The shell
 // never hardcodes module-specific UI beyond what `panel` tells it to render.
 
-import { skillRefs, webError } from "./manifestChecks.ts";
+import type { ComponentType } from "react";
+import { skillRefs, uiError, webError } from "./manifestChecks.ts";
+import { accentError, customizeError, iconError, ringError, type CustomizeDef, type Ring } from "./customizeChecks.ts";
+export type { CustomizeDef, OptionDef, Ring } from "./customizeChecks.ts";
 
 export type PanelKind = "list" | "table" | "chat" | "custom" | "web";
 
@@ -53,9 +56,15 @@ export interface ModuleManifest {
   // on (persisted in `schedule_settings`), never just because this field
   // exists. Keeps "no background task without explicit enable" true.
   schedule?: { skill: string; intervalMinutes: number };
-  // For panel === "web": an https site shown in an isolated webview, with its
-  // own persistent profile (cookies/storage) named by `profile`.
+  // panel === "web": an https site in an isolated webview; `profile` names its persistent storage.
   web?: { url: string; profile: string };
+  accent?: string; // #rrggbb default accent for this module's panel and planet
+  ring?: Ring; // star-map orbit ring; default "system" (see ringOf)
+  icon?: string; // glyph key in src/shell/icons.ts ICONS, drawn on the planet
+  customize?: CustomizeDef; // user-tunable sections/options (generic customize pane)
+  // Required for panel === "custom": lazy-loaded panel body.
+  ui?: () => Promise<{ default: ComponentType<{ module: ModuleManifest }> }>;
+  badge?: () => Promise<number>;
 }
 
 export class ManifestError extends Error {}
@@ -102,9 +111,7 @@ export function validateManifest(m: ModuleManifest, existing: ModuleManifest[]) 
     seen.add(s.name);
   }
   if ((m.panel === "list" || m.panel === "table") && !m.load) {
-    throw new ManifestError(
-      `${where}: panel "${m.panel}" needs a load() to render anything`
-    );
+    throw new ManifestError(`${where}: panel "${m.panel}" needs a load() to render anything`);
   }
   for (const f of m.forms ?? []) {
     if (f.fields.length === 0) {
@@ -119,8 +126,9 @@ export function validateManifest(m: ModuleManifest, existing: ModuleManifest[]) 
   if (m.schedule && m.schedule.intervalMinutes < 1) {
     throw new ManifestError(`${where}: schedule.intervalMinutes must be >= 1`);
   }
-  const webErr = webError(m);
-  if (webErr) throw new ManifestError(`${where}: ${webErr}`);
+  const extraErr = webError(m) ?? uiError(m) ?? accentError(m.accent) ?? ringError(m.ring) ??
+    iconError(m.icon) ?? customizeError(m.customize);
+  if (extraErr) throw new ManifestError(`${where}: ${extraErr}`);
   const credKeys = new Set<string>();
   for (const f of m.credentialFields ?? []) {
     if (!f.key?.trim()) {
@@ -133,6 +141,7 @@ export function validateManifest(m: ModuleManifest, existing: ModuleManifest[]) 
   }
 }
 
+export const ringOf = (m: Pick<ModuleManifest, "ring">): Ring => m.ring ?? "system";
 export const registry: ModuleManifest[] = [];
 
 export function registerModule(manifest: ModuleManifest) {

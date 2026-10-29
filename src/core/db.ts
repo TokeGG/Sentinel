@@ -1,11 +1,16 @@
 import Database from "@tauri-apps/plugin-sql";
 
-let db: Database | null = null;
+let loading: Promise<Database> | null = null;
 
-// One shared handle; migrations already ran in src-tauri/src/lib.rs on startup.
-export async function getDb(): Promise<Database> {
-  if (!db) db = await Database.load("sqlite:sentinel.db");
-  return db;
+// tauri-plugin-sql runs the migrations only inside the FIRST `load` call; an
+// overlapping second load returns at once, before the new tables exist. So
+// every caller shares one load promise (cleared on failure so it can retry).
+export function getDb(): Promise<Database> {
+  loading ??= Database.load("sqlite:sentinel.db").catch((e) => {
+    loading = null;
+    throw e;
+  });
+  return loading;
 }
 
 // The shared activity log every module writes to (Core Architecture: "what

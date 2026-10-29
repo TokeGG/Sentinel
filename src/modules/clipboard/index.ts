@@ -2,6 +2,7 @@ import { readText } from "@tauri-apps/plugin-clipboard-manager";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { clipboardSections } from "./panelLogic";
 
 interface ClipRow extends Record<string, unknown> {
   id: number;
@@ -28,7 +29,7 @@ async function checkClipboard() {
 
   const d = await getDb();
   await d.execute("INSERT INTO clipboard_history (content) VALUES ($1)", [text]);
-  await logActivity("clipboard", "check_clipboard", "new clipboard content", text.slice(0, 60));
+  await logActivity("clipboard", "check_clipboard", `captured a clip (${text.length} chars)`, "ok");
   return { ok: true, captured: true };
 }
 
@@ -62,17 +63,22 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
     "SELECT * FROM clipboard_history ORDER BY copied_at DESC LIMIT 30"
   );
   return [
-    ...launches.map((l) => ({ id: `launch-${l.id}`, title: `▶ ${l.label}`, link: undefined, path: l.path })),
-    ...clips.map((c) => ({ id: `clip-${c.id}`, title: c.content.slice(0, 140) })),
+    ...launches.map((l) => ({ id: `launch-${l.id}`, title: `▶ ${l.label}`, link: undefined, label: l.label, path: l.path })),
+    ...clips.map((c) => ({ id: `clip-${c.id}`, title: c.content.slice(0, 140), copied_at: c.copied_at })),
   ];
 }
 
 export const clipboardModule: ModuleManifest = {
   id: "hub.clipboard",
   name: "Clipboard & Quick-Launch",
+  accent: "#b6e04f",
+  ring: "system",
+  icon: "clipboard",
   description:
-    "Quick-launch shortcuts (apps/files/folders you add) plus a clipboard history. Polling is off by default — switch on Auto-check to start capturing.",
-  panel: "list",
+    "Quick-launch shortcuts (apps/files/folders you add) plus a clipboard history. Polling is off by default — switch on Auto-refresh to start capturing.",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: { sections: clipboardSections },
   skills: [
     { name: "check_clipboard", run: checkClipboard },
     { name: "add_launch_item", run: addLaunchItem },

@@ -1,4 +1,5 @@
 import { getDb, logActivity } from "../../core/db";
+import { notesSections } from "./panelLogic";
 import { registerModule, type ModuleManifest } from "../../core/module";
 
 interface Note extends Record<string, unknown> {
@@ -37,11 +38,28 @@ async function loadNotes(): Promise<Record<string, unknown>[]> {
   );
 }
 
+/** Planet badge: notes not yet filed (read-only query). */
+async function unfiledCount(): Promise<number> {
+  const d = await getDb();
+  const r = await d.select<{ n: number }[]>(
+    "SELECT COUNT(*) AS n FROM notes WHERE filed_to IS NULL OR TRIM(filed_to) = ''"
+  );
+  return Number(r[0]?.n ?? 0);
+}
+
 export const notesModule: ModuleManifest = {
   id: "hub.notes",
   name: "Notes",
+  accent: "#ffb454",
+  ring: "daily",
+  icon: "notes",
   description: "Quick-capture inbox — untagged until you file it.",
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: {
+    sections: notesSections,
+  },
+  badge: unfiledCount,
   skills: [
     { name: "capture_note", run: captureNote },
     { name: "file_note", run: fileNote },

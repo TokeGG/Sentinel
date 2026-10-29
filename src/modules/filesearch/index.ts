@@ -3,6 +3,7 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { openPath } from "@tauri-apps/plugin-opener";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { filesearchSections } from "./panelLogic";
 
 let lastResults: { path: string }[] = [];
 
@@ -34,15 +35,26 @@ async function search(args?: Record<string, unknown>) {
 }
 
 async function loadRows(): Promise<Record<string, unknown>[]> {
-  return lastResults.map((r, i) => ({ id: i, title: r.path, path: r.path }));
+  // Read-only extra rows (kind "root") so the panel can show the saved folders.
+  const d = await getDb();
+  const roots = await d.select<{ path: string }[]>("SELECT path FROM search_roots ORDER BY path");
+  return [
+    ...roots.map((r, i) => ({ id: `root-${i}`, kind: "root", title: r.path, path: r.path })),
+    ...lastResults.map((r, i) => ({ id: i, kind: "result", title: r.path, path: r.path })),
+  ];
 }
 
 export const fileSearchModule: ModuleManifest = {
   id: "hub.filesearch",
   name: "Local File Search",
+  accent: "#6ad0ff",
+  ring: "system",
+  icon: "filesearch",
   description:
     "Filename search over folders you add — not full-disk indexing, scoped to exactly what you've added.",
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: { sections: filesearchSections },
   skills: [
     { name: "add_root", run: addRoot },
     { name: "search", run: search },

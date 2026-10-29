@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { homenetSections } from "./panelLogic";
 
 interface RawDevice {
   ip: string;
@@ -52,15 +53,24 @@ async function loadDevices(): Promise<Record<string, unknown>[]> {
     id: r.id,
     title: `${r.ip} — ${r.mac}`,
     label: r.tag,
+    ip: r.ip,
+    mac: r.mac,
+    tag: r.tag,
+    last_seen: r.last_seen,
   }));
 }
 
 export const homeNetModule: ModuleManifest = {
   id: "hub.homenet",
   name: "Home Network",
+  accent: "#2ee6d0",
+  ring: "system",
+  icon: "homenet",
   description:
     "Devices from your OS's own ARP cache — passive, no active scan. Doubles as the allow-list source for the Pentest Lab's own-infrastructure scope.",
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: { sections: homenetSections },
   skills: [
     { name: "scan_network", run: scanNetwork },
     { name: "tag_device", run: tagDevice },

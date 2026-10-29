@@ -1,6 +1,7 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
+import { feedSections } from "../news/panelLogic";
 import { parseFeed } from "../news/rss"; // deals sources are RSS/Atom too — same parser, no duplication
 
 interface DealItem extends Record<string, unknown> {
@@ -61,7 +62,7 @@ async function fetchDeals() {
 async function loadItems(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   return await d.select<DealItem[]>(`
-    SELECT deal_offers.*, deal_sources.label
+    SELECT deal_offers.*, deal_sources.label, deal_sources.url AS source_url
     FROM deal_offers
     JOIN deal_sources ON deal_sources.id = deal_offers.source_id
     ORDER BY COALESCE(published_at, fetched_at) DESC
@@ -72,8 +73,15 @@ async function loadItems(): Promise<Record<string, unknown>[]> {
 export const dealsModule: ModuleManifest = {
   id: "hub.deals",
   name: "Deals & Promos",
+  accent: "#ff9a4d",
+  ring: "daily",
+  icon: "deals",
   description: "RSS/Atom deal feeds you add — same fetch+dedupe pattern as News.",
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: {
+    sections: feedSections("deals", "Deals"),
+  },
   skills: [
     { name: "check_source", run: addSource },
     { name: "fetch_deals", run: fetchDeals },

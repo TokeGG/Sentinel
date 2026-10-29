@@ -2,6 +2,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { parseFeed } from "./rss";
+import { feedSections } from "./panelLogic";
 
 interface NewsItem extends Record<string, unknown> {
   id: number;
@@ -62,7 +63,7 @@ async function fetchFeeds() {
 async function loadItems(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   return await d.select<NewsItem[]>(`
-    SELECT news_items.*, news_sources.label
+    SELECT news_items.*, news_sources.label, news_sources.url AS source_url
     FROM news_items
     JOIN news_sources ON news_sources.id = news_items.source_id
     ORDER BY COALESCE(published_at, fetched_at) DESC
@@ -73,8 +74,15 @@ async function loadItems(): Promise<Record<string, unknown>[]> {
 export const newsModule: ModuleManifest = {
   id: "hub.news",
   name: "News",
+  accent: "#6aa5ff",
+  ring: "daily",
+  icon: "news",
   description: "RSS/Atom feeds you add — fetched on demand, deduped by guid.",
-  panel: "list",
+  panel: "custom",
+  ui: () => import("./Panel"),
+  customize: {
+    sections: feedSections("headlines", "Headlines"),
+  },
   skills: [
     { name: "add_source", run: addSource },
     { name: "fetch_feeds", run: fetchFeeds },

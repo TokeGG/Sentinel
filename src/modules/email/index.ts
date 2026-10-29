@@ -87,6 +87,9 @@ async function loadRows(): Promise<Record<string, unknown>[]> {
 export const emailModule: ModuleManifest = {
   id: MODULE_ID,
   name: "Email",
+  accent: "#7fa6d6",
+  ring: "daily",
+  icon: "email",
   description:
     "Generic IMAP/SMTP. Read-only fetch and send are distinct actions — nothing sends automatically.",
   panel: "list",

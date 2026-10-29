@@ -1,38 +1,50 @@
-// Pure canvas drawing for one planet; no React state.
-import { hashId, type PlanetPos } from "./planets";
+// Cached planet/sun sprites: gradient disc + white glyph rendered once into an
+// offscreen canvas per planet, redrawn only when its device-pixel size, hue or
+// icon changes (zoom, dpr). A frame is then one unscaled drawImage per planet.
+import { drawIcon } from "./icons";
 
-export function drawPlanet(ctx: CanvasRenderingContext2D, p: PlanetPos, name: string, hover: boolean) {
-  const hue = hashId(p.id) % 360;
-  const g = ctx.createRadialGradient(p.x - p.r * 0.35, p.y - p.r * 0.35, p.r * 0.1, p.x, p.y, p.r);
-  g.addColorStop(0, `hsl(${hue} 70% 72%)`);
-  g.addColorStop(1, `hsl(${hue} 55% 22%)`);
-  if (hover) {
-    ctx.shadowColor = `hsl(${hue} 90% 70%)`;
-    ctx.shadowBlur = p.r * 0.8;
+export type Sprite = { c: HTMLCanvasElement; px: number; hue: number; icon?: string; dpr: number };
+const TAU = Math.PI * 2;
+
+/** Sprite for a disc of CSS radius `r` (plus a `glow` x r halo for the sun). */
+export function sprite(prev: Sprite | undefined, hue: number, r: number, dpr: number, icon?: string, glow = 0): Sprite {
+  const px = 2 * Math.ceil((r + Math.ceil(r * glow) + 2) * dpr); // even, whole device pixels
+  if (prev && prev.px === px && prev.hue === hue && prev.icon === icon && prev.dpr === dpr) return prev;
+  const c = prev?.c ?? document.createElement("canvas");
+  c.width = c.height = px; // also clears a reused canvas
+  const g = c.getContext("2d")!;
+  const m = px / 2, rd = r * dpr;
+  if (glow) {
+    const h = g.createRadialGradient(m, m, rd * 0.6, m, m, m);
+    h.addColorStop(0, `hsla(${hue} 95% 65% / 0.45)`);
+    h.addColorStop(1, `hsla(${hue} 95% 60% / 0)`);
+    g.fillStyle = h;
+    g.fillRect(0, 0, px, px);
   }
-  ctx.beginPath();
-  ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-  ctx.fillStyle = g;
-  ctx.fill();
-  ctx.shadowBlur = 0;
-  if (hover) {
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "rgba(255,255,255,0.8)";
-    ctx.stroke();
+  const d = g.createRadialGradient(m - rd * 0.35, m - rd * 0.35, rd * 0.1, m, m, rd);
+  d.addColorStop(0, glow ? `hsl(${hue} 100% 80%)` : `hsl(${hue} 70% 62%)`);
+  d.addColorStop(1, glow ? `hsl(${hue - 15} 90% 42%)` : `hsl(${hue} 55% 20%)`);
+  g.fillStyle = d;
+  g.beginPath();
+  g.arc(m, m, rd, 0, TAU);
+  g.fill();
+  if (icon) {
+    g.scale(dpr, dpr);
+    drawIcon(g, icon, m / dpr, m / dpr, r * 1.15, "#ffffff");
   }
-  ctx.font = `${hover ? 600 : 400} 13px Inter, Avenir, Helvetica, Arial, sans-serif`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-  ctx.fillStyle = hover ? "#ffffff" : "#aab3cf";
-  ctx.fillText(name, p.x, p.y + p.r + 6);
+  return { c, px, hue, icon, dpr };
 }
 
-// Deterministic starfield (seeded LCG) so redraws don't flicker.
-export function drawStars(ctx: CanvasRenderingContext2D, w: number, h: number) {
-  let s = 12345;
-  const rnd = () => ((s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff);
-  ctx.fillStyle = "rgba(220,230,255,0.7)";
-  for (let i = 0; i < Math.floor((w * h) / 4000); i++) {
-    ctx.fillRect(rnd() * w, rnd() * h, rnd() < 0.1 ? 2 : 1, 1);
+/** One planet (or the sun) centered at screen (x, y), snapped to device
+ *  pixels so the blit is a plain copy; hover adds a white ring. */
+export function drawPlanet(ctx: CanvasRenderingContext2D, sp: Sprite, x: number, y: number, r: number, hover: boolean) {
+  const d = sp.dpr, half = sp.px / 2;
+  ctx.drawImage(sp.c, Math.round(x * d - half) / d, Math.round(y * d - half) / d, sp.px / d, sp.px / d);
+  if (hover) {
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "rgba(255,255,255,0.85)";
+    ctx.beginPath();
+    ctx.arc(x, y, r + 2, 0, TAU);
+    ctx.stroke();
   }
 }

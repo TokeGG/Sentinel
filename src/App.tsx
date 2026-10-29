@@ -5,7 +5,10 @@ import { listen } from "@tauri-apps/api/event";
 import { StarMap } from "./shell/StarMap";
 import { GameHud } from "./shell/GameHud";
 import { PanelRoute, panelIdFromHash } from "./shell/PanelRoute";
-import { restore } from "./shell/panelApi";
+import { restore, LAYOUT_COMMIT, LAYOUT_DELETE, type SavedPanel } from "./shell/panelApi";
+import { saveLayout, deleteLayout } from "./shell/layoutStore";
+import { SETTINGS_CHANGED } from "./shell/generalSettings";
+import { useBadges } from "./shell/useBadges";
 import { ChromeRoute, chromeIdFromHash } from "./shell/ChromeRoute";
 import "./modules/notes"; // self-registers into `registry` on import
 import "./modules/news";
@@ -29,6 +32,8 @@ import "./App.css";
 // that module and never start the scheduler, restore layout, or listen.
 function MainShell() {
   const [error, setError] = useState<string | null>(null);
+  const [settingsTick, setSettingsTick] = useState(0);
+  const onPanelClosed = useBadges(registry, setError);
   useEffect(() => {
     // Only resumes timers the user already switched on — see core/scheduler.ts.
     initScheduler(registry);
@@ -37,15 +42,29 @@ function MainShell() {
       const m = registry.find((x) => x.id === payload.moduleId);
       if (m) syncModule(m).catch((e) => setError(`Schedule sync: ${String(e)}`));
     });
-    restore().catch((e) => setError(`Restore layout: ${String(e)}`));
+    // Chrome webviews report layout changes here; only main touches SQLite.
+    const fail = (what: string) => (e: unknown) => setError(`${what}: ${String(e)}`);
+    const unCommit = listen<SavedPanel>(LAYOUT_COMMIT, ({ payload: p }) => {
+      saveLayout(p.id, p.rect, p.z, p.state).catch(fail("Save layout"));
+    });
+    const unDelete = listen<{ id: string }>(LAYOUT_DELETE, ({ payload }) => {
+      deleteLayout(payload.id).catch(fail("Forget panel"));
+      onPanelClosed(payload.id); // a panel closed: refresh badges
+    });
+    // The Settings panel is another webview: it saves, then tells us to re-read.
+    const unSettings = listen(SETTINGS_CHANGED, () => setSettingsTick((t) => t + 1));
+    restore().catch(fail("Restore layout"));
     return () => {
       un.then((f) => f());
+      unCommit.then((f) => f());
+      unDelete.then((f) => f());
+      unSettings.then((f) => f());
     };
   }, []);
   return (
     <div className="starmap">
       <StarMap modules={registry} onError={setError} />
-      <GameHud error={error} setError={setError} />
+      <GameHud error={error} setError={setError} refresh={settingsTick} />
     </div>
   );
 }

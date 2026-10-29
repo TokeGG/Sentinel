@@ -1,0 +1,96 @@
+/* Customize drawer + <Sections> layout — tokens only (see ../tokens.css). */
+
+.ui-sections { display: flex; flex-direction: column; gap: var(--gap); }
+
+.cz-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: color-mix(in srgb, var(--base) 55%, transparent);
+}
+.cz-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 51;
+  width: min(280px, 100vw);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--surface-2);
+  border-left: 1px solid var(--line);
+  box-shadow: -8px 0 24px var(--shadow);
+  color: var(--text);
+  font-size: 0.9em;
+  padding: 0 var(--pad) var(--pad);
+}
+.cz-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--line);
+  margin: 0 calc(var(--pad) * -1);
+  padding: calc(6px * var(--density)) var(--pad);
+}
+.cz-head h2 { margin: 0; font-family: var(--font-display); font-size: 1.05em; font-weight: 600; }
+.cz-x { font: inherit; font-size: 1.3em; line-height: 1; background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 2px 6px; border-radius: 4px; }
+.cz-x:hover { color: var(--text); }
+
+.cz-sec { display: flex; flex-direction: column; gap: var(--gap); padding: var(--pad) 0; border-bottom: 1px solid var(--line); }
+.cz-sec:last-child { border-bottom: none; }
+.cz-sec h3 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 0.78em;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.cz-field { display: flex; align-items: center; gap: var(--gap); }
+.cz-field > span:first-child { flex: 0 0 96px; color: var(--text-dim); }
+.cz-field > input[type="range"] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.cz-field > select, .cz-field > input[type="number"] { flex: 1; min-width: 0; }
+.cz-field code { font-family: var(--font-mono); font-size: 0.85em; color: var(--text-dim); min-width: 3.5em; text-align: right; }
+.cz-check { display: flex; align-items: center; gap: var(--gap); flex: 1; min-width: 0; }
+.cz-check input { accent-color: var(--accent); margin: 0; }
+.cz-note { margin: 0; color: var(--text-dim); font-size: 0.85em; }
+.cz-row { display: flex; gap: var(--gap); flex-wrap: wrap; }
+.cz-row input { flex: 1; min-width: 0; }
+
+.cz-drawer :where(input:not([type="checkbox"]):not([type="range"]):not([type="color"]), select, textarea) {
+  background: var(--base);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) - 2px);
+  padding: 4px 8px;
+  font: inherit;
+}
+.cz-drawer input[type="color"] { width: 36px; height: 26px; padding: 0; border: 1px solid var(--line); border-radius: 4px; background: var(--base); }
+.cz-drawer button:not(.cz-x) {
+  font: inherit;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: calc(var(--radius) - 2px);
+  padding: 3px 10px;
+  cursor: pointer;
+}
+.cz-drawer button:not(.cz-x):hover:not(:disabled) { border-color: var(--accent-text); }
+.cz-drawer button[type="submit"]:not(:disabled), .cz-drawer button[aria-pressed="true"] {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-color: var(--accent);
+}
+.cz-drawer button:disabled { opacity: 0.45; cursor: default; }
+.cz-drawer .cz-json { width: 100%; min-height: 120px; resize: vertical; font-family: var(--font-mono); font-size: 0.85em; }
+
+.cz-sections { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cz-sections li { display: flex; align-items: center; gap: 4px; padding: 2px 0; }
+.cz-sections li button:not(.cz-x) { padding: 0 8px; }
+
+.cz-drawer :is(button, input, select, textarea):focus-visible { outline: none; box-shadow: var(--focus); }

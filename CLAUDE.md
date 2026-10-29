@@ -37,23 +37,40 @@ manifest alone.
 src/
   core/
     module.ts         — ModuleManifest contract + validateManifest()
-                        (manifestChecks.ts: table-driven skill-ref checks)
-    ModulePanel.tsx   — the ONE generic panel (pieces in core/panel/)
+                        (manifestChecks.ts: skill-ref checks; customizeChecks.ts:
+                        customize/accent/ring/icon checks)
+    ModulePanel.tsx   — the generic panel for `list` modules (pieces in core/panel/)
     db.ts             — shared SQLite handle + logActivity()
     credentials.ts    — OS keychain wrapper (TS side)
     scheduler.ts      — opt-in per-module background refresh
-  shell/              — star map (StarMap/Planet/planets.ts), PanelRoute,
-                        ChromeRoute (#/chrome/<id> strip), GameHud,
-                        layout.ts (pure clamp/tile/cascade), layoutStore.ts
-                        (panel_layout + app_settings via db.ts), panelApi.ts
+  ui/                 — panel UI foundation shared by custom panels: kit/ (Table,
+                        Tabs, Gauge, ... components), tokens.css + generic.css +
+                        panels.css, prefs.ts/prefsStore.ts (per-module saved views
+                        in SQLite `panel_prefs`), useModule (load/run/status),
+                        useCustomize + Section/Sections, CustomizeDrawer +
+                        drawer/*, QuickAdd, safeLink (http(s)-only openUrl),
+                        useDebounced, useOption
+  shell/              — solar-system map: orbit.ts (pure orbit math), mapLayout.ts,
+                        mapDraw.ts, mapHit.ts, icons.ts (planet glyphs), moons.ts/
+                        moonDraw.ts/badges.ts/badgeStore.ts/useBadges.ts (notification
+                        moons), stars.ts/Sky.ts (starfield), motionPolicy.ts/
+                        motionStore.ts/useMotionPolicy.ts, OrbitControls, StarMap,
+                        Planet, SettingsPanel + settings/*; PanelRoute, ChromeRoute
+                        (#/chrome/<id> strip), GameHud, layout.ts (pure clamp/tile/
+                        cascade), layoutStore.ts (panel_layout + app_settings via
+                        db.ts), settingsStore.ts, panelApi.ts
   modules/<name>/
     index.ts          — the module's ModuleManifest + its skills
+    Panel.tsx, panelLogic.ts (+ .test.ts) — custom panel and its pure logic
     (other files)     — independently testable logic kept OUT of index.ts
   App.tsx             — imports every module (registers it) + mounts the shell
 
 src-tauri/
-  migrations/NN_<module>.sql — numbered SQL, versions 1..18 strictly ascending;
-                        loaded by src/migrations.rs (order must match version)
+  migrations/NN_<module>.sql — numbered SQL, versions 1..19 strictly ascending
+                        (19 = panel_prefs); loaded by src/migrations.rs (order must match version)
+  capabilities/default.json — Tauri permissions; includes
+                        `core:webview:allow-set-webview-focus` so chrome/panel
+                        webviews can hand keyboard focus to each other (moves focus only)
   src/commands/       — Rust commands by area (backup, credentials, files,
                         mail, network, oauth, pentest, repo, system)
   src/panels/         — panel manager: every panel = a content webview + a
@@ -65,10 +82,18 @@ src-tauri/
   src/lib.rs          — wiring + invoke_handler list only
 ```
 
-**Shell.** The main window is a star map (planets = modules from the
-registry). A planet opens a floating panel through the panel manager (Rust).
-Layout is persisted from the TS side in SQLite `panel_layout` / `app_settings`
-(Rust returns `SavedPanel`, the frontend writes; call `clampToScreen` before
+**Shell.** The main window is an orbiting solar system (canvas, `shell/orbit.ts`
+math): planets = modules from the registry, placed on rings by `ring`, drawn
+with `accent` + `icon`. A planet opens a floating panel through the panel
+manager (Rust). Notification moons come from each module's `badge()` plus
+`planet-badge` events (`shell/badges.ts`): **counts only, never message text**.
+Star and orbit motion obey one motion policy (`motionPolicy.ts`): both stop in
+game mode, when the window is hidden, or with reduced motion. Settings is a
+panel with id `hub.settings` (`SettingsPanel`, opened from the HUD), not a
+module. `app_settings` keys: `game_mode_auto`, `star_motion`, `orbit_motion`,
+`orbit_speed`, `notif_moons`, `restore_panels`, `appearance_defaults`. Layout
+is persisted from the TS side in SQLite `panel_layout` / `app_settings` (Rust
+returns `SavedPanel`, the frontend writes; call `clampToScreen` before
 move/resize). **Game mode** (manual button or auto detection) pauses the
 scheduler and destroys/suspends panels; auto detection is gated by the
 persisted `game_mode_auto` toggle (default on).
@@ -76,7 +101,7 @@ persisted `game_mode_auto` toggle (default on).
 ## The module contract (read `src/core/module.ts` for the real types)
 
 A module is a `ModuleManifest`: `id` (reverse-DNS, e.g. `"hub.notes"`),
-`panel` (`"list"`, or `"web"` with `web: { url, profile }` for an embedded site with a persistent profile), `skills` (named async functions), and
+`panel` (`"list"` = generic panel; `"custom"` = own React panel, requires `ui`; `"web"` with `web: { url, profile }` for an embedded site with a persistent profile), `skills` (named async functions), and
 `load()` (returns rows). Everything else is optional generic UI the panel
 already knows how to render — **adding a new one of these is the
 right move before writing bespoke UI**:
@@ -89,9 +114,26 @@ right move before writing bespoke UI**:
 | `credentialFields` | password inputs → OS keychain | GitHub PAT |
 | `forms` | multi-field forms | Email compose, Pentest add-engagement |
 | `schedule` | an opt-in "Auto-refresh" checkbox | News, Weather |
+| `customize` | sections/options the user can show, hide, reorder, tune (customize drawer, saved views) | Notes, Finance |
+| `ui` | lazy `() => import("./Panel")`; required for `panel: "custom"` | all custom panels |
+| `badge` | `() => Promise<number>` count shown as a notification moon | Notes (unfiled) |
+| `accent` / `ring` / `icon` | planet + panel colour (`#rrggbb`), orbit ring, glyph key in `shell/icons.ts` | every module |
 
 `validateManifest()` rejects a module at registration time if any of these
-reference a skill name that doesn't exist, so a typo fails loud, not silent.
+reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
+is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
+
+**Custom panels** exist for notes, news, deals, pccare, weather, homenet,
+github, finance, calendar, backup, clipboard, filesearch. email, pentest,
+social, youtube still use the generic panel (redesigns planned). To add one:
+1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
+2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
+3. Wrap each user-hideable part in `<Section id="...">` inside `<Sections>`.
+4. Declare the same ids in `customize.sections` (+ `options`) in the manifest.
+5. Put decisions/formatting in `panelLogic.ts` (pure, no Tauri/React).
+6. `panelLogic.test.ts`: test the logic, and that the manifest's section ids
+   match the `<Section id>` values used in `Panel.tsx`.
+
 
 ## Patterns already established — copy these, don't reinvent
 
@@ -109,8 +151,9 @@ reference a skill name that doesn't exist, so a typo fails loud, not silent.
   array. Adding platform #5 is "write one connector, list it" — see that
   file's own comments before adding a 5th.
 - **Preview-before-apply for anything destructive**: `pccare/index.ts`
-  (temp-file cleanup) and `backup/index.ts` (restore). Never wire a delete
-  straight to a button with no preview step.
+  (temp-file cleanup; Apply deletes exactly the previewed paths). Never wire a
+  delete straight to a button with no preview step. Backup restore is NOT yet
+  an example (see known-incomplete): its panel only adds a confirm step.
 - **Pure logic extracted for testability**: when a module's core decision
   (not its I/O) can be unit-tested without Tauri/DB, pull it into its own
   file and test it there — `pentest/scope.ts`, `news/rss.ts`,
@@ -130,9 +173,9 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-76 TS tests + 4 size-guard tests + 48 Rust tests as of this commit. Run the
+326 TS tests + 4 size-guard tests + 48 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
-`*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, or `src-tauri/src/panels`.
+`*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
 **File-size rule:** no .ts/.tsx/.rs file over ~150 lines (`*.test.ts` and Rust
 code after `#[cfg(test)]` are exempt). `npm run check:size` enforces it;
@@ -141,7 +184,7 @@ split (finance, pentest, social connectors, youtube). Never add to it; shrink it
 
 ## What's known-incomplete (check before assuming a gap is a bug)
 
-- No UI overhaul yet — functional-first, default Tauri styling. Expected.
+- Only the custom panels above have the new UI; the rest is default styling.
 - `social/connectors.ts`'s Bluesky and X connectors are `authType: "manual"`
   (no OAuth) — Bluesky because AT Protocol has no public-client OAuth yet,
   X because its free API tier has no usable read endpoint (stubbed on
@@ -152,6 +195,20 @@ split (finance, pentest, social connectors, youtube). Never add to it; shrink it
   doesn't exist as a stable release, fixed to `"2"`).
 - A full security review of the credential/OAuth/IMAP code hasn't happened
   yet — flagged as a known TODO, not a claim that it's been checked.
+- Backup's folder-picker restore applies the picked folder without showing it
+  first; needs a pick-folder skill so the path is shown and confirmed.
+- Rust `restore_database` copies only the files present in the backup, leaves
+  stale `-wal`/`-shm` next to the restored db, copies over an open DB, and does
+  no validation; needs its own fix.
+- email, pentest, social, youtube are not yet redesigned (generic panel).
+- Specified in `docs/superpowers/specs/` but not built: Discord panel (embedded
+  web app; Go Live must work), multi-site chat, skills/MCP hub, browser bot.
+- Data semantics: Finance day-change is session-based (DB keeps only the latest
+  price); Home Network "new" means new this session; Calendar "overdue" means
+  unfiled notes.
+- Nothing in WebView2/Windows has been run by the assistant, only Chromium with
+  Tauri stubbed plus unit tests. GUI behavior (panels, chrome strip, `emitTo`
+  between webviews, moons, orbit feel) is unverified until run on Windows.
 - Webview overlap spike not run on Windows
   (`docs/superpowers/spikes/2026-10-28-webview-spike.md`); raising a panel is
   close + re-create (reloads the page; web profiles keep sessions).
