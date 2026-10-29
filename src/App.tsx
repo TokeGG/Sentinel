@@ -29,6 +29,9 @@ import "./modules/pentest";
 import "./modules/clipboard";
 import "./modules/filesearch";
 import "./modules/discord";
+import "./modules/x";
+import "./modules/facebook";
+import "./modules/instagram";
 import "./modules/chat";
 import "./App.css";
 
