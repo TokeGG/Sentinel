@@ -48,3 +48,17 @@ Principles that still apply to everything above: local-first, no hosted AI, noth
 
 ## Accounts: one "Connect" button (owner request)
 Generic connect framework: OAuth2 PKCE (loopback via oauth_listen_once; GitHub/Twitch via device-code), tokens in the OS keychain with silent refresh, one "Connect" / "Disconnect" button per account in every module. Providers: Mastodon (dynamic client registration, no setup), Gmail + Outlook/Microsoft 365 mail (IMAP/SMTP XOAUTH2 in Rust), Google (YouTube subs import), Twitch (chat send), GitHub (device flow), Reddit, Kick, Bluesky OAuth if public clients are supported. Needs one-time client IDs (public, free) from the owner for Google, Microsoft, Twitch, Reddit, GitHub; the app ships them as config.
+
+## Ideas round 4: 100 QoL features (all accepted, grouped)
+Shell/navigation: jump-to-panel typing; panel tabs; pin on top; hover peek; per-monitor map; global summon hotkey; tray icon with counts; start with Windows (opt-in); launch into saved layout; reopen last closed panel; back/forward between panels; focus mode.
+Notifications: master hub grouped + mark-all-read; snooze per module; quiet hours from calendar; priority moons; Windows toasts (off by default); daily digest mode; keyword alerts; notification history search.
+Notes: markdown editor + preview; tags + folders; daily note; pin/archive; templates; attachments; version history; full-text search; export md/pdf; clipper hotkey; mind-map of links; review queue.
+Calendar/tasks: month/week/day/agenda; recurring; ICS import/export; Google/Outlook sync (after connect); subtasks; smart lists; drag task to calendar; floating reminders; time blocking; natural-language add.
+Mail: unified inbox; snooze; rules; unsubscribe helper; attachment download/preview; draft autosave; contacts autocomplete; threads.
+YouTube/Chat/Social: playlists; channel groups; speed memory; continue watching; picture-in-picture; chat nicknames/colours; ignore list + filters; emote picker; searchable chat logs; social lists; scheduled posts (opt-in); mute words.
+News/Deals/Congress/Finance: topic boosts; source tags; read-later + highlights; duplicate story grouping; deal price history + fair-price badge; deal categories; promo-code collector; wishlist alerts; bill tracker timeline; my representatives + votes; follow a bill; watchlist groups; price alerts; portfolio lots + gain/loss.
+Dev/PC/Network: PR/issue inbox; local git status; open in editor/terminal; startup manager (preview); large-file finder; process viewer (confirm kill); temperature graphs; device naming/icons; uptime history; wake-on-LAN; port-change alerts; router links.
+Lab/Bot: engagement templates; scope CIDR calculator; CVSS fields; screenshot evidence from bot browser; command session recording; bot goal templates; dry-run; step approval; watch pages (opt-in schedule); explain-why per step; brain share/import; weekly "what I learned".
+
+## Style decisions (owner interview)
+Flat Pro base; each module may have its own style; balanced density; tinted surfaces per-module accent; strip shows name + status dot + hover-only controls; media panels mimic real-site layout in Sentinel colours; Lab/Pentest/Bot = full terminal with hacker-movie flair; 3D map = realistic shaded planets (later).
