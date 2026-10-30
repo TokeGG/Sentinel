@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { canAfford, goalProgress, monthlyTotal, recurringCharges, remindersDue, upcomingDividends } from "./plan.ts";
+import { canAfford, goalProgress, monthlyTotal, recurringCharges, remindersDue, upcomingDividends } from "./planLogic.ts";
 import { addSnapshot, chartPoints, monthChange, monthlyReport, netWorth, searchVault } from "./report.ts";
 import { parseCsv, splitLine, toCsv } from "./csv.ts";
 import { dueKinds } from "./schedule.ts";

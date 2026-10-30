@@ -5,7 +5,7 @@ import type { ModuleState } from "../../ui/useModule";
 import { listSubs } from "../calendar/extraStore";
 import { listBills, listBudgets, spentByCategory } from "./extraStore";
 import { getPlan, type Plan as PlanData } from "./planStore";
-import { recurringCharges, type Recurring } from "./plan";
+import { recurringCharges, type Recurring } from "./planLogic";
 import type { FinPrefs } from "./prefs";
 import { AffordPart, DividendsPart, GoalsPart, SubsPart } from "./PlanMoney";
 import { CsvPart, ReportPart, WorthPart } from "./PlanWorth";

@@ -4,7 +4,7 @@ import { getDb } from "../../core/db";
 import { readWords } from "../../core/spoiler";
 import { getSetting, setSetting } from "../../ui/appSetting";
 import { unseenCount } from "../congress/store";
-import { ALERT_KEY, ALERT_SEEN_KEY, alertHits, dueSources, INTERVAL_KEY, LAST_KEY, readNumMap } from "./newsPrefs";
+import { ALERT_KEY, ALERT_SEEN_KEY, alertHits, dueSources, INTERVAL_KEY, LAST_KEY, readNumMap } from "./newsPrefsLogic";
 import { enabledNewsSources } from "./sourceStore";
 import { fetchFrom } from "./store";
 

@@ -1,7 +1,7 @@
 // Plan parts: net worth chart (SVG, tokens), monthly report (copyable), portfolio CSV import (preview) / export.
 import { useState } from "react";
 import { parseCsv, type CsvPreview } from "./csv";
-import { monthlyTotal } from "./plan";
+import { monthlyTotal } from "./planLogic";
 import { fmtMoney } from "./prefs";
 import { chartPoints, monthChange, monthlyReport } from "./report";
 import { exportCsv } from "./portfolioIO";
