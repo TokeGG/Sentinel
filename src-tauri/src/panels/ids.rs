@@ -19,13 +19,18 @@ pub fn chrome_label(id: &str) -> String {
 pub fn grip_label(id: &str) -> String {
     format!("grip-{}", id.replace('.', "_"))
 }
-/// Label of an embedded site view inside panel `id`: `embed-<panel>-<site>`. Sites have no '-'
-/// ([a-z0-9]{1,16}), so the last '-' splits it unambiguously.
+/// Label of an embedded site view inside panel `id`: `embed-<panel>-<site>`. A site's '-' is
+/// written as '_' (sites never contain '_'), so the last '-' splits it unambiguously.
 pub fn embed_label(id: &str, site: &str) -> String {
-    format!("embed-{}-{site}", id.replace('.', "_"))
+    format!("embed-{}-{}", id.replace('.', "_"), site.replace('-', "_"))
 }
+/// Site slugs: 1..=24 of [a-z0-9-], not starting/ending with '-'.
 pub fn is_valid_site(s: &str) -> bool {
-    !s.is_empty() && s.len() <= 16 && s.bytes().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit())
+    !s.is_empty()
+        && s.len() <= 24
+        && !s.starts_with('-')
+        && !s.ends_with('-')
+        && s.bytes().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == b'-')
 }
 /// Browser tab embeds use the site name `tab<n>` (no Social site starts with "tab").
 pub fn is_tab_site(s: &str) -> bool {
@@ -37,7 +42,7 @@ pub fn is_tab_label(label: &str) -> bool {
 }
 /// Does webview `label` belong to panel `id`'s embeds?
 pub fn embed_of(label: &str, id: &str) -> bool {
-    label.strip_prefix("embed-").and_then(|r| r.rsplit_once('-')).is_some_and(|(own, site)| own == id.replace('.', "_") && is_valid_site(site))
+    label.strip_prefix("embed-").and_then(|r| r.rsplit_once('-')).is_some_and(|(own, site)| own == id.replace('.', "_") && is_valid_site(&site.replace('_', "-")))
 }
 /// Only http/https URLs may be loaded into a web panel.
 pub fn parse_web_url(u: &str) -> Result<tauri::Url, String> {
@@ -111,6 +116,11 @@ mod tests {
         // "a" must not claim an embed of "a-b"
         assert!(!embed_of(&embed_label("a-b", "x"), "a") && embed_of(&embed_label("a-b", "x"), "a-b"));
         assert!(!embed_of("panel-hub_social", "hub.social"));
-        assert!(is_valid_site("x") && !is_valid_site("") && !is_valid_site("a-b") && !is_valid_site("A"));
+        assert!(is_valid_site("x") && !is_valid_site("") && !is_valid_site("A") && !is_valid_site("a_b"));
+        assert!(is_valid_site("a-b") && is_valid_site(&"a".repeat(24)) && !is_valid_site(&"a".repeat(25)));
+        assert!(!is_valid_site("-a") && !is_valid_site("a-"));
+        let m = embed_label("hub.social", "my-site");
+        assert_eq!(m, "embed-hub_social-my_site");
+        assert!(embed_of(&m, "hub.social") && !embed_of(&m, "hub.social-my"));
     }
 }
