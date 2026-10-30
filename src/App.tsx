@@ -22,6 +22,8 @@ import { useAppKeys } from "./shell/desk/useAppKeys";
 import { Tour } from "./shell/desk/Tour";
 import { delayedRestore, useSysSync } from "./shell/privacy/useSysSync";
 import { LockScreen } from "./shell/privacy/LockScreen";
+import { TerminalHome } from "./shell/desk/TerminalHome";
+import { useHomeStyle } from "./shell/desk/useHomeStyle";
 import "./modules/notes"; // self-registers into `registry` on import
 import "./modules/news";
 import "./modules/pccare";
@@ -59,6 +61,7 @@ function MainShell() {
   useShellCommands(deskFail); // palette / keys / tray commands, nav history, pins
   useAppKeys();
   useSysSync(deskFail);
+  const homeStyle = useHomeStyle();
   const skyTint = useDesktopSync(deskFail);
   useEffect(() => {
     getDb()
@@ -102,7 +105,7 @@ function MainShell() {
         <GameHud setError={setError} refresh={settingsTick} />
       </TitleBar>
       <div className="starmap">
-        <StarMap modules={registry} onError={setError} />
+        {homeStyle === "terminal" ? <TerminalHome onError={setError} /> : <StarMap modules={registry} onError={setError} />}
         <div className="sky-tint" style={{ background: skyTint }} />
         <Tour />
         <LockScreen />

@@ -9,6 +9,7 @@ export interface FeedItem {
   publishedAt: string | null;
   enclosure?: { url: string; type: string } | null; // podcast audio etc.
   summary?: string; // plain text, <= 400 chars
+  image?: string | null; // https lead image (media:content/thumbnail, image enclosure, first <img>)
 }
 
 export function tag(block: string, name: string): string | null {
@@ -41,6 +42,14 @@ function enclosureOf(item: string): { url: string; type: string } | null {
   return url ? { url, type: attr(item, "enclosure", "type") ?? "" } : null;
 }
 
+/** First https image: media:content / media:thumbnail, an image enclosure, or the first <img> in the html. */
+export function imageOf(block: string): string | null {
+  const raw = block.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&amp;/g, "&");
+  const enc = /image\//i.test(attr(block, "enclosure", "type") ?? "") ? attr(block, "enclosure", "url") : null;
+  const c = [attr(block, "media:content", "url"), attr(block, "media:thumbnail", "url"), enc, raw.match(/<img[^>]*\bsrc=["']([^"']+)["']/i)?.[1] ?? null];
+  return c.find((u): u is string => !!u && /^https:\/\/\S+$/i.test(u)) ?? null;
+}
+
 export function parseFeed(xml: string): FeedItem[] {
   const rssItems = blocks(xml, "item");
   if (rssItems.length > 0) {
@@ -54,6 +63,7 @@ export function parseFeed(xml: string): FeedItem[] {
         publishedAt: tag(item, "pubDate"),
         enclosure: enclosureOf(item),
         summary: plain(tag(item, "description")),
+        image: imageOf(item),
       };
     });
   }
@@ -68,6 +78,7 @@ export function parseFeed(xml: string): FeedItem[] {
       link,
       publishedAt: tag(entry, "updated"),
       summary: plain(tag(entry, "summary") ?? tag(entry, "content")),
+      image: imageOf(entry),
     };
   });
 }

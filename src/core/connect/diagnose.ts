@@ -42,6 +42,8 @@ export function explainError(p: Provider, raw: string): string {
   if (has(raw, "port_blocked")) return `Sentinel could not listen on 127.0.0.1:${port}; a firewall or security tool may block it. Allow Sentinel on private networks, then Connect again.`;
   if (has(raw, "cancelled")) return "Sign-in cancelled.";
   if (has(raw, "timeout:")) return `No sign-in arrived within 3 minutes. If the browser showed an error, check the redirect is registered as ${p.redirect ? redirectUri(p) : "required"}; then Connect again.`;
+  if (/not allowed\. (Permissions|Command)|not allowed by ACL|forbidden by|Command \w+ not found/i.test(raw) && !has(raw, "opener"))
+    return `This build blocks a step of sign-in (permission error: ${raw.slice(0, 160)}). Update Sentinel; if it persists, use Copy debug info and report it.`;
   if (has(raw, "opener", "not allowed", "open_url", "openUrl")) return `Could not open your browser (${raw.slice(0, 160)}). Use the sign-in link shown below.`;
   if (has(raw, "AADSTS9002326")) return "Microsoft rejected the token request as a browser request. Update Sentinel (token requests must go through the app) and Connect again.";
   if (has(raw, "AADSTS700016", "invalid_client", "unauthorized_client", "client_id")) return p.clientGroup
@@ -53,3 +55,14 @@ export function explainError(p: Provider, raw: string): string {
   if (has(raw, "could not reach", "error sending request", "dns", "offline")) return `Could not reach ${p.label} (${raw.slice(0, 120)}). Check your internet connection or firewall.`;
   return `${p.label} sign-in failed: ${raw.slice(0, 240)}`;
 }
+
+/** Where a Connect attempt got to; shown by "Copy debug info". Never holds the client ID or a token. */
+export interface ConnectTrace { provider: string; flow: string; hasClientId: boolean; step: string | null; error: string | null; at: number }
+
+export const debugInfo = (t: ConnectTrace): string => [
+  `provider: ${t.provider} (${t.flow})`,
+  `client ID stored: ${t.hasClientId ? "yes" : "no"}`,
+  `last step: ${t.step ?? "(not started)"}`,
+  `last error: ${t.error ?? "none"}`,
+  `time: ${t.at ? new Date(t.at).toISOString() : "-"}`,
+].join("\n");

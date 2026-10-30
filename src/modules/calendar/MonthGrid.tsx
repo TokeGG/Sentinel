@@ -15,7 +15,7 @@ export function MonthGrid({ rows, now }: { rows: ModuleRow[]; now: Date }) {
           <span
             key={c.key}
             role="gridcell"
-            className={`cal-cell${c.inMonth ? "" : " out"}${c.today ? " today" : ""}${c.count ? " has" : ""}${c.overdue ? " late" : ""}`}
+            className={`cal-cell${c.inMonth ? "" : " out"}${c.today ? " today" : ""}${c.count ? " has" : ""}${c.overdue ? " late" : ""}${c.holiday ? " hol" : ""}`}
             title={c.count ? `${c.count} item${c.count === 1 ? "" : "s"}` : undefined}
           >
             {c.day}

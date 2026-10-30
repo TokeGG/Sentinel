@@ -6,6 +6,7 @@ import { addKb, loadKb, removeKb } from "../../core/knowledge/store";
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Row } from "../../ui/kit";
 import { Head } from "./Switch";
+import { KnowledgeImport } from "./KnowledgeImport";
 
 export function KnowledgeSection({ onError }: { onError(e: unknown): void }) {
   const [cat, setCat] = useState<Category>("news");
@@ -41,6 +42,7 @@ export function KnowledgeSection({ onError }: { onError(e: unknown): void }) {
         <textarea className="st-input" rows={3} value={body} onChange={(e) => setBody(e.target.value)} placeholder="Note text, example Q/A, house rules…" aria-label="Text" />
         <button className="ui-btn" disabled={!body.trim()}>Add</button>
       </form>
+      <KnowledgeImport cat={cat} onDone={() => void reload()} onError={onError} />
       {rows.slice(0, 50).map((r) => (
         <div key={r.id} className="st-acct">
           <Row><strong>{r.kind}: {r.title}</strong><ConfirmButton label="Delete" onConfirm={() => void removeKb(r.id!).then(reload, onError)} /></Row>

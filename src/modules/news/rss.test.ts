@@ -64,3 +64,15 @@ it("enclosure + summary", () => {
   assert.deepEqual(i.enclosure, { url: "https://x.org/e.mp3", type: "audio/mpeg" });
   assert.equal(i.summary, "Use code SAVE20");
 });
+
+it("imageOf finds https media, enclosure or inline img", async () => {
+  const { imageOf, parseFeed } = await import("./rss.ts");
+  assert.equal(imageOf('<item><media:content url="https://a/x.jpg" medium="image"/></item>'), "https://a/x.jpg");
+  assert.equal(imageOf('<item><enclosure url="https://a/y.png" type="image/png"/></item>'), "https://a/y.png");
+  assert.equal(imageOf('<item><enclosure url="https://a/y.mp3" type="audio/mpeg"/></item>'), null);
+  assert.equal(imageOf('<item><description>&lt;img src="https://a/z.gif"&gt; hi</description></item>'), "https://a/z.gif");
+  assert.equal(imageOf('<item><media:thumbnail url="http://a/x.jpg"/></item>'), null);
+  const [it] = parseFeed('<rss><channel><item><title>T</title><link>https://l</link><description>Body text</description><media:thumbnail url="https://i/t.jpg"/></item></channel></rss>');
+  assert.equal(it.image, "https://i/t.jpg");
+  assert.equal(it.summary, "Body text");
+});

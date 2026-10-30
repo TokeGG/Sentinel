@@ -5,6 +5,7 @@ import { getShown, subscribeShown } from "./notifStore";
 import { totalOf } from "./notifLogic";
 import { subscribeSys, sysNow } from "./privacy/sysPrefsStore";
 import { countsHidden } from "./privacy/sysPrefs";
+import { DndButton, PinnedCounts } from "./TitleExtras";
 
 // The one title bar (main window is frameless, like Discord): app name left,
 // the HUD controls (children) next to it, drag region in between, window
@@ -21,12 +22,18 @@ const Glyph = ({ d }: { d: string }) => (
   <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden="true"><path d={d} /></svg>
 );
 
+// Hide counts / presentation mode (Settings > Privacy).
+function useCountsHidden() {
+  const [hidden, setHidden] = useState(() => countsHidden(sysNow()));
+  useEffect(() => subscribeSys(() => setHidden(countsHidden(sysNow()))), []);
+  return hidden;
+}
+
 // Unread total (read/snooze/DND/quiet hours applied); click opens the Master Hub.
 function UnreadPill({ onError }: { onError: (e: string) => void }) {
   const [n, setN] = useState(() => totalOf(getShown()));
-  const [hidden, setHidden] = useState(() => countsHidden(sysNow()));
+  const hidden = useCountsHidden();
   useEffect(() => subscribeShown(() => setN(totalOf(getShown()))), []);
-  useEffect(() => subscribeSys(() => setHidden(countsHidden(sysNow()))), []); // hide counts / presentation mode
   if (n === 0 || hidden) return null;
   return (
     <button className="titlebar-pill" title="Open Master Hub" aria-label={`${n} unread, open Master Hub`}
@@ -36,6 +43,7 @@ function UnreadPill({ onError }: { onError: (e: string) => void }) {
 
 export function TitleBar({ children, onError }: { children?: ReactNode; onError: (e: string) => void }) {
   const [max, setMax] = useState(false);
+  const hiddenCounts = useCountsHidden();
   const timer = useRef(0);
   useEffect(() => {
     const w = win();
@@ -65,6 +73,8 @@ export function TitleBar({ children, onError }: { children?: ReactNode; onError:
       </div>
       <div className="titlebar-tools">{children}</div>
       <div className="titlebar-drag" data-tauri-drag-region onDoubleClick={run((w) => w.toggleMaximize())} />
+      {!hiddenCounts && <PinnedCounts onError={onError} />}
+      <DndButton onError={onError} />
       <UnreadPill onError={onError} />
       <button className="titlebar-gear" title="Settings" aria-label="Settings" onClick={() => openSettings().catch((e) => onError(String(e)))}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
