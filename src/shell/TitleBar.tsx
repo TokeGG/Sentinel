@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { openMaster, openSettings, reclampPanels } from "./panelApi";
 import { getShown, subscribeShown } from "./notifStore";
 import { totalOf } from "./notifLogic";
+import { useTitleStyle } from "./desk/useTitleStyle";
 
 // The one title bar (main window is frameless, like Discord): app name left,
 // the HUD controls (children) next to it, drag region in between, window
@@ -32,6 +33,7 @@ function UnreadPill({ onError }: { onError: (e: string) => void }) {
 
 export function TitleBar({ children, onError }: { children?: ReactNode; onError: (e: string) => void }) {
   const [max, setMax] = useState(false);
+  const style = useTitleStyle(); // Settings > Panels: compact / auto-hide
   const timer = useRef(0);
   useEffect(() => {
     const w = win();
@@ -54,7 +56,7 @@ export function TitleBar({ children, onError }: { children?: ReactNode; onError:
     if (w) f(w).catch((e) => onError(String(e)));
   };
   return (
-    <header className="titlebar">
+    <header className={`titlebar tb-${style}`}>
       <div className="titlebar-brand" data-tauri-drag-region onDoubleClick={run((w) => w.toggleMaximize())}>
         <span className="titlebar-logo" data-tauri-drag-region />
         <span data-tauri-drag-region>Sentinel</span>

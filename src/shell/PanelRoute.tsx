@@ -25,6 +25,8 @@ import { Briefing } from "./desk/Briefing";
 import { HelpPanel } from "./desk/HelpPanel";
 import { CaptureBox } from "./desk/CaptureBox";
 import { useAppKeys } from "./desk/useAppKeys";
+import { usePanelView } from "./desk/usePanelView";
+import { viewStyle } from "./desk/panelView";
 
 const YtPlayer = lazy(() => import("../modules/youtube/PopPlayer"));
 const PopPlayer = () => <Suspense fallback={null}><YtPlayer /></Suspense>;
@@ -89,6 +91,7 @@ function useCustomizeEvent(id: string, onToggle: () => void) {
 
 function PanelBody({ m }: { m: ModuleManifest }) {
   const cz = useCustomize(m);
+  const pv = usePanelView(m.id); // zoom/opacity/scroll per module (Settings > Panels)
   const ms = useModSettings(m.id); // generic per-module settings: Ask bar, link mode
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<PanelStatus>({ updated: null, error: null });
@@ -110,6 +113,7 @@ function PanelBody({ m }: { m: ModuleManifest }) {
   return (
     <PanelShell className="panel-route" vars={cz.vars}>
       <PanelContext.Provider value={ctx}>
+        <div style={viewStyle(pv)}>
         {cz.error && <ErrorLine message={`Customize: ${cz.error}`} />}
         {!cz.ready ? (
           <EmptyState title="Loading…" />
@@ -120,6 +124,7 @@ function PanelBody({ m }: { m: ModuleManifest }) {
         ) : (
           <ModulePanel module={m} />
         )}
+        </div>
         {ms.assist && cz.ready && m.panel !== "web" && <AssistBar module={m} />}
         <StatusLine updated={status.updated} autoRefresh={auto} error={status.error} />
         {open && <CustomizeDrawer module={m} cz={cz} onClose={() => setOpen(false)} />}
