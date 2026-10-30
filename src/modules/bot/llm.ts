@@ -5,8 +5,8 @@ import type { Brain } from "./kernel/brain.ts";
 import { int } from "./brainSpecs.ts";
 import type { McpTool } from "../skills/mcpGate.ts";
 import { SYSTEM_RULES } from "./prompt.ts";
-import { pickSkills, type SkillScores } from "../../core/skillPick.ts";
 import { planLines, planMessages, type TaskPlan } from "./plan.ts";
+import { pickSkillsFor, type PickOptions } from "../../core/skillPick.ts";
 
 export const OLLAMA_CHAT_URL = "http://127.0.0.1:11434/api/chat";
 
@@ -29,9 +29,10 @@ export interface ChatMessage { role: "system" | "user"; content: string }
 
 export { SYSTEM_RULES };
 
-/** The skills whose name/description overlap the goal, best first (core/skillPick.ts; `scores` = thumbs per skill). */
-export function relevantSkills(goal: string, skills: PromptSkill[], max = 3, clip = 1500, scores: SkillScores = {}, weight?: number): PromptSkill[] {
-  return pickSkills(goal, skills, scores, max, clip, weight);
+
+/** The skills whose name/description overlap the goal, best first (at most `max`, bodies clipped). */
+export function relevantSkills(goal: string, skills: PromptSkill[], max = 3, clip = 1500, o: PickOptions = {}): PromptSkill[] {
+  return pickSkillsFor(goal, skills, { ...o, max, clip });
 }
 
 export function formatObservation(obs: Observation, brain: Brain): string {

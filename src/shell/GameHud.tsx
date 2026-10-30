@@ -10,6 +10,7 @@ import { setGameMode as shareGameMode, setStarMotion as shareStarMotion } from "
 import { OrbitControls } from "./OrbitControls";
 import { sendCmd } from "./desk/shellCmd";
 import { BRIEFING_ID } from "./desk/ids";
+import { unloadOnGameMode } from "../modules/bot/ollamaAdmin";
 
 // Main-window only: game-mode listeners, the auto toggle, the manual button,
 // rendered as the toolbar inside the title bar (the error line lives in App).
@@ -36,6 +37,7 @@ export function GameHud({ setError, refresh = 0 }: { setError: (e: string | null
       last.current = payload.active;
       setActive(payload.active);
       shareGameMode(payload.active);
+      void unloadOnGameMode(payload.active);
       if (payload.active) pauseAll();
       else resumeEnabled(registry).catch(fail);
     });

@@ -22,6 +22,8 @@ export async function fetchFeeds() {
           [source.id, item.guid, item.title, item.link, item.publishedAt]
         );
         if (result.rowsAffected > 0) added++;
+        if (item.image || item.summary)
+          await d.execute("INSERT OR IGNORE INTO news_item_media (source_id, guid, image, summary) VALUES ($1,$2,$3,$4)", [source.id, item.guid, item.image ?? null, item.summary ?? ""]);
         if (item.enclosure)
           await d.execute("INSERT OR IGNORE INTO news_enclosures (source_id, guid, url, type) VALUES ($1,$2,$3,$4)", [source.id, item.guid, item.enclosure.url, item.enclosure.type]);
       }
@@ -39,11 +41,13 @@ export async function loadItems(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   return d.select(`
     SELECT i.*, s.label, s.url AS source_url, COALESCE(m.tag, '') AS tag, COALESCE(m.reliability, '') AS reliability,
-      COALESCE(v.later, 0) AS later, COALESCE(v.highlight, '') AS highlight, e.url AS audio_url, e.type AS audio_type
+      COALESCE(v.later, 0) AS later, COALESCE(v.highlight, '') AS highlight, e.url AS audio_url, e.type AS audio_type,
+      md.image AS image, COALESCE(md.summary, '') AS summary
     FROM news_items i JOIN news_sources s ON s.id = i.source_id
     LEFT JOIN news_source_meta m ON m.source_id = s.id
     LEFT JOIN news_saved v ON v.item_id = i.id
     LEFT JOIN news_enclosures e ON e.source_id = i.source_id AND e.guid = i.guid
+    LEFT JOIN news_item_media md ON md.source_id = i.source_id AND md.guid = i.guid
     WHERE i.id IN (SELECT id FROM news_items ORDER BY COALESCE(published_at, fetched_at) DESC LIMIT 200) OR v.item_id IS NOT NULL
     ORDER BY COALESCE(i.published_at, i.fetched_at) DESC`);
 }

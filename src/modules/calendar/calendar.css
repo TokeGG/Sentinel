@@ -76,3 +76,7 @@
 .cal-card h3 { margin: 0; overflow-wrap: anywhere; }
 .cal-card-notes { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
 .cal-card-links { margin: 0; padding-left: 1.2em; overflow-wrap: anywhere; }
+/* Holidays: dashed left edge + warm tint so they never read as own events. */
+.cal-item.hol { border-left: 3px dashed var(--warn, var(--accent)); background: var(--warn-soft, var(--accent-soft)); }
+.cal-chip.hol { font-style: italic; border: 1px dashed var(--line); }
+.cal-cell.hol { text-decoration: underline dotted; font-weight: 700; }

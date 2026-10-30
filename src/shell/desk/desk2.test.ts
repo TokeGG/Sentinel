@@ -47,3 +47,9 @@ describe("help", () => {
     assert.ok(TOUR.length >= 3);
   });
 });
+
+import { speechScript } from "./briefingLogic.ts";
+it("speechScript reads counts and first lines", () => {
+  const s = speechScript("Good morning", [["Mail", 3]], [{ id: "c", name: "Today", lines: ["Standup", "Bill"], count: 2 }, { id: "d", name: "Deals", lines: [], count: 0 }]);
+  assert.equal(s, "Good morning. You have 3 in Mail. Today: Standup; Bill.");
+});

@@ -72,10 +72,11 @@ async function runLocked(r: RunRequest, model: string, cfg: RunConfig): Promise<
   const lab = r.lab;
   const goal = lab ? lab.goal(r.goal) : r.goal;
   const notes = lab ? [] : noteLines(retrieve(await store.allNotes(), r.goal, int(brain, "lessonCount")));
-  const skills = lab ? [] : relevantSkills(r.goal, (await listSkills()).filter((s) => s.enabled).map(({ name, description, body }) => ({ name, description, body })), 3, 1500, cfg.scores, cfg.weight);
+  const enabled = (await listSkills().catch(() => [])).map(({ name, description, body, categories }) => ({ name, description, body, categories }));
+  const skills = relevantSkills(r.goal, enabled, 3, 1500, lab ? { only: ["lab"], categories: ["lab"] } : { scores: cfg.scores, weight: cfg.weight });
   const tools = lab ? [...lab.tools, ...(await listMcpTools().catch(() => [])).slice(0, 12)] : (await listMcpTools().catch(() => [])).slice(0, 20);
   let cost = emptyCost(r.workflow ? "" : model);
-  r.log("info", `model ${model}; variant ${variant.id}; ${notes.length} notes, ${skills.length} skills, ${tools.length} tools; caps ${int(brain, "maxStepsPerGoal")} steps / ${brain.wallClockSec} s`);
+  r.log("info", `model ${model}; variant ${variant.id}; ${notes.length} notes, ${skills.length} skills${skills.length ? ` (${skills.map((s) => s.name).join(", ")})` : ""}, ${tools.length} tools; caps ${int(brain, "maxStepsPerGoal")} steps / ${brain.wallClockSec} s`);
 
   const stop = new AbortController();
   const abort = () => stop.abort();

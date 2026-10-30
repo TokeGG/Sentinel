@@ -10,7 +10,7 @@ import { sanitizePrefs, type NotifPrefs } from "./notifLogic";
 export const NOTIF_PREFS_CHANGED = "notif-prefs-changed";
 export const NOTIF_LOGGED = "notif-logged";
 export type LogRow = { id: number; module_id: string; count: number; at: number };
-const KEYS = { snooze: "notif_snooze", dnd: "notif_dnd", quiet: "notif_quiet", read: "notif_read" } as const;
+const KEYS = { snooze: "notif_snooze", dnd: "notif_dnd", quiet: "notif_quiet", read: "notif_read", all: "notif_all" } as const;
 const KEEP_DAYS = 30;
 
 export async function loadPrefs(): Promise<NotifPrefs> {

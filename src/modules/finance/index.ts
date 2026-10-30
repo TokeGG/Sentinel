@@ -13,7 +13,7 @@ export const financeModule: ModuleManifest = {
   category: "finance",
   icon: "finance",
   description:
-    "Stock/ETF (Stooq) and crypto (CoinGecko) watchlist, plus Senate/House trade disclosures. All free, no key, no account linking.",
+    "Stock/ETF watchlist (Stooq, Yahoo fallback, optional Finnhub/Alpha Vantage key) and crypto (CoinGecko), plus Senate/House trade disclosures.",
   panel: "custom",
   ui: () => import("./Panel"),
   customize: { sections: financeSections },
@@ -23,6 +23,10 @@ export const financeModule: ModuleManifest = {
     { name: "remove_symbol", run: removeSymbol },
     { name: "sync_congress_trades", run: syncCongressTrades },
     ...extraSkills,
+  ],
+  credentialFields: [
+    { key: "finnhub_key", label: "Finnhub API key (optional fallback)" },
+    { key: "alphavantage_key", label: "Alpha Vantage API key (optional fallback)" },
   ],
   load: loadRows,
   // Price alerts that fired since you last looked (counts only).

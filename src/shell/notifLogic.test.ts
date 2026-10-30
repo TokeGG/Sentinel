@@ -97,3 +97,15 @@ test("sanitizePrefs survives junk and keeps good fields independently", () => {
   assert.deepEqual(p.quiet, { on: true, start: 22 * 60, end: 60 });
   assert.deepEqual(p.read, {});
 });
+
+import { dndLabel, nextDnd, shownCounts as shown2, DEFAULT_PREFS as D2 } from "./notifLogic.ts";
+test("global DND mutes everything until it ends; cycle and label", () => {
+  const now = new Date(2026, 0, 1, 10, 0);
+  assert.deepEqual(shown2({ a: 3 }, { ...D2, all: now.getTime() + 1000 }, now), {});
+  assert.deepEqual(shown2({ a: 3 }, { ...D2, all: now.getTime() - 1 }, now), { a: 3 });
+  const a = nextDnd(0, now);
+  assert.equal(a - now.getTime(), 30 * 60000);
+  assert.equal(nextDnd(nextDnd(nextDnd(a, now), now), now), new Date(2026, 0, 2, 8).getTime());
+  assert.equal(nextDnd(new Date(2026, 0, 2, 8).getTime(), now), 0);
+  assert.equal(dndLabel(now.getTime() + 90 * 60000, now.getTime()), "1h 30m");
+});

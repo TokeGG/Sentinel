@@ -7,6 +7,7 @@ import { noteTitle } from "./noteLogic";
 import { DAILY_KEY } from "./panelLogic";
 import { createNote } from "./store";
 import type { NotesStore } from "./useNotes";
+import { MoodPicker } from "./MoodPicker";
 
 /** Creates today's daily note once per open when the user opted in. */
 export function useDailyNote(store: NotesStore) {
@@ -31,6 +32,7 @@ export function JournalTab({ store, open }: { store: NotesStore; open(id: number
         <input type="checkbox" checked={opt.data === "1"} onChange={(e) => void opt.act(() => setSetting(DAILY_KEY, e.target.checked ? "1" : "0"))} />{" "}
         Create a daily note automatically when Notes opens
       </label>
+      <MoodPicker day={`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`} />
       <blockquote className="nt-prompt">{promptFor(now)}</blockquote>
       {today ? <button type="button" className="ui-btn primary" onClick={() => open(today.id)}>Open today's note</button>
         : <button type="button" className="ui-btn primary" onClick={() => void make()}>Start today's note</button>}

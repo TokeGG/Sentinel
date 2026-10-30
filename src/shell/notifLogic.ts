@@ -4,9 +4,9 @@
 import type { Badges } from "./badges.ts";
 
 export type Quiet = { on: boolean; start: number; end: number }; // minutes since local midnight
-export type NotifPrefs = { snooze: Record<string, number>; dnd: string[]; quiet: Quiet; read: Record<string, number> };
+export type NotifPrefs = { snooze: Record<string, number>; dnd: string[]; quiet: Quiet; read: Record<string, number>; /** global do-not-disturb until (ms), 0 = off */ all: number };
 export const DEFAULT_QUIET: Quiet = { on: false, start: 22 * 60, end: 7 * 60 };
-export const DEFAULT_PREFS: NotifPrefs = { snooze: {}, dnd: [], quiet: DEFAULT_QUIET, read: {} };
+export const DEFAULT_PREFS: NotifPrefs = { snooze: {}, dnd: [], quiet: DEFAULT_QUIET, read: {}, all: 0 };
 const DAY = 1440, HOUR_MS = 3600_000;
 
 const isNum = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v);
@@ -28,6 +28,7 @@ export function sanitizePrefs(raw: unknown): NotifPrefs {
     dnd: Array.isArray(r.dnd) ? [...new Set(r.dnd.filter((x): x is string => typeof x === "string" && okId(x)))] : [],
     quiet: { on: q.on === true, start: minutes(q.start, DEFAULT_QUIET.start), end: minutes(q.end, DEFAULT_QUIET.end) },
     read: numMap(r.read, 0),
+    all: isNum(r.all) && r.all > 0 ? Math.floor(r.all) : 0,
   };
 }
 
@@ -90,7 +91,7 @@ export function groupMissed(counts: Badges, p: NotifPrefs, nowMs: number): HubRo
  *  snoozed/DND modules and quiet hours muted. The log and hub are unaffected. */
 export function shownCounts(counts: Badges, p: NotifPrefs, now: Date): Badges {
   const out: Badges = {};
-  if (inQuiet(p.quiet, minutesOfDay(now))) return out;
+  if (inQuiet(p.quiet, minutesOfDay(now)) || p.all > now.getTime()) return out;
   const ms = now.getTime();
   for (const id of Object.keys(counts)) {
     const c = muteKind(p, id, ms) ? 0 : missedCount(counts[id], p.read[id]);
@@ -98,6 +99,19 @@ export function shownCounts(counts: Badges, p: NotifPrefs, now: Date): Badges {
   }
   return out;
 }
+/** Title-bar DND button cycle: off -> 30 min -> 1 h -> 2 h -> until 08:00 tomorrow -> off. */
+export function nextDnd(all: number, now: Date): number {
+  const ms = now.getTime(), left = all - ms;
+  if (left <= 0) return ms + 30 * 60000;
+  if (left <= 30 * 60000) return ms + HOUR_MS;
+  if (left <= HOUR_MS) return ms + 2 * HOUR_MS;
+  if (left <= 2 * HOUR_MS) return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 8).getTime();
+  return 0;
+}
+export const dndLabel = (all: number, nowMs: number): string => {
+  const m = Math.ceil((all - nowMs) / 60000);
+  return m <= 0 ? "" : m < 60 ? `${m}m` : `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ""}`;
+};
 export const totalOf = (b: Badges): number => Object.values(b).reduce((t, n) => t + (n > 0 ? n : 0), 0);
 
 /** Ms until shownCounts could change by itself (a snooze ends or quiet hours start/stop), or null. */
@@ -106,6 +120,7 @@ export function nextChangeMs(p: NotifPrefs, now: Date): number | null {
   let best: number | null = null;
   const take = (v: number) => { if (v > 0 && (best === null || v < best)) best = v; };
   for (const until of Object.values(p.snooze)) take(until - ms);
+  take(p.all - ms);
   if (p.quiet.on && p.quiet.start !== p.quiet.end) {
     const m = minutesOfDay(now) + (now.getSeconds() * 1000 + now.getMilliseconds()) / 60000;
     for (const edge of [p.quiet.start, p.quiet.end]) take((((edge - m) % DAY) + DAY) % DAY * 60000 || DAY * 60000);

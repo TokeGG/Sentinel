@@ -38,6 +38,7 @@ export function useShellCommands(fail: (e: unknown) => void) {
         case "back": return goto("back");
         case "forward": return goto("fwd");
         case "focusMode": return toggleFocusMode(nav.current.cur).then(() => {});
+        case "home": return toggleFocusMode(null).then(() => {});
         case "tile": return tileAll(c.preset as TilePreset);
         case "layout": return switchLayout(c.name);
         case "saveLayout": return saveNamedLayout(c.name);

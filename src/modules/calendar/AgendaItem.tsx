@@ -11,7 +11,7 @@ export function AgendaItem({ r, overdue, now, busy, run, onEdit }: { r: ModuleRo
   const own = typeof r.itemId === "number";
   const open = useContext(CardCtx);
   return (
-    <li className={`cal-item${overdue ? " overdue" : ""}`}>
+    <li className={`cal-item${overdue ? " overdue" : ""}${r.holiday === true ? " hol" : ""}`}>
       {own && r.kind === "task" ? (
         <input type="checkbox" className="cal-check" aria-label="Done" checked={r.done === true} disabled={busy} onChange={() => void run("toggle_done", { id: r.itemId })} />
       ) : (

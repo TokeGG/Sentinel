@@ -9,6 +9,8 @@ export const EXTRA_SECTIONS = [
   { id: "contacts", label: "Contacts and birthdays" },
   { id: "money", label: "Expenses and subscriptions" },
   { id: "bookmarks", label: "Bookmarks / read later" },
+  { id: "holidays", label: "Holidays and events" },
+  { id: "imports", label: "Import your own (CSV, subscriptions)" },
 ];
 
 export const CAL_TABS: TabDef[] = [
@@ -20,4 +22,5 @@ export const CAL_TABS: TabDef[] = [
   { id: "contacts", label: "Contacts", sections: ["contacts"] },
   { id: "money", label: "Money", sections: ["money"] },
   { id: "bookmarks", label: "Read later", sections: ["bookmarks"] },
+  { id: "holidays", label: "Holidays", sections: ["holidays", "imports"] },
 ];

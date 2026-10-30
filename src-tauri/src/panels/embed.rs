@@ -1,4 +1,4 @@
-//! Embedded site views inside a custom panel's body (Social tabs X/Facebook/Instagram).
+//! Embedded site views inside a custom panel's body (Social site tabs, user-editable).
 //! Each is a child webview `embed-<panel>-<site>` (own profile dir, same guards as web
 //! panels, NO IPC: the capability patterns do not match `embed-*`), placed at
 //! `embed_rect(panel rect)` and moved/resized/hidden/closed with the panel (webview.rs).
@@ -82,7 +82,7 @@ mod tests {
     #[test]
     fn embeds_have_no_ipc_capability() {
         let cap: serde_json::Value = serde_json::from_str(include_str!("../../capabilities/default.json")).unwrap();
-        for site in ["x", "facebook", "instagram"] {
+        for site in ["x", "facebook", "instagram", "threads", "my-site-2", &"a".repeat(24)] {
             let l = embed_label("hub.social", site);
             for key in ["windows", "webviews"] {
                 for p in cap[key].as_array().unwrap() {

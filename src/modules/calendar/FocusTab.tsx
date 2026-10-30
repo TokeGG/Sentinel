@@ -6,6 +6,7 @@ import { listFocus, logFocus } from "./extraStore";
 import { clock, FOCUS_KEY, focusUntil, minutesOn, PRESETS, secondsLeft } from "./focus";
 import { dayKey } from "./panelLogic";
 import { localStamp } from "./reminders";
+import { FocusStats } from "./FocusStats";
 
 export function FocusTab() {
   const until = useStore(() => getSetting(FOCUS_KEY), null);
@@ -28,6 +29,7 @@ export function FocusTab() {
         {left > 0 && <button type="button" className="ui-btn" onClick={() => void until.act(() => setSetting(FOCUS_KEY, ""))}>Stop</button>}
       </div>
       <p className="ui-meta">Focused today: {minutesOn(log.data, dayKey(now)!)} min · {log.data.length} sessions logged.</p>
+      <FocusStats log={log.data} />
     </div>
   );
 }
