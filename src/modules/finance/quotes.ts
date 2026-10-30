@@ -2,6 +2,8 @@
 import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { checkAlerts } from "./extraStore";
+import { getPrefs, snapshotWorth } from "./planStore";
+import { dueKinds } from "./schedule";
 import type { WatchRow } from "./rows";
 
 // Both free, no API key, no account:
@@ -26,9 +28,11 @@ async function fetchCryptoQuote(id: string): Promise<number | null> {
   return data[id]?.usd ?? null;
 }
 
-export async function refreshQuotes() {
+/** Refreshes every symbol, or only `args.kinds` ("stock"/"crypto"); then alerts + a net worth snapshot. */
+export async function refreshQuotes(args?: Record<string, unknown>) {
   const d = await getDb();
-  const rows = await d.select<WatchRow[]>("SELECT * FROM watchlist");
+  const kinds = Array.isArray(args?.kinds) ? (args!.kinds as string[]) : null;
+  const rows = (await d.select<WatchRow[]>("SELECT * FROM watchlist")).filter((r) => !kinds || kinds.includes(r.kind));
 
   let updated = 0;
   let failed = 0;
@@ -51,6 +55,7 @@ export async function refreshQuotes() {
   }
 
   const fired = await checkAlerts();
+  await snapshotWorth().catch(() => {});
   await logActivity(
     "finance",
     "refresh_quotes",
@@ -60,3 +65,14 @@ export async function refreshQuotes() {
   return { ok: true, updated, failed, fired };
 }
 
+
+// Last scheduled refresh per kind (this process). The schedule tick runs only while the
+// module Auto-refresh opt-in is on; the per-kind intervals come from the Settings tab.
+const last = { stock: 0, crypto: 0 };
+export async function scheduledRefresh() {
+  const now = Date.now();
+  const kinds = dueKinds(now, last, await getPrefs());
+  if (!kinds.length) return { ok: true, skipped: true };
+  for (const k of kinds) last[k] = now;
+  return refreshQuotes({ kinds });
+}

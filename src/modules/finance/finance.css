@@ -40,3 +40,10 @@
 .fin-bar { flex: 1; min-width: 60px; height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
 .fin-bar span { display: block; height: 100%; background: var(--accent); }
 .fin-line.fired .fin-bar span { background: var(--bad, var(--accent)); }
+
+/* Plan section + privacy blur (amounts only; hover does not reveal). */
+.fin-blur .fin-price, .fin-blur .fin-money, .fin-blur .fin-tools:not(.fin-plan) .fin-line { filter: blur(6px); }
+.fin-eye { margin-left: auto; }
+.fin-chart { width: 100%; max-width: 480px; height: 110px; background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); }
+.fin-report { white-space: pre-wrap; font: 0.85em var(--font-mono); background: var(--surface-2); border: 1px solid var(--line); border-radius: var(--radius); padding: var(--pad); max-height: 260px; overflow: auto; }
+.fin-csv { width: 100%; min-height: 80px; font: 0.85em var(--font-mono); background: var(--surface-2); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); }

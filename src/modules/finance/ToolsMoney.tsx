@@ -3,11 +3,12 @@ import { useState } from "react";
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import { BILL_CYCLES, budgetStatus, expiryState, MAX_VAULT_BYTES, upcomingBills } from "./money";
 import { fmtPrice } from "./panelLogic";
+import { searchVault } from "./report";
 import type { PartProps } from "./Tools";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export function BudgetsPart({ data, busy, act }: PartProps) {
+export function BudgetsPart({ data, busy, act, prefs }: PartProps) {
   const [cat, setCat] = useState("");
   const [amt, setAmt] = useState("");
   return (
@@ -20,11 +21,11 @@ export function BudgetsPart({ data, busy, act }: PartProps) {
         </div>
       ))}
       <div className="ui-controls">
-        <input className="ui-file-text" value={cat} onChange={(e) => setCat(e.target.value)} placeholder="Category (as in Calendar > Money)" aria-label="Category" />
+        <select value={cat} onChange={(e) => setCat(e.target.value)} aria-label="Category"><option value="">Category…</option>{prefs.categories.map((c) => <option key={c}>{c}</option>)}</select>
         <input className="ui-file-text fin-num" value={amt} onChange={(e) => setAmt(e.target.value)} placeholder="Monthly" inputMode="decimal" aria-label="Monthly target" />
         <button type="button" className="ui-btn ui-sm" disabled={busy || !cat || !amt} onClick={() => void act("set_budget", { category: cat, monthly: amt }).then(() => { setCat(""); setAmt(""); })}>Set</button>
       </div>
-      <p className="ui-meta">Spend this month comes from expenses logged in Calendar &gt; Money.</p>
+      <p className="ui-meta">Spend this month comes from expenses logged in Calendar &gt; Money (same category names). Edit categories in Plan &gt; Settings.</p>
     </div>
   );
 }
@@ -54,6 +55,7 @@ export function BillsPart({ data, busy, act }: PartProps) {
 export function VaultPart({ data, busy, act }: PartProps) {
   const [f, setF] = useState({ name: "", expires_on: "", note: "", file_name: "", data_url: "" });
   const [err, setErr] = useState("");
+  const [q, setQ] = useState("");
   const pick = (file: File | undefined) => {
     if (!file) return;
     if (file.size > MAX_VAULT_BYTES) return setErr("File is over 2 MB");
@@ -63,7 +65,8 @@ export function VaultPart({ data, busy, act }: PartProps) {
   };
   return (
     <div className="fin-part">
-      {data.vault.map((v) => {
+      <input className="ui-file-text" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, date (2026-05) or notes" aria-label="Search vault" />
+      {searchVault(data.vault, q).map((v) => {
         const st = expiryState(v.expires_on, new Date());
         return (
           <div key={v.id} className={`fin-line ${st ? "fired" : ""}`}>
@@ -75,6 +78,7 @@ export function VaultPart({ data, busy, act }: PartProps) {
       })}
       <div className="ui-controls">
         <input className="ui-file-text" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} placeholder="Item (receipt / warranty)" aria-label="Item" />
+        <input className="ui-file-text" value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} placeholder="Notes (store, serial…)" aria-label="Notes" />
         <input type="date" value={f.expires_on} onChange={(e) => setF({ ...f, expires_on: e.target.value })} aria-label="Warranty ends" />
         <input type="file" onChange={(e) => pick(e.target.files?.[0])} aria-label="Attach file" />
         <button type="button" className="ui-btn ui-sm" disabled={busy || !f.name} onClick={() => void act("add_vault", f).then(() => setF({ name: "", expires_on: "", note: "", file_name: "", data_url: "" }))}>Add</button>

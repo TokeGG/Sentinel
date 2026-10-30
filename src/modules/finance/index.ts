@@ -1,7 +1,10 @@
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { extraSkills, unseenAlerts } from "./extraStore";
 import { financeSections } from "./panelLogic";
-import { refreshQuotes } from "./quotes";
+import { refreshQuotes, scheduledRefresh } from "./quotes";
+import { planSkills } from "./planStore";
+import { ioSkills } from "./portfolioIO";
+import { TICK_MINUTES } from "./schedule";
 import { addSymbol, loadRows, removeSymbol } from "./store";
 import { syncCongressTrades } from "./trades";
 
@@ -22,7 +25,10 @@ export const financeModule: ModuleManifest = {
     { name: "refresh_quotes", run: refreshQuotes },
     { name: "remove_symbol", run: removeSymbol },
     { name: "sync_congress_trades", run: syncCongressTrades },
+    { name: "scheduled_refresh", run: scheduledRefresh },
     ...extraSkills,
+    ...planSkills,
+    ...ioSkills,
   ],
   load: loadRows,
   // Price alerts that fired since you last looked (counts only).
@@ -36,7 +42,8 @@ export const financeModule: ModuleManifest = {
     { label: "Refresh quotes", skill: "refresh_quotes" },
     { label: "Sync Congress Trades", skill: "sync_congress_trades" },
   ],
-  schedule: { skill: "refresh_quotes", intervalMinutes: 60 },
+  // Ticks every 5 min only while Auto-refresh is on; stock/crypto intervals are set in Plan > Settings.
+  schedule: { skill: "scheduled_refresh", intervalMinutes: TICK_MINUTES },
 };
 
 registerModule(financeModule);

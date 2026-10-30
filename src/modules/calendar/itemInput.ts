@@ -37,8 +37,12 @@ export function toFields(a: Record<string, unknown> | undefined): ItemFields {
   const repeat = (REPEATS as string[]).includes(s("repeat")) ? (s("repeat") as Repeat) : "none";
   if (repeat !== "none" && !day) throw new Error("a repeating item needs a date");
   const pid = Number(a?.parent_id);
+  // Optional link (e.g. a deal from Deals): kept in notes, where the detail card finds links.
+  const url = s("url");
+  const baseNotes = String(a?.notes ?? "").trim();
+  const notes = /^https?:\/\/\S+$/i.test(url) && !baseNotes.includes(url) ? `${baseNotes}${baseNotes ? "\n" : ""}${url}` : baseNotes;
   return {
     kind, title, startsAt: day ? (time ? `${day}T${time}` : day) : null, endsAt: null, allDay: !!day && !time,
-    rrule: ruleFor(repeat), notes: String(a?.notes ?? "").trim(), parentId: Number.isInteger(pid) && pid > 0 ? pid : null,
+    rrule: ruleFor(repeat), notes, parentId: Number.isInteger(pid) && pid > 0 ? pid : null,
   };
 }
