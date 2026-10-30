@@ -4,6 +4,8 @@ import { ConfirmButton } from "../../ui/ConfirmButton";
 import type { ModuleRow, ModuleState } from "../../ui/useModule";
 import { listCoupons, listWishes, type Coupon } from "./extraStore";
 import type { Wish } from "./extras";
+import { fmtMoney } from "../finance/prefs";
+import { SteamSync } from "./SteamSync";
 
 export function DealExtras({ run, busy, version }: { run: ModuleState["run"]; busy: boolean; version: ModuleRow[] }) {
   const [wishes, setWishes] = useState<Wish[]>([]);
@@ -29,10 +31,12 @@ export function DealExtras({ run, busy, version }: { run: ModuleState["run"]; bu
         </div>
         {wishes.map((w) => (
           <div key={w.id} className="dl-src">
-            <span>{w.term}{w.max_price !== null ? ` ≤ $${w.max_price}` : ""}</span>
+            <span>{w.term}{w.max_price !== null ? ` ≤ ${fmtMoney(w.max_price)}` : ""}</span>
+            <input key={`${w.id}:${w.max_price}`} className="ui-file-text dl-num" defaultValue={w.max_price ?? ""} placeholder="Alert at" inputMode="decimal" aria-label={`Alert price for ${w.term}`} onBlur={(e) => e.target.value !== String(w.max_price ?? "") && void run("set_wish_max", { id: w.id, max_price: e.target.value })} />
             <ConfirmButton label="Remove" className="ui-btn ui-sm" disabled={busy} onConfirm={() => void run("remove_wish", { id: w.id })} />
           </div>
         ))}
+        <SteamSync run={run} busy={busy} />
       </details>
       <details>
         <summary className="ui-meta">Coupons ({coupons.length})</summary>
