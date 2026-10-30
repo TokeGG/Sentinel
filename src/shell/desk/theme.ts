@@ -1,7 +1,9 @@
 // Pure themes + day/night sky. A theme is a small set of token overrides set on
 // :root (tokens.css stays the single source of defaults). Opt-in.
-export type ThemeId = "default" | "midnight" | "dawn" | "contrast" | "terminal";
+// "custom" is filled from app_settings `custom_theme` (theme builder, look.ts).
+export type ThemeId = "default" | "midnight" | "dawn" | "contrast" | "terminal" | "custom";
 export const THEMES: Record<ThemeId, Record<string, string>> = {
+  custom: {},
   default: {},
   midnight: { "--base": "#05070d", "--raised": "#0a0e18", "--overlay": "#101626" },
   dawn: { "--base": "#1a1420", "--raised": "#221a2a", "--overlay": "#2c2236" },

@@ -96,6 +96,12 @@ html:has(.panel-grip), html:has(.panel-grip) body { margin: 0; overflow: hidden;
 .snap-thumb button { position: absolute; box-sizing: border-box; border: 2px solid var(--surface, #111); border-radius: 4px; background: var(--accent-soft); cursor: pointer; padding: 0; }
 .snap-thumb button:hover, .snap-thumb button:focus-visible { background: var(--accent); }
 .snap-assist-row { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+/* Title bar styles (app_settings titlebar_style); height never changes. */
+.titlebar.tb-compact { font-size: var(--fs-xs); }
+.titlebar.tb-compact .titlebar-brand > span:last-child { display: none; }
+.titlebar.tb-autohide > * { opacity: 0; transition: opacity 0.15s; }
+.titlebar.tb-autohide:hover > *, .titlebar.tb-autohide:focus-within > * { opacity: 1; }
 .titlebar-dnd, .titlebar-chip { all: unset; align-self: center; margin-right: 6px; padding: 0 8px; height: 18px; line-height: 18px; border-radius: 9px; font-size: var(--fs-xs); color: var(--text-dim); border: 1px solid var(--line-base); cursor: pointer; }
 .titlebar-dnd.on { color: var(--text); border-color: var(--accent-text); }
 .titlebar-chip b { color: var(--text); }

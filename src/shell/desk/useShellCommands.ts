@@ -9,6 +9,8 @@ import type { ShellCmd } from "./keymap";
 import { drop, emptyNav, popClosed, pushClosed, step, visit, type Closed } from "./nav";
 import { isKnown, moveToNextMonitor, openById, raisePins, saveNamedLayout, switchLayout, tileAll, toggleFocusMode, togglePin } from "./layoutOps";
 import type { TilePreset } from "./snap";
+import { quickSwitchTarget } from "./collections";
+import { getFolders, getGroups, PALETTE_QUERY } from "./collectionsStore";
 
 const isOpen = async (id: string) => (await getPanel(id).catch(() => null))?.state === "open";
 
@@ -45,6 +47,20 @@ export function useShellCommands(fail: (e: unknown) => void) {
         case "pin": { const id = c.id ?? nav.current.cur; return id ? togglePin(id).then(() => {}) : undefined; }
         case "gameMode": return emit("tray-game-mode");
         case "nextMonitor": return moveToNextMonitor();
+        case "quickSwitch": {
+          const open = new Set<string>();
+          for (const id of nav.current.back) if (await isOpen(id)) open.add(id);
+          const t = quickSwitchTarget(nav.current.back, (id) => open.has(id));
+          return t ? openById(t) : undefined;
+        }
+        case "group": { for (const id of (await getGroups())[c.name] ?? []) if (isKnown(id)) await openById(id); return; }
+        case "smartFolder": {
+          const q = (await getFolders())[c.name];
+          if (!q) return;
+          try { localStorage.setItem(PALETTE_QUERY, q); } catch { /* storage off */ }
+          if (await isOpen(PALETTE_ID)) await import("../panelApi").then((a) => a.closePanel(PALETTE_ID));
+          return openById(PALETTE_ID);
+        }
         case "snapLayouts": {
           const id = c.id ?? nav.current.cur;
           if (!id || id === SNAP_ID) return;

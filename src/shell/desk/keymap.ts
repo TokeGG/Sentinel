@@ -3,7 +3,8 @@ export type ShellCmd =
   | { type: "palette" } | { type: "reopen" } | { type: "back" } | { type: "forward" }
   | { type: "focusMode" } | { type: "home" } | { type: "tile"; preset: string } | { type: "open"; id: string }
   | { type: "layout"; name: string } | { type: "saveLayout"; name: string } | { type: "pin"; id?: string }
-  | { type: "gameMode" } | { type: "nextMonitor" } | { type: "capture" } | { type: "help" } | { type: "snapLayouts"; id?: string };
+  | { type: "gameMode" } | { type: "nextMonitor" } | { type: "capture" } | { type: "help" } | { type: "snapLayouts"; id?: string }
+  | { type: "quickSwitch" } | { type: "group"; name: string } | { type: "smartFolder"; name: string };
 
 export type KeyLike = { key: string; ctrlKey: boolean; metaKey: boolean; shiftKey: boolean; altKey: boolean };
 

@@ -8,6 +8,8 @@ import { errorText } from "../ui/moduleRun";
 import { fmtHM, groupMissed, inQuiet, minutesOfDay, totalOf } from "./notifLogic";
 import { openPanel } from "./panelApi";
 import { useHub } from "./useHub";
+import { urgencyColor } from "./notifPolicy";
+import { filterLog } from "./notifSearch";
 import "./masterhub.css";
 
 const nameOf = (id: string) => registry.find((m) => m.id === id)?.name ?? id;
@@ -15,6 +17,7 @@ const when = (at: number) => new Date(at).toLocaleString([], { month: "short", d
 
 export function MasterHub() {
   const [error, setError] = useState<string | null>(null);
+  const [find, setFind] = useState("");
   const hub = useHub((e) => setError(errorText(e)));
   const now = Date.now(), rows = groupMissed(hub.counts, hub.prefs, now), q = hub.prefs.quiet;
   const jump = (id: string) => {
@@ -36,7 +39,7 @@ export function MasterHub() {
             <i className="mh-dot" />
             <span className="mh-name">{nameOf(r.id)}</span>
             {r.mute && <span className="mh-tag">{r.mute === "dnd" ? "DND" : "snoozed"}</span>}
-            <span className="mh-count">{r.count}</span>
+            <span className="mh-count" style={{ color: urgencyColor(r.count) }}>{r.count}</span>
             <span className="mh-acts">
               <button className="mh-btn" onClick={() => jump(r.id)}>Open</button>
               {r.mute === "snooze" ? <button className="mh-btn" onClick={() => hub.unsnooze(r.id)}>Unsnooze</button> : (
@@ -51,9 +54,10 @@ export function MasterHub() {
         ))}
       </ul>
       <h3 className="mh-sub">History</h3>
+      <input className="mh-find" type="search" placeholder="Search history (module, date)" value={find} onChange={(e) => setFind(e.target.value)} />
       <Table
         columns={[{ key: "at", label: "When", width: "12em" }, { key: "name", label: "Module" }, { key: "count", label: "Count", width: "5em" }]}
-        rows={hub.log.map((l) => ({ id: l.id, at: when(l.at), name: nameOf(l.module_id), count: l.count }))}
+        rows={filterLog(hub.log.map((l) => ({ id: l.id, at: when(l.at), name: nameOf(l.module_id), count: l.count })), find)}
         empty="No notifications logged yet."
       />
     </div>

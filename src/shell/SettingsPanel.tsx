@@ -19,6 +19,10 @@ import { UpdatesSection } from "./settings/UpdatesSection";
 import { ModulesSection } from "./settings/ModulesSection";
 import { KnowledgeSection } from "./settings/KnowledgeSection";
 import { DataSourcesSection } from "./settings/DataSourcesSection";
+import { PanelsSection } from "./settings/PanelsSection";
+import { AlertRulesSection } from "./settings/AlertRulesSection";
+import { ProductivitySection } from "./settings/ProductivitySection";
+import { ThemeBuilderSection } from "./settings/ThemeBuilderSection";
 import "./settings/settings.css";
 
 export function SettingsPanel() {
@@ -31,11 +35,15 @@ export function SettingsPanel() {
       <AppearanceSection onError={onError} />
       <AccountsSection onError={onError} />
       <NotificationsSection onError={onError} />
+      <AlertRulesSection onError={onError} />
       <JobsSection onError={onError} />
       <ModulesSection onError={onError} />
       <KnowledgeSection onError={onError} />
       <DataSourcesSection onError={onError} />
       <DesktopSection onError={onError} />
+      <ThemeBuilderSection onError={onError} />
+      <PanelsSection onError={onError} />
+      <ProductivitySection onError={onError} />
       <TerminalSection onError={onError} />
       <SnapSection onError={onError} />
       <DataSection onError={onError} />
