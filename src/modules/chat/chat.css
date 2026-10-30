@@ -1,6 +1,7 @@
 /* Chat: Chatterino/Twitch-style. Tab strip with site-coloured dots, dense message rows,
    coloured names, docked send box, columns view. Flat Pro, tinted by --accent. */
-.panel-shell:has(.chat-root) { height: 100vh; padding-bottom: 0; }
+.panel-shell:has(.chat-root) { height: 100vh; padding-bottom: 0; overflow: hidden; display: flex; flex-direction: column; }
+body:has(.chat-root) { overflow: hidden; }
 .chat-root { container: chat / inline-size; flex: 1; min-height: 0; display: flex; flex-direction: column; margin: 0 calc(var(--pad) * -1.33); }
 .chat-bar { flex: none; padding: 0 var(--pad) var(--gap); font-size: var(--fs-md); }
 .chat-root > .kit-error { margin: 0 var(--pad) var(--gap); }
@@ -79,3 +80,7 @@
 .chat-logrows { max-height: 320px; overflow: auto; font-size: var(--fs-sm); }
 .chat-player { width: 100%; aspect-ratio: 16 / 9; border: 0; flex: none; background: #000; }
 .chat-room { position: relative; }
+
+.chat-sections > [data-section="filters"], .chat-sections > [data-section="logs"] { flex: none; padding: 0 var(--pad); }
+.chat-more > summary { cursor: pointer; padding: 4px 0; color: var(--text-dim); font-size: var(--fs-sm); }
+.chat-more[open] { max-height: 40vh; overflow: auto; }

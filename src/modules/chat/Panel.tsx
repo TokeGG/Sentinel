@@ -16,9 +16,14 @@ import { RoomView } from "./RoomView";
 import { FiltersTool, LogsTool } from "./ChatTools";
 import { PrefsCtx, useChatPrefs } from "./prefsContext";
 import { SpoilerWords, useSpoilers } from "../../ui/wordList";
+import { getCredential } from "../../core/credentials";
+import { listAccounts } from "../../core/connect";
 import "./chat.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
+  // The Twitch login box only shows until a token is saved (Settings > Accounts Connect also counts).
+  const [hasToken, setHasToken] = useState(true);
+  useEffect(() => { void Promise.all([getCredential(module.id, "twitch_oauth").catch(() => null), listAccounts("twitch").catch(() => [])]).then(([t, a]) => setHasToken(!!t || a.length > 0)); }, []);
   const { rows, busy, error, run, refresh } = useModule(module);
   const mode = useOption<string>("view", "tabs");
   const cols = useOption("columns", 2);
@@ -85,15 +90,15 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             </div>
           )}
         </Section>
-        <Section id="filters"><Tile title="Ignore list, word filters, highlights"><FiltersTool /><SpoilerWords words={spoil.words} save={spoil.save} /></Tile></Section>
-        <Section id="logs"><Tile title="Chat logs"><LogsTool /></Tile></Section>
-        <Section id="login">
+        <Section id="filters"><details className="chat-more"><summary>Ignore list, word filters, highlights</summary><FiltersTool /><SpoilerWords words={spoil.words} save={spoil.save} /></details></Section>
+        <Section id="logs"><details className="chat-more"><summary>Chat logs</summary><LogsTool /></details></Section>
+        {!hasToken && <Section id="login">
           <Tile title="Twitch login (to send)">
             <p className="chat-help">{twitch.auth!.help}</p>
             <p className="chat-help">Kick and destiny.gg open as their own embedded chat (log in and send there); "Try native" uses the read-only live socket. Other embedded sites handle their own login and sending.</p>
-            <CredentialFields module={module} onSaved={() => setEpoch((e) => e + 1)} />
+            <CredentialFields module={module} onSaved={() => { setEpoch((e) => e + 1); setHasToken(true); }} />
           </Tile>
-        </Section>
+        </Section>}
       </Sections>
     </div>
     </PrefsCtx.Provider>
