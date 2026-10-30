@@ -83,3 +83,9 @@ PC/system: per-game game-mode profiles; disk-full forecast; manual update checke
 Privacy: app lock (Windows Hello/PIN); hide sensitive panels while screen sharing; data map + per-module wipe; on-demand breach check.
 Look: theme builder with live preview; opt-in seasonal themes.
 Done: auto skill choice by goal (core/skillPick.ts).
+
+## Settings audit (owner: "majority of implemented features should have settings if changeable")
+Pass over every module + shell: hard-coded limits, intervals, counts, defaults and toggles become Settings > Modules fields (generic modSettings / customize options), not per-panel UI. Next after the home style.
+
+## Ideas round 7: 100 more (owner asked; see chat list, all accepted)
+Recorded in chat 2026-10-30; build order after round 6 + settings audit.
