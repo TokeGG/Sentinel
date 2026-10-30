@@ -15,6 +15,14 @@ import { useBotRun } from "./useBotRun";
 import { useFx } from "./useFx";
 import { useModelStatus } from "./useModelStatus";
 import { shortStatus } from "./ollamaStatus";
+import { CoachPane } from "./coach/CoachPane";
+import { ModelsPane } from "./ModelsPane";
+import { useMore } from "./useMore";
+import { SettingsPane } from "./SettingsPane";
+import { SiteRulesPane } from "./SiteRulesPane";
+import { RoutinesPane } from "./RoutinesPane";
+import { StatsPane } from "./StatsPane";
+import { MemoryPane } from "./MemoryPane";
 import "./bot.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -22,7 +30,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const data = useBotData();
   const model = useModelStatus();
   const ex = useExtras();
-  const bot = useBotRun(() => { void refresh(); void data.reload(); void ex.reload(); });
+  const more = useMore();
+  const bot = useBotRun(() => { void refresh(); void data.reload(); void ex.reload(); void more.reload(); });
   const fx = useFx();
   return (
     <div className="bot-root" data-fx={fx} data-run={bot.running ? "1" : "0"}>
@@ -33,15 +42,22 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <span className="bot-dim">{bot.running ? `${bot.log.length} log lines` : "waiting for a goal"}</span>
         <b className="bot-prog" aria-hidden />
       </div>
-      {(error || data.error || ex.error) && <ErrorLine message={error ?? data.error ?? ex.error ?? ""} />}
+      {(error || data.error || ex.error || more.error) && <ErrorLine message={error ?? data.error ?? ex.error ?? more.error ?? ""} />}
       <Sections className="bot-grid">
-        <Section id="run"><Tile title="Run"><RunPane bot={bot} model={model.status} recheck={() => void model.check()} run={run} busy={busy} /></Tile></Section>
-        <Section id="log"><Tile title="Step log and past runs"><LogPane log={bot.log} rows={rows} /></Tile></Section>
+        <Section id="run"><Tile title="Run"><RunPane bot={bot} model={model.status} recheck={() => void model.check()} run={run} busy={busy} more={more} /></Tile></Section>
+        <Section id="log"><Tile title="Step log and past runs"><LogPane log={bot.log} rows={rows} runs={more.log} /></Tile></Section>
         <Section id="knowledge"><Tile title="Knowledge"><KnowledgePane notes={data.notes} run={run} busy={busy} reload={() => void data.reload()} /></Tile></Section>
-        <Section id="workflows"><Tile title="Saved workflows"><WorkflowPane list={ex.workflows} bot={bot} run={run} busy={busy} reload={() => void ex.reload()} /></Tile></Section>
-        <Section id="jobs"><Tile title="Scheduled jobs"><JobsPane jobs={ex.jobs} runs={ex.runs} workflows={ex.workflows} run={run} busy={busy} reload={() => void ex.reload()} /></Tile></Section>
+        <Section id="workflows"><Tile title="Saved workflows"><WorkflowPane list={ex.workflows} sites={ex.sites} bot={bot} run={run} busy={busy} reload={() => void ex.reload()} /></Tile></Section>
+        <Section id="jobs"><Tile title="Scheduled jobs"><JobsPane bot={bot} jobs={ex.jobs} runs={ex.runs} workflows={ex.workflows} run={run} busy={busy} reload={() => void ex.reload()} /></Tile></Section>
         <Section id="sites"><Tile title="Site notebook"><SitesPane sites={ex.sites} run={run} busy={busy} reload={() => void ex.reload()} /></Tile></Section>
         <Section id="weekly"><Tile title="What I learned this week"><ul className="bot-steps">{ex.weekly.map((l, i) => <li key={i}>{l}</li>)}</ul></Tile></Section>
+        <Section id="coach"><Tile title="Challenge Coach"><CoachPane /></Tile></Section>
+        <Section id="models"><Tile title="Local models"><ModelsPane /></Tile></Section>
+        <Section id="routines"><Tile title="Routines"><RoutinesPane more={more} workflows={ex.workflows} bot={bot} run={run} busy={busy} /></Tile></Section>
+        <Section id="settings"><Tile title="Run settings"><SettingsPane more={more} run={run} busy={busy} /></Tile></Section>
+        <Section id="rules"><Tile title="Site rules"><SiteRulesPane more={more} run={run} busy={busy} /></Tile></Section>
+        <Section id="stats"><Tile title="Skill usage"><StatsPane more={more} /></Tile></Section>
+        <Section id="memory"><Tile title="Bot memory"><MemoryPane notes={data.notes} state={data.state} sites={ex.sites.length} run={run} busy={busy} reload={() => { void data.reload(); void ex.reload(); }} /></Tile></Section>
         <Section id="brain"><Tile title="Brain"><BrainPane state={data.state} run={run} busy={busy} reload={() => void data.reload()} /></Tile></Section>
       </Sections>
     </div>

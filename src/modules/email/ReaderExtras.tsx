@@ -1,4 +1,7 @@
 // Reader add-ons: conversation strip, snooze menu, unsubscribe helper (confirm first).
+import { useUiDefaults } from "../../shell/desk/useUiDefaults";
+import { registry } from "../../core/module";
+import { mailTaskArgs } from "./mailTask";
 import { useState } from "react";
 import { openLink as openUrl } from "../../ui/openLink"; // in-app browser or system (links_open_in)
 import { safeLink } from "../../ui/safeLink";
@@ -8,12 +11,13 @@ import { msgKey } from "./threads";
 import type { Msg } from "./types";
 
 export function ThreadStrip({ thread, selKey, onPick }: { thread: Msg[]; selKey: string | null; onPick: (m: Msg) => void }) {
+  const { clock } = useUiDefaults();
   if (thread.length < 2) return null;
   return (
     <ol className="mail-thread" aria-label="Conversation">
       {thread.map((m) => (
         <li key={msgKey(m)}><button type="button" className={msgKey(m) === selKey ? "active" : ""} onClick={() => onPick(m)}>
-          <b>{senderLabel(m)}</b> <time>{dateLabel(m.dateTs)}</time>{!m.seen && <i className="mail-dot" />}</button></li>
+          <b>{senderLabel(m)}</b> <time>{dateLabel(m.dateTs, undefined, clock)}</time>{!m.seen && <i className="mail-dot" />}</button></li>
       ))}
     </ol>
   );
@@ -46,4 +50,15 @@ export function Unsubscribe({ raw, busy, onMail }: { raw: string; busy: boolean;
       <button type="button" className="ui-btn" onClick={() => setConfirm(false)}>Cancel</button>
     </div>
   );
+}
+
+/** Email -> Calendar task through Calendar's own add_item skill (subject + sender only). */
+export function ToTask({ msg }: { msg: { subject: string; fromAddr: string } }) {
+  const [state, setState] = useState("");
+  const add = async () => {
+    const skill = registry.find((m) => m.id === "hub.calendar")?.skills.find((s) => s.name === "add_item");
+    if (!skill) return setState("Calendar not available");
+    try { await skill.run(mailTaskArgs(msg, new Date())); setState("Added to Calendar"); } catch (e) { setState(String(e)); }
+  };
+  return state ? <span className="mail-note">{state}</span> : <button type="button" className="ui-btn" onClick={() => void add()}>To task</button>;
 }

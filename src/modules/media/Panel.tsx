@@ -10,6 +10,7 @@ import { Images } from "./Images";
 import { airsIn } from "./panelLogic";
 import type { ShowRow } from "./shows";
 import { NowPlayingCard, Sports, TwitchLive } from "./Widgets";
+import { NewFeed, StreamerSchedule, WatchParty } from "./MediaPlans";
 import "./media.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -23,6 +24,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       <h2 className="ui-head"><span className="ui-dot" />{module.name}</h2>
       {error && <ErrorLine message={error} />}
       <Sections>
+        <Section id="new"><NewFeed run={run} /></Section>
+        <Section id="party"><WatchParty /></Section>
+        <Section id="schedule"><StreamerSchedule /></Section>
         <Section id="nowplaying"><NowPlayingCard run={run} /></Section>
         <Section id="twitch"><TwitchLive run={run} /></Section>
         <Section id="shows">

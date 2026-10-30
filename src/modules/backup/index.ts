@@ -3,8 +3,15 @@ import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { backupSections } from "./panelLogic";
-import { setSetting } from "../../ui/appSetting";
-import { LAST_KEY } from "./health";
+import { getSetting, setSetting } from "../../ui/appSetting";
+import { LAST_KEY, reminderDue } from "./health";
+import { parseSys, SYS_KEY } from "../../shell/privacy/sysPrefs";
+
+async function reminderBadge(): Promise<number> {
+  const days = parseSys(await getSetting(SYS_KEY)).backupRemindDays;
+  const last = await getSetting(LAST_KEY);
+  return reminderDue(last ? new Date(last) : null, new Date(), days) ? 1 : 0;
+}
 
 let lastBackups: { id: string; title: string }[] = [];
 
@@ -63,6 +70,7 @@ export const backupModule: ModuleManifest = {
     { name: "delete_backup", run: deleteBackup },
   ],
   load: loadRows,
+  badge: reminderBadge,
   actions: [
     { label: "Backup now…", skill: "backup_now" },
     { label: "Restore from…", skill: "restore_from" },

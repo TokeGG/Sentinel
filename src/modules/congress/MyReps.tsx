@@ -1,15 +1,17 @@
 // "My representatives": enter state + district; shows your senators/House member and their recent votes.
+import { useLimit } from "../../ui/useOption";
 import { useEffect, useState } from "react";
 import { openLink as openUrl } from "../../ui/openLink";
 import { EmptyState } from "../../ui/kit";
 import { safeLink } from "../../ui/safeLink";
 import type { ModuleState } from "../../ui/useModule";
 import type { MemberRow } from "./panelLogic";
-import { seat as seatOf } from "./panelLogic";
+import { congressOptions, seat as seatOf } from "./panelLogic";
 import { getSeat, listRepVotes } from "./repStore";
 import { myReps, seatText, type Seat } from "./reps";
 
 export function MyReps({ members, busy, run }: { members: MemberRow[]; busy: boolean; run: ModuleState["run"] }) {
+  const repVotes = useLimit(congressOptions, "repVotes");
   const [seat, setSeat] = useState<Seat | null>(null);
   const [text, setText] = useState("");
   const [votes, setVotes] = useState<Awaited<ReturnType<typeof listRepVotes>>>([]);
@@ -29,7 +31,7 @@ export function MyReps({ members, busy, run }: { members: MemberRow[]; busy: boo
       {!seat ? <EmptyState title="No district set" hint="Enter your state code and district number." /> : !reps.length ? <EmptyState title="No members found" hint="Press Sync Congress first." /> : (
         <ul className="cg-list">
           {reps.map((m) => {
-            const mv = votes.filter((v) => v.member_id === m.ref).slice(0, 8);
+            const mv = votes.filter((v) => v.member_id === m.ref).slice(0, repVotes);
             return (
               <li key={m.id} className="cg-card">
                 <div className="cg-top"><b>{m.name}</b> <span className="ui-meta">{m.party} · {seatOf(m)}</span></div>

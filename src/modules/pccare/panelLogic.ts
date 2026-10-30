@@ -1,5 +1,6 @@
 // Pure helpers for the PC Care panel. Units follow the Rust PcMetrics:
 // RAM in MB, disks in GB, temp-file sizes in bytes.
+import { numOption } from "../../ui/numOption.ts";
 type Row = Record<string, unknown>;
 export type Unit = "mb" | "gb" | "bytes";
 
@@ -16,6 +17,7 @@ export const PC_TOOL_TABS = [
   { id: "startup", label: "Startup" }, { id: "disk", label: "Disk" }, { id: "dupes", label: "Duplicates" },
   { id: "procs", label: "Processes" }, { id: "system", label: "System" }, { id: "files", label: "Sort files" },
   { id: "net", label: "Network" }, { id: "security", label: "Security" },
+  { id: "games", label: "Game profiles" }, { id: "health", label: "Health" }, { id: "updates", label: "Updates" },
 ];
 
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
@@ -75,3 +77,7 @@ export function splitRows(rows: Row[]) {
     previewed: files.length > 0 || rows.some((r) => r.kind === "tmp-none"),
   };
 }
+export const pccareLimits = [
+  numOption("largestFiles", "Largest files listed", 25, 5, 100), numOption("procRows", "Processes listed", 80, 10, 300),
+  numOption("speedRows", "Speed tests listed", 8, 1, 50),
+];

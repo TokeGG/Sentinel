@@ -22,7 +22,11 @@ export interface AgentDeps {
   /** Step-approval mode: ask the user before EVERY action (with the model's reason). */
   approve?(action: Action, obs: Observation, why: string | undefined): Promise<boolean>;
   /** Gate for EVERY action (Lab mode: only tools and in-scope goto pass). Absent = no extra restriction. */
-  actionGate?(action: Action): Verdict;
+  actionGate?(action: Action, obs: Observation): Verdict;
+  /** Extra pause after each executed step (bot settings: step speed). */
+  stepDelayMs?: number;
+  /** Fields added to the saved episode at the end (run cost). */
+  extra?(): Partial<Episode>;
   /** Gate for tool actions (MCP). Absent = tools refused. */
   toolGate?(action: Extract<Action, { type: "tool" }>): Verdict;
   brain: Brain;
@@ -95,7 +99,7 @@ export async function runAgent(d: AgentDeps, o: RunOpts): Promise<Episode> {
 
     const refuse = (error: string): Step => ({ ...base, ok: false, error, changed: false });
     if (d.actionGate) {
-      const g = await d.actionGate(action);
+      const g = await d.actionGate(action, obs);
       if (!g.allowed) { steps.push(refuse(`blocked: ${g.reason}`)); continue; }
     }
     if (action.type === "tool") {
@@ -112,9 +116,11 @@ export async function runAgent(d: AgentDeps, o: RunOpts): Promise<Episode> {
     }
     const { res, retries } = await actVerified(d, action, cancelled);
     steps.push({ ...base, ok: res.ok, error: res.error, changed: res.changed, timedOut: res.timedOut, retries, output: res.output?.slice(0, 600) });
+    if (d.stepDelayMs && d.stepDelayMs > 0 && !cancelled()) await d.clock.sleep(d.stepDelayMs);
   }
 
-  const ep: Episode = { goal: o.goal, variantId: d.variantId, steps, outcome, maxSteps, startedAt, endedAt: d.clock.now(), result, plan };
+  const skills = (d.skills ?? []).map((s) => s.name);
+  const ep: Episode = { goal: o.goal, variantId: d.variantId, steps, outcome, maxSteps, startedAt, endedAt: d.clock.now(), result, plan, ...(skills.length ? { skills } : {}), ...d.extra?.() };
   try { await d.store.saveEpisode(ep); } catch { /* the run's result still goes back to the caller */ }
   return ep;
 }

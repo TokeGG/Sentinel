@@ -1,4 +1,5 @@
 // Pure helpers for the Notes panel.
+import { numOption, startTabOption } from "../../ui/numOption.ts";
 import type { TabDef } from "../../ui/sectionTabsLogic.ts";
 type Row = Record<string, unknown>;
 
@@ -24,6 +25,10 @@ export const notesSections = [
   { id: "snippets", label: "Snippets" },
   { id: "vault", label: "Document vault" },
   { id: "clipper", label: "Web clipper" },
+  { id: "board", label: "Kanban boards" },
+  { id: "goals", label: "Goals and milestones" },
+  { id: "meeting", label: "Meeting notes (timestamped)" },
+  { id: "totp", label: "2FA codes (keychain)" },
 ];
 
 /** Panel tabs: each groups section ids above. */
@@ -36,7 +41,12 @@ export const NOTES_TABS: TabDef[] = [
   { id: "snippets", label: "Snippets", sections: ["snippets"] },
   { id: "vault", label: "Vault", sections: ["vault"] },
   { id: "clip", label: "Clip", sections: ["clipper"] },
+  { id: "board", label: "Board", sections: ["board"] },
+  { id: "goals", label: "Goals", sections: ["goals"] },
+  { id: "meeting", label: "Meeting", sections: ["meeting"] },
+  { id: "totp", label: "2FA", sections: ["totp"] },
 ];
 
 /** app_settings key: "1" = create today's daily note when the panel opens (opt-in). */
 export const DAILY_KEY = "notes_daily";
+export const notesOptions = [startTabOption(NOTES_TABS), numOption("tagChips", "Tag chips shown", 12, 0, 50)];

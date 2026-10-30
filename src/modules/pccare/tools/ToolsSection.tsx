@@ -8,10 +8,14 @@ import { ProcTool } from "./ProcTool";
 import { SecurityTool } from "./SecurityTool";
 import { StartupTool } from "./StartupTool";
 import { SystemTool } from "./SystemTool";
+import { GameProfileTool } from "./GameProfileTool";
+import { HealthTool } from "./HealthTool";
+import { UpdatesTool } from "./UpdatesTool";
 import { PC_TOOL_TABS } from "../panelLogic";
 
 const VIEWS: Record<string, ComponentType> = {
   startup: StartupTool, disk: DiskTool, dupes: DupesTool, procs: ProcTool, system: SystemTool, files: FilesTool, net: NetTool, security: SecurityTool,
+  games: GameProfileTool, health: HealthTool, updates: UpdatesTool,
 };
 
 // Every tool does nothing until its own button is pressed; destructive steps show a preview and confirm.

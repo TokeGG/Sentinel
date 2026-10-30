@@ -1,7 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
-import { pccareSections } from "./panelLogic";
+import { pccareLimits, pccareSections } from "./panelLogic";
+import { recordDisks } from "./sysOps";
 
 interface DiskMetric {
   mount: string;
@@ -27,6 +28,7 @@ let previewedFiles: TempFile[] | null = null; // null = showing metrics, not pre
 async function getMetrics() {
   previewedFiles = null; // refreshing metrics exits preview mode
   last = await invoke<PcMetrics>("get_pc_metrics");
+  await recordDisks(last.disks).catch(() => {}); // disk-full forecast history (one sample per disk per day)
   await logActivity(
     "pccare",
     "get_metrics",
@@ -111,7 +113,7 @@ export const pcCareModule: ModuleManifest = {
   ui: () => import("./Panel"),
   customize: {
     sections: pccareSections,
-    options: [{ key: "warnAt", label: "Gauge warning at (%)", type: "number", default: 85, min: 50, max: 99 }],
+    options: [{ key: "warnAt", label: "Gauge warning at (%)", type: "number", default: 85, min: 50, max: 99 }, ...pccareLimits],
   },
   skills: [
     { name: "get_metrics", run: getMetrics },

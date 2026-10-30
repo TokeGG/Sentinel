@@ -4,23 +4,26 @@ import { searchAll, type Hit } from "../../core/search/registry";
 import { errorText } from "../../ui/moduleRun";
 import { closePanel } from "../panelApi";
 import { PALETTE_ID } from "./ids";
+import { useUiDefaults } from "./useUiDefaults";
 import { registerBuiltins, resetContent } from "./providers";
+import { registerCollections, takePaletteQuery } from "./collectionsStore";
 import "./desk.css";
 
 const KIND: Record<Hit["kind"], string> = { panel: "Panel", command: "Command", skill: "Action", setting: "Setting", content: "Found" };
 
 export function Palette() {
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(takePaletteQuery);
+  const max = useUiDefaults().paletteResults;
   const [hits, setHits] = useState<Hit[]>([]);
   const [sel, setSel] = useState(0);
   const [msg, setMsg] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
-  useEffect(() => { registerBuiltins(); resetContent(); input.current?.focus(); }, []);
+  useEffect(() => { registerBuiltins(); registerCollections(); resetContent(); input.current?.focus(); }, []);
   useEffect(() => {
     let live = true;
-    const t = setTimeout(() => searchAll(q, 40).then((h) => { if (live) { setHits(h); setSel(0); } }), 80);
+    const t = setTimeout(() => searchAll(q, max).then((h) => { if (live) { setHits(h); setSel(0); } }), 80);
     return () => { live = false; clearTimeout(t); };
-  }, [q]);
+  }, [q, max]);
   const close = () => closePanel(PALETTE_ID).catch(() => {});
   const run = async (h: Hit | undefined) => {
     if (!h) return;

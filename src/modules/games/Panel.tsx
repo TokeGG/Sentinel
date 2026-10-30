@@ -6,8 +6,9 @@ import { EmptyState, ErrorLine } from "../../ui/kit";
 import { safeLink } from "../../ui/safeLink";
 import { Section, Sections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
-import type { NewsRow } from "./library";
+import { getScanStatus, type NewsRow } from "./library";
 import { filterGames, playedText, recentGames, type Game } from "./panelLogic";
+import { Cs2 } from "./Cs2";
 import "./games.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -25,16 +26,23 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       <h3>{g.name}</h3>
       <p className="gm-dim">Played {playedText(g.lastPlayed)}</p>
       <div className="ui-controls">
-        <button type="button" className="ui-btn primary ui-sm" disabled={busy} onClick={() => void run("launch", { key: g.key })}>Play</button>
+        {g.uri ? <button type="button" className="ui-btn primary ui-sm" disabled={busy} onClick={() => void run("launch", { key: g.key })}>Play</button>
+          : <span className="gm-dim" title={g.path}>Start from its launcher</span>}
         <button type="button" className="ui-btn ui-sm" aria-pressed={g.favorite} disabled={busy} onClick={() => void run("toggle_favorite", { key: g.key })}>{g.favorite ? "★" : "☆"}</button>
       </div>
     </article>
   );
   const list = filterGames(games, q, fav);
+  const scan = getScanStatus();
   return (
     <div className="gm">
       <h2 className="ui-head"><span className="ui-dot" />{module.name}<span className="ui-count">{games.length}</span></h2>
       {error && <ErrorLine message={error} />}
+      <ul className="gm-status">
+        {scan.status.map((s) => <li key={s.id} className={s.found ? "" : "gm-dim"}><b>{s.label}</b>: {s.detail}</li>)}
+        {scan.errors.map((e) => <li key={e} className="gm-err">{e}</li>)}
+      </ul>
+      <button type="button" className="ui-btn ui-sm" disabled={busy} onClick={() => void run("scan")}>Rescan</button>
       <Sections>
         <Section id="recent">
           <div className="gm-grid">{recentGames(games).map(card)}</div>
@@ -45,8 +53,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             <label><input type="checkbox" checked={fav} onChange={(e) => setFav(e.target.checked)} /> Favourites</label>
           </div>
           {list.length ? <div className="gm-grid">{list.map(card)}</div>
-            : <EmptyState title="No games found" hint="Steam and Epic installs are read on Windows only." />}
+            : <EmptyState title="No games found" hint={busy ? "Scanning…" : "No installs found. See the launcher status above, then Rescan."} />}
         </Section>
+        <Section id="cs2"><Cs2 /></Section>
         <Section id="news">
           {news.length ? (
             <ul className="gm-news">

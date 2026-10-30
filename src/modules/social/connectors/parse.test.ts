@@ -34,7 +34,7 @@ describe("social connector parsing", () => {
     assert.equal(p.text, "hey");
     assert.deepEqual(p.media, ["https://m/1.png"]);
     assert.equal(p.reposts, 3);
-    assert.deepEqual(p.meta, { targetId: "5", liked: true, shared: false });
+    assert.deepEqual(p.meta, { targetId: "5", liked: true, shared: false, repost: true });
   });
   it("reddit maps subreddit/author and epoch seconds", () => {
     const [p] = parseReddit({ data: { children: [{ data: { id: "z", author: "u1", subreddit: "rust", title: "T", permalink: "/r/rust/z", created_utc: 1767225600, score: 10, num_comments: 2, thumbnail: "self" } }] } });

@@ -41,3 +41,9 @@ export function greeting(now: Date): string {
   const h = now.getHours();
   return h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
 }
+
+/** Plain sentence script for read-aloud (OS voice via speechSynthesis; nothing leaves the PC). */
+export function speechScript(greet: string, unread: [string, number][], parts: Section[]): string {
+  const u = unread.length ? `You have ${unread.map(([n, c]) => `${c} in ${n}`).join(", ")}.` : "You are all caught up.";
+  return [greet + ".", u, ...parts.filter((p) => p.lines.length).map((p) => `${p.name}: ${p.lines.slice(0, 3).join("; ")}.`)].join(" ");
+}

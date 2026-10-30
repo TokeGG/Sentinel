@@ -12,3 +12,5 @@ export const DEFAULT_APPS: { name: string; url: string }[] = [
   { name: "Twitch", url: "https://www.twitch.tv/" },
   { name: "Spotify", url: "https://open.spotify.com/" },
 ];
+import { numOption } from "../../ui/numOption.ts";
+export const browserOptions = [numOption("speedDial", "Bookmarks on the new tab page", 12, 0, 48)];

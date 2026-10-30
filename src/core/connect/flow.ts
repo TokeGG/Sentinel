@@ -17,7 +17,7 @@ export interface DevicePrompt { userCode: string; verificationUri: string; expir
 /** Stops a waiting loopback listener (Cancel button). */
 export const cancelLoopback = (p: Provider): Promise<void> => (p.redirect ? invoke<void>("oauth_cancel", { port: p.redirect.port }).catch(() => {}) : Promise.resolve());
 
-export async function loopbackSignIn(p: Provider, ep: TokenEndpoint, authUrl: string, onLink?: (url: string | null) => void): Promise<TokenSet> {
+export async function loopbackSignIn(p: Provider, ep: TokenEndpoint, authUrl: string, onLink?: (url: string | null) => void, step: (s: string) => void = () => {}): Promise<TokenSet> {
   const state = newState();
   const verifier = newVerifier();
   const redirect = redirectUri(p);
@@ -26,31 +26,37 @@ export async function loopbackSignIn(p: Provider, ep: TokenEndpoint, authUrl: st
     authUrl, clientId: ep.clientId, redirectUri: redirect, scopes: p.scopes, state, extra: p.authExtra,
     challenge: usePkce ? await challengeS256(verifier) : "",
   });
+  step("Starting the local sign-in listener…");
   const waiting = invoke<string>("oauth_listen_once", { port: p.redirect!.port, timeoutSecs: 180, path: "/", state });
   waiting.catch(() => {}); // surfaced by the await below; avoids an unhandled-rejection if openUrl throws first
   await sleep(150); // let the listener bind before the browser can redirect
   onLink?.(url); // shown as "open this link" in case no browser appears
+  step("Opening your browser…");
   try {
     await openUrl(url);
   } catch (e) {
     void invoke("oauth_cancel", { port: p.redirect!.port }).catch(() => {});
     throw new Error(`opener: ${e instanceof Error ? e.message : String(e)}`);
   }
+  step("Waiting for you to finish signing in in the browser…");
   try {
     const code = await waiting;
+    step("Exchanging the sign-in code…");
     const res = await send(codeExchange(ep, code, redirect, usePkce ? verifier : undefined));
     return parseTokenResponse(await res.json().catch(() => ({})), Date.now());
   } finally { onLink?.(null); }
 }
 
 /** Device-code sign-in: shows the user code via onPrompt, opens the verification page, polls with backoff. */
-export async function deviceSignIn(p: Provider, ep: TokenEndpoint, onPrompt: (d: DevicePrompt | null) => void, cancelled: () => boolean): Promise<TokenSet> {
+export async function deviceSignIn(p: Provider, ep: TokenEndpoint, onPrompt: (d: DevicePrompt | null) => void, cancelled: () => boolean, step: (s: string) => void = () => {}): Promise<TokenSet> {
+  step("Requesting a sign-in code…");
   const start = await send(deviceStart(p.deviceUrl!, ep.clientId, p.scopes, p.headers));
   const sb = (await start.json().catch(() => ({}))) as Record<string, unknown>;
   if (!start.ok || typeof sb.error === "string" || typeof sb.message === "string") throw new Error(`device start HTTP ${start.status}: ${String(sb.error ?? sb.message ?? "")} ${String(sb.error_description ?? "")}`.trim());
   const d = parseDeviceStart(sb, Date.now());
   onPrompt({ userCode: prettyCode(d.userCode), verificationUri: d.verificationUri, expiresAt: d.expiresAt });
-  await openUrl(d.verificationUri).catch(() => {}); // the panel also shows the link
+  step("Opening your browser; enter the code shown here…");
+  await openUrl(d.verificationUri).catch(() => step("Could not open the browser: open the link below and enter the code."));
   let interval = d.interval;
   try {
     while (Date.now() < d.expiresAt) {

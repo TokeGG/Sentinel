@@ -1,4 +1,7 @@
 // Month / Week / Day / Agenda views. Own items are draggable onto a day (move_item keeps the time).
+import { calendarLimits } from "./panelLogic";
+import { useLimit, useOption } from "../../ui/useOption";
+import { useUiDefaults } from "../../shell/desk/useUiDefaults";
 import { useContext, useState, type DragEvent } from "react";
 import { CardCtx } from "./ItemCard";
 import { Tabs } from "../../ui/kit";
@@ -13,16 +16,20 @@ const WEEK = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 function Chip({ r }: { r: ModuleRow }) {
   const id = r.itemId;
   const open = useContext(CardCtx);
+  const t = timeText(r, useUiDefaults().clock);
   return (
-    <span className="cal-chip" role="button" tabIndex={0} onClick={() => open({ r })} onKeyDown={(e) => e.key === "Enter" && open({ r })} draggable={id != null} title={id != null ? "Click for details, drag to another day" : String(r.source ?? "")}
+    <span className={`cal-chip${r.holiday === true ? " hol" : ""}`} role="button" tabIndex={0} onClick={() => open({ r })} onKeyDown={(e) => e.key === "Enter" && open({ r })} draggable={id != null} title={id != null ? "Click for details, drag to another day" : String(r.source ?? "")}
       onDragStart={(e) => id != null && e.dataTransfer.setData("text/x-cal-item", String(id))}>
-      {timeText(r) && <b>{timeText(r)} </b>}{itemTitle(r)}
+      {t && <b>{t} </b>}{itemTitle(r)}
     </span>
   );
 }
 
 export function ViewsTab({ rows, busy, run }: { rows: ModuleRow[]; busy: boolean; run: ModuleState["run"] }) {
-  const [mode, setMode] = useState<ViewMode>("month");
+  const saved = useOption("calView", "month") as ViewMode;
+  const [picked, setMode] = useState<ViewMode | null>(null);
+  const mode: ViewMode = picked ?? (VIEW_MODES.includes(saved) ? saved : "month");
+  const dayChips = useLimit(calendarLimits, "dayChips"), agendaDays = useLimit(calendarLimits, "agendaDays");
   const [anchor, setAnchor] = useState(() => new Date());
   const now = new Date();
   const drop = (day: string) => ({
@@ -35,7 +42,7 @@ export function ViewsTab({ rows, busy, run }: { rows: ModuleRow[]; busy: boolean
     return (
       <div key={k} className={`cal-vcell ${cls}${k === dayKey(now) ? " today" : ""}`} {...drop(k)}>
         <button type="button" className="cal-vday" onClick={() => { setAnchor(d); setMode("day"); }}>{d.getDate()}</button>
-        {rowsOn(rows, k).slice(0, 4).map((r) => <Chip key={String(r.id)} r={r} />)}
+        {rowsOn(rows, k).slice(0, dayChips).map((r) => <Chip key={String(r.id)} r={r} />)}
       </div>
     );
   };
@@ -62,7 +69,7 @@ export function ViewsTab({ rows, busy, run }: { rows: ModuleRow[]; busy: boolean
           <DayBlocks day={dayKey(anchor)!} />
         </div>
       )}
-      {mode === "agenda" && groupByDay(rows.filter((r) => { const d = rowDate(r); return !!d && dayKey(d)! >= dayKey(now)!; }), now).slice(0, 21).map((g) => (
+      {mode === "agenda" && groupByDay(rows.filter((r) => { const d = rowDate(r); return !!d && dayKey(d)! >= dayKey(now)!; }), now).slice(0, agendaDays).map((g) => (
         <div key={g.day}><h3 className="cal-day">{g.label}</h3><ul className="cal-list">{g.rows.map((r) => <li key={String(r.id)} className="cal-item"><Chip r={r} /></li>)}</ul></div>
       ))}
       {unscheduled.length > 0 && (

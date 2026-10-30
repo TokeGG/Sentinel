@@ -2,7 +2,8 @@ import { registerModule, type ModuleManifest } from "../../core/module";
 import { runDueJobs } from "./jobRunner";
 import { addTextNote, addUrlNote, deleteNote, exportBrain, importBrain, rateRun, resetBrain } from "./ops";
 import { addJob, deleteJob, deleteSiteNote, deleteWorkflow, enableJob, putSiteNote, saveDemo, saveRunAsWorkflow, shareBrain, updateWorkflow } from "./opsExtras";
-import { botSections } from "./panelLogic";
+import * as more from "./opsMore";
+import { botLimits, botSections } from "./panelLogic";
 import { recentEpisodes } from "./store";
 
 // Browser bot: a local model (Ollama on this PC) drives a separate browser window to reach a goal you type.
@@ -19,7 +20,7 @@ export const botModule: ModuleManifest = {
   description: "Type a goal; a local model browses in its own window to reach it, asking before anything irreversible. Learns from your notes and thumbs.",
   panel: "custom",
   ui: () => import("./Panel"),
-  customize: { sections: botSections },
+  customize: { sections: botSections, options: botLimits },
   schedule: { skill: "run_due_jobs", intervalMinutes: 15 },
   skills: [
     { name: "add_note", run: addTextNote },
@@ -40,6 +41,9 @@ export const botModule: ModuleManifest = {
     { name: "run_due_jobs", run: runDueJobs },
     { name: "put_site_note", run: putSiteNote },
     { name: "delete_site_note", run: deleteSiteNote },
+    ...([["save_settings", more.saveSettings], ["save_site_rules", more.saveRules], ["rate_skill", more.rateSkill], ["reset_skill_scores", more.resetScores],
+      ["set_boost_weight", more.setBoostWeight], ["save_prompts", more.savePrompts], ["save_routines", more.saveRoutines], ["export_recipe", more.exportRecipe],
+      ["import_recipe", more.importRecipe], ["update_note", more.updateNote], ["delete_lesson", more.deleteLesson], ["clear_memory", more.clearMemory]] as const).map(([name, run]) => ({ name, run })),
   ],
   load: async () => (await recentEpisodes()) as unknown as Record<string, unknown>[],
 };

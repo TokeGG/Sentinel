@@ -10,7 +10,7 @@ import { fullDate, senderLabel, subjectLabel, urlsIn } from "./panelLogic";
 import type { Mode } from "./composeLogic";
 import type { Account, Body, Msg } from "./types";
 import { Attachments } from "./Attachments";
-import { SnoozeMenu, ThreadStrip, Unsubscribe } from "./ReaderExtras";
+import { SnoozeMenu, ThreadStrip, ToTask, Unsubscribe } from "./ReaderExtras";
 
 export function Reader({ msg, body, busy, inTrash, onCompose, onFlag, onDelete, x }: {
   msg: Msg | null; body: Body | null; busy: boolean; inTrash: boolean;
@@ -32,6 +32,7 @@ export function Reader({ msg, body, busy, inTrash, onCompose, onFlag, onDelete, 
         <button type="button" className="ui-btn" onClick={() => onCompose("forward")}>Forward</button>
         <button type="button" className="ui-btn" disabled={busy} onClick={() => onFlag("flagged", !msg.starred)}>{msg.starred ? "Unstar" : "Star"}</button>
         <button type="button" className="ui-btn" disabled={busy} onClick={() => onFlag("seen", !msg.seen)}>Mark {msg.seen ? "unread" : "read"}</button>
+        <ToTask key={key} msg={msg} />
         <SnoozeMenu until={x.snoozed} onSnooze={x.onSnooze} />
         <Unsubscribe raw={x.unsub} busy={busy} onMail={x.onMail} />
         {!confirm && <button type="button" className="ui-btn" onClick={() => setConfirm(true)}>{inTrash ? "Delete…" : "Trash…"}</button>}

@@ -12,7 +12,9 @@ import { PostCard, type CardActions } from "./PostCard";
 import { cardActions, postKey } from "./actionLogic";
 import { useActions } from "./useActions";
 import { dividerIndex, filterPosts, mergePosts, platformColor, rowToPost, type FeedPost } from "./panelLogic";
-import { FEED_TAB, FOLLOWS_TAB, SOCIAL_TABS, parseTab, siteOf } from "./embedSites";
+import { FEED_TAB, FOLLOWS_TAB, allTabs, parseTab, siteOf, type EmbedSite } from "./embedSites";
+import { useSiteTabs } from "./useSiteTabs";
+import { TabsEditor } from "./TabsEditor";
 import { FollowsTab } from "./FollowsTab";
 import { TasteBar } from "../../ui/TasteBar";
 import { useTasteView } from "../../ui/useTasteView";
@@ -20,27 +22,30 @@ import { socialTaste } from "./taste";
 import { getLastVisit, markVisited } from "./store";
 import { useFeedFilters } from "./useFeedFilters";
 import { ListsTool } from "./ListsTool";
+import { SpoilerGate, SpoilerWords, spoilerHit, useSocialPrefs } from "./useSocialPrefs";
 import "./social.css";
 
-const PAGE = 100;
 const TAB_KEY = "soc.tab"; // per-viewer convenience: a raise re-creates this webview
 
-function useTab(panelId: string) {
-  const [tab, set] = useState(() => {
-    try { return parseTab(localStorage.getItem(TAB_KEY)); } catch { return FEED_TAB; }
+function useTab(panelId: string, sites: EmbedSite[]) {
+  const [stored, set] = useState(() => {
+    try { return localStorage.getItem(TAB_KEY) ?? FEED_TAB; } catch { return FEED_TAB; }
   });
+  const tab = parseTab(stored, sites); // a deleted tab falls back to Feed
   // Show the site's embedded view (or hide them all on Feed). Rust keeps the others alive.
   useEffect(() => {
-    const s = siteOf(tab);
+    const s = siteOf(tab, sites);
     void (s ? embedShow(panelId, s.id, s.url, s.profile, s.hosts) : embedHide(panelId)).catch(() => {});
     try { localStorage.setItem(TAB_KEY, tab); } catch { /* optional */ }
-  }, [panelId, tab]);
+  }, [panelId, tab, sites]);
   return [tab, set] as const;
 }
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
-  const [tab, setTab] = useTab(module.id);
+  const siteTabs = useSiteTabs();
+  const [tab, setTab] = useTab(module.id, siteTabs.sites);
+  const [editTabs, setEditTabs] = useState(false);
   const density = useOption("density", "comfortable");
   const showMedia = useOption("showMedia", true);
   const showCounts = useOption("showCounts", true);
@@ -50,7 +55,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const [lastVisit, setLastVisit] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [query, setQuery] = useState("");
-  const [limit, setLimit] = useState(PAGE);
+  const page = Math.min(500, Math.max(10, Math.round(useOption("pageSize", 100))));
+  const [limit, setLimit] = useState(page);
 
   // The divider uses the previous visit; opening the panel marks it visited.
   useEffect(() => {
@@ -64,7 +70,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const acts = useActions(module, base);
   const posts = acts.view;
   const ff = useFeedFilters();
-  const shown = useMemo(() => filterPosts(ff.apply(ff.inbox ?? posts), picked, query), [ff, posts, picked, query]);
+  const sp = useSocialPrefs();
+  const shown = useMemo(() => filterPosts(sp.apply(ff.apply(ff.inbox ?? posts)), picked, query), [ff, sp, posts, picked, query]);
   const ranked = useMemo(() => taste.order(shown, socialTaste, forYou), [taste, shown, forYou]);
   const divider = (forYou && !taste.off) || ff.inbox ? -1 : dividerIndex(shown, lastVisit);
   const statusById = Object.fromEntries(status.map((s) => [s.id, s]));
@@ -86,7 +93,11 @@ export default function Panel({ module }: { module: ModuleManifest }) {
 
   return (
     <div className="soc-root">
-      <Tabs className="soc-tabs" tabs={SOCIAL_TABS} active={tab} onChange={setTab} />
+      <div className="soc-tabs-row">
+        <Tabs className="soc-tabs" tabs={allTabs(siteTabs.sites)} active={tab} onChange={setTab} />
+        <button type="button" className="ui-btn" aria-expanded={editTabs} onClick={() => { setEditTabs(!editTabs); setTab(FEED_TAB); }}>{editTabs ? "Done" : "Edit tabs"}</button>
+      </div>
+      {editTabs && <TabsEditor {...siteTabs} />}
       {tab === FOLLOWS_TAB && <FollowsTab />}
       {tab === FEED_TAB && <>
       <h2 className="ui-head soc-bar">
@@ -112,24 +123,22 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             {ff.listNames.map((n) => <Chip key={n} on={ff.list === n} onClick={() => ff.setList(ff.list === n ? null : n)}>☰ {n}</Chip>)}
           </div>
           <TasteBar taste={taste} name="Social" forYou={forYou} onForYou={setForYou} />
+          <SpoilerWords words={sp.spoil.words} save={sp.spoil.save} />
           <input className="ui-file-text soc-search" type="search" value={query} placeholder="Search posts…" onChange={(e) => setQuery(e.target.value)} />
         </Section>
         <Section id="feed">
-          {shown.length ? (
+          {sp.quiet ? <EmptyState title="Quiet hours" hint={`The feed is hidden until ${sp.quietTo}:00 (Customize > Quiet hours).`} /> : shown.length ? (
             <div className={`soc-feed ${density}`}>
               {ranked.slice(0, limit).map((rk, i) => { const p = rk.item; return (
                 <div key={`${p.platform}:${p.postId}`}>
                   {i === divider && <div className="soc-divider"><span>New since your last visit</span></div>}
-                  <PostCard post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} actions={cardProps(p)} taste={taste} ranked={forYou ? rk : undefined} />
+                  <SpoilerGate hit={spoilerHit(p.text, sp.spoil.words)}><PostCard onNote={() => sp.toNotes(p)} post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} actions={cardProps(p)} taste={taste} ranked={forYou ? rk : undefined} /></SpoilerGate>
                 </div>
               ); })}
-              {ranked.length > limit && <button type="button" className="ui-btn soc-more" onClick={() => setLimit(limit + PAGE)}>Show more</button>}
+              {ranked.length > limit && <button type="button" className="ui-btn soc-more" onClick={() => setLimit(limit + page)}>Show more</button>}
             </div>
           ) : (
-            <EmptyState
-              title={posts.length ? "No posts match" : "No posts yet"}
-              hint={posts.length ? "Clear the filters or search." : "Connect an account under Accounts, then press Refresh."}
-            />
+            <EmptyState title={posts.length ? "No posts match" : "No posts yet"} hint={posts.length ? "Clear the filters or search." : "Connect an account under Accounts, then press Refresh."} />
           )}
         </Section>
         <Section id="lists"><ListsTool f={ff} /></Section>

@@ -1,4 +1,6 @@
 // Expenses and subscriptions: log spending, track renewals, monthly totals by category.
+import { calendarLimits } from "./panelLogic";
+import { useLimit } from "../../ui/useOption";
 import { useState } from "react";
 import { ErrorLine, Row } from "../../ui/kit";
 import { useStore } from "../../ui/useStore";
@@ -7,6 +9,7 @@ import { byCategory, CYCLES, monthlyCost, nextRenewal, round2, validAmount } fro
 import { dayKey } from "./panelLogic";
 
 export function MoneyTab() {
+  const moneyRows = useLimit(calendarLimits, "moneyRows");
   const subs = useStore(listSubs, []);
   const ex = useStore(listExpenses, []);
   const today = dayKey(new Date())!;
@@ -35,7 +38,7 @@ export function MoneyTab() {
       <h3 className="cal-day">This month by category</h3>
       {byCategory(ex.data, month).map(([c, n]) => <span key={c} className="ui-meta">{c}: {n}</span>)}
       <h3 className="cal-day">Recent expenses</h3>
-      {ex.data.slice(0, 30).map((x) => (
+      {ex.data.slice(0, moneyRows).map((x) => (
         <Row key={x.id} end={<button type="button" className="ui-btn ui-sm" onClick={() => void ex.act(() => deleteExpense(x.id))}>Remove</button>}>
           {x.day} · {x.amount} · {x.category} <span className="ui-meta">{x.note}</span>
         </Row>

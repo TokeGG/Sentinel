@@ -3,7 +3,7 @@ import type { ModuleManifest } from "../../core/module";
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Chip, EmptyState, ErrorLine, Tabs } from "../../ui/kit";
 import { TasteBar } from "../../ui/TasteBar";
-import { useOption } from "../../ui/useOption";
+import { useOption, useStartTab } from "../../ui/useOption";
 import { useTasteView } from "../../ui/useTasteView";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
@@ -11,14 +11,15 @@ import { BillList } from "./BillList";
 import { MyReps } from "./MyReps";
 import { MemberList, VoteList } from "./OtherLists";
 import "./congress.css";
-import { TABS, filterBills, filterMembers, filterVotes, shownTab, splitRows, type Tab } from "./panelLogic";
+import { TABS, filterBills, filterMembers, filterVotes, shownTab, splitRows, visibleSections, type Tab } from "./panelLogic";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
-  const ids = useSections();
+  const ids = visibleSections(useSections());
   const { taste, forYou, setForYou } = useTasteView(module.id, useOption("taste", true));
   const { bills, votes, members } = splitRows(rows);
-  const [chosen, setChosen] = useState<Tab>("bills");
+  const [picked, setChosen] = useState<Tab | null>(null);
+  const chosen = useStartTab(TABS, picked) as Tab;
   const [q, setQ] = useState("");
   const [followed, setFollowed] = useState(false);
   const [chamber, setChamber] = useState("");
@@ -35,6 +36,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
     <button type="button" className="ui-btn primary" disabled={busy} onClick={() => void sync()}>{busy ? "Syncing…" : "Sync Congress"}</button>
   );
   const none = !rows.length;
+  const empty = <EmptyState title="Nothing synced yet" hint={ids.includes("sync") ? "Press Sync Congress to fetch bills, votes and members from GovTrack." : "Re-enable “Sync & auto-refresh” in Customize to sync."} />;
   return (
     <div className="cg-root">
       <h2 className="ui-head">
@@ -43,7 +45,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <span className="ui-count">{bills.length} bills</span>
         {updates > 0 && <span className="cg-new">{updates} updated</span>}
       </h2>
-      {error && <ErrorLine message={error} />}
+      {error && <ErrorLine message={`Could not load Congress data: ${error}`} />}
       <Sections>
         <Section id="sync">
           <div className="ui-controls">
@@ -66,19 +68,19 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         {TABS.filter((t) => ids.includes(t.id)).length > 1 && <Tabs tabs={TABS.filter((t) => ids.includes(t.id))} active={tab ?? "bills"} onChange={(id) => setChosen(id as Tab)} />}
         {tab === "bills" && (
           <Section id="bills">
-            {none ? <EmptyState title="Nothing synced yet" hint={ids.includes("sync") ? "Press Sync Congress." : "Re-enable “Sync & auto-refresh” in Customize to sync."} /> : (
+            {none ? empty : (
               <BillList bills={filterBills(bills, q, followed)} busy={busy} run={run} taste={taste} forYou={forYou} />
             )}
           </Section>
         )}
         {tab === "votes" && (
           <Section id="votes">
-            {none ? <EmptyState title="Nothing synced yet" /> : <VoteList votes={filterVotes(votes, q, chamber)} />}
+            {none ? empty : <VoteList votes={filterVotes(votes, q, chamber)} />}
           </Section>
         )}
         {tab === "members" && (
           <Section id="members">
-            {none ? <EmptyState title="Nothing synced yet" /> : <MemberList members={filterMembers(members, q, followed, party)} busy={busy} run={run} taste={taste} forYou={forYou} />}
+            {none ? empty : <MemberList members={filterMembers(members, q, followed, party)} busy={busy} run={run} taste={taste} forYou={forYou} />}
           </Section>
         )}
         {tab === "mine" && (

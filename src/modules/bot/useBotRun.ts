@@ -21,8 +21,10 @@ export function useBotRun(onFinished: () => void) {
   useEffect(() => { live.current = true; return () => { live.current = false; ac.current?.abort(); }; }, []); // closing the panel stops the run
 
   const ask = (q: Omit<ConfirmReq, "answer">) => new Promise<boolean>((res) => { if (live.current) setConfirm({ ...q, answer: (ok) => { setConfirm(null); res(ok); } }); else res(false); });
-  const start = useCallback(async (goal: string, opts: StartOpts, lab?: LabHooks) => {
-    if (ac.current) return;
+  /** Resolves with the run result (null on error or when a run is already going); routines and job previews await it. */
+  const start = useCallback(async (goal: string, opts: StartOpts, lab?: LabHooks): Promise<RunResult | null> => {
+    if (ac.current) return null;
+    let out: RunResult | null = null;
     const c = (ac.current = new AbortController());
     setLog([]); setResult(null); setError(null); setRunning(true);
     const add = (kind: LogEntry["kind"], text: string) => live.current && setLog((l) => pushLog(l, { kind, text, at: Date.now() }));
@@ -32,6 +34,7 @@ export function useBotRun(onFinished: () => void) {
         confirm: (action, obs) => ask({ action, obs }),
         approve: opts.stepApproval ? (action, obs, why) => ask({ action, obs, step: true, why }) : undefined,
       });
+      out = r;
       if (live.current) setResult(r);
     } catch (e) {
       if (live.current) setError(e instanceof Error ? e.message : String(e));
@@ -39,6 +42,7 @@ export function useBotRun(onFinished: () => void) {
       ac.current = null;
       if (live.current) { setRunning(false); setConfirm(null); onFinished(); }
     }
+    return out;
   }, [visible, onFinished]);
 
   const stop = useCallback(() => { confirm?.answer(false); ac.current?.abort(); }, [confirm]);

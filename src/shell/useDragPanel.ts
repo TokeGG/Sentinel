@@ -7,6 +7,7 @@ import { dragRect, resizeRect, type Rect } from "./layout";
 import { finishMove, finishResize, previewSnap } from "./snap/dragSnap";
 import { edgeZone, zoneRect, type Zone } from "./snap/zones";
 import { snapPrefsNow } from "./snap/snapPrefs";
+import { lockedNow } from "./desk/usePanelView";
 import { commit, dragMove, dragResize, focusPanel, getPanel, mainClientRect, MIN } from "./panelApi";
 
 export type Kind = "move" | "resize";
@@ -48,8 +49,8 @@ export function useDragPanel(id: string, kind: Kind, min = MIN) {
     drag.current = null;
     const my = ++press.current;
     try {
-      const [p, screen] = await Promise.all([getPanel(id), mainClientRect()]);
-      if (my !== press.current) return; // released before the rect arrived
+      const [p, screen, locked] = await Promise.all([getPanel(id), mainClientRect(), lockedNow(id)]);
+      if (my !== press.current || locked) return; // released early, or panel lock (Settings > Panels)
       drag.current = { sx, sy, ox, oy, start: p.rect, screen, dx: 0, dy: 0, raf: 0, zone: null };
     } catch (x) {
       fail("drag")(x);

@@ -16,3 +16,9 @@ export function latest(stored: string | null, session: (Date | null)[]): Date | 
   const all = [stored ? new Date(stored) : null, ...session].filter((d): d is Date => !!d && Number.isFinite(d.getTime()));
   return all.length ? new Date(Math.max(...all.map((d) => d.getTime()))) : null;
 }
+
+/** Backup reminder (Settings > Privacy, days 0 = off): 1 moon when the last backup is older than `days`. */
+export function reminderDue(last: Date | null, now: Date, days: number): boolean {
+  if (!(days > 0)) return false;
+  return !last || !Number.isFinite(last.getTime()) || now.getTime() - last.getTime() >= days * 86_400_000;
+}

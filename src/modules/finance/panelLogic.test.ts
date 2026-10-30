@@ -116,7 +116,7 @@ describe("finance panelLogic", () => {
     assert.deepEqual(shownParts(["congress"], "watchlist"), { tab: "congress", watchlist: false, congress: true });
   });
   it("section ids", () => {
-    assert.deepEqual(financeSections.map((s) => s.id), ["tabs", "watchlist", "congress", "add", "actions", "tools"]);
+    assert.deepEqual(financeSections.map((s) => s.id), ["tabs", "watchlist", "congress", "add", "actions", "tools", "plan"]);
   });
   it("every <Section id> in Panel.tsx is declared, and vice versa", () => {
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");

@@ -1,18 +1,21 @@
 // Pure: merges detected installs with local meta (favourite, last played) for the Games panel.
 import { epicLaunchUri, steamLaunchUri, type EpicApp } from "./epic.ts";
+import type { OtherApp } from "./reg.ts";
 import type { SteamApp } from "./vdf.ts";
 
 export const gamesSections = [
   { id: "recent", label: "Recently played" },
   { id: "library", label: "Library" },
   { id: "news", label: "Patch notes" },
+  { id: "cs2", label: "CS2 (HLTV news + match reminders)", default: false },
   { id: "actions", label: "Scan + refresh" },
 ];
 
 export interface Meta { game_key: string; favorite: number; last_played: string | null; plays: number }
-export interface Game { key: string; store: "steam" | "epic"; name: string; appid: string; uri: string; favorite: boolean; lastPlayed: number }
+/** `uri` is "" when the store has no allow-listed launch URI (GOG/Ubisoft/Battle.net/EA): panel shows the path. */
+export interface Game { key: string; store: "steam" | "epic" | OtherApp["store"]; name: string; appid: string; uri: string; favorite: boolean; lastPlayed: number; path?: string }
 
-export function mergeLibrary(steam: SteamApp[], epic: EpicApp[], meta: Meta[]): Game[] {
+export function mergeLibrary(steam: SteamApp[], epic: EpicApp[], meta: Meta[], others: OtherApp[] = []): Game[] {
   const m = new Map(meta.map((x) => [x.game_key, x]));
   const last = (k: string, own: number) => Math.max(own, Date.parse(m.get(k)?.last_played ?? "") / 1000 || 0);
   const out: Game[] = [];
@@ -22,7 +25,11 @@ export function mergeLibrary(steam: SteamApp[], epic: EpicApp[], meta: Meta[]): 
   }
   for (const a of epic) {
     const key = `epic:${a.appName}`;
-    out.push({ key, store: "epic", name: a.name, appid: "", uri: epicLaunchUri(a), favorite: !!m.get(key)?.favorite, lastPlayed: last(key, 0) });
+    out.push({ key, store: "epic", name: a.name, appid: "", uri: epicLaunchUri(a), favorite: !!m.get(key)?.favorite, lastPlayed: last(key, 0), path: a.installLocation });
+  }
+  for (const a of others) {
+    const key = `${a.store}:${a.id}`;
+    out.push({ key, store: a.store, name: a.name, appid: "", uri: "", favorite: !!m.get(key)?.favorite, lastPlayed: last(key, 0), path: a.path });
   }
   const seen = new Set<string>();
   return out.filter((g) => !seen.has(g.key) && seen.add(g.key)).sort((a, b) => Number(b.favorite) - Number(a.favorite) || a.name.localeCompare(b.name));

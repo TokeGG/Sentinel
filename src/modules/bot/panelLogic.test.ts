@@ -10,13 +10,13 @@ describe("bot panelLogic", () => {
   it("manifest sections match the <Section id> values in Panel.tsx", () => {
     const used = [...read("./Panel.tsx").matchAll(/<Section id="([^"]+)"/g)].map((m) => m[1]);
     assert.deepEqual(used.sort(), botSections.map((s) => s.id).sort());
-    assert.deepEqual(botSections.map((s) => s.id), ["run", "log", "knowledge", "brain", "workflows", "jobs", "sites", "weekly"]);
+    assert.deepEqual(botSections.map((s) => s.id), ["run", "log", "knowledge", "brain", "workflows", "jobs", "sites", "weekly", "coach", "models", "routines", "settings", "rules", "stats", "memory"]);
   });
   it("the module manifest uses the same sections and is a custom panel with static ring/icon/accent", () => {
     const src = read("./index.ts");
     assert.match(src, /id: "hub\.bot"/);
     assert.match(src, /panel: "custom"/);
-    assert.match(src, /customize: \{ sections: botSections \}/);
+    assert.match(src, /customize: \{ sections: botSections(, options: botLimits)? \}/);
     assert.match(src, /^\s*icon: "bot",/m);
     assert.match(src, /^\s*ring: "[a-z]+",/m);
     assert.match(src, /^\s*accent: "#[0-9a-fA-F]{6}",/m);

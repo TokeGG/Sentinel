@@ -63,7 +63,7 @@ export const openWebPanel = (id: string, url: string, profile: string): Promise<
 // Settings / Master Hub / YouTube pop-out player (hub.ytplayer) are NOT modules (never planets);
 // opened explicitly. restore() ignores their saved rows (unknown id).
 export const SETTINGS_ID = "hub.settings";
-export const openSettings = (): Promise<void> => openAt(SETTINGS_ID, { w: 560, h: 520 });
+export const openSettings = async (): Promise<void> => { if (await (await import("./privacy/settingsGate")).settingsGate()) await openAt(SETTINGS_ID, { w: 560, h: 520 }); };
 export const MASTER_ID = "hub.master";
 export const openMaster = (): Promise<void> => openAt(MASTER_ID, { w: 540, h: 600 });
 export const YTPLAYER_ID = "hub.ytplayer"; export const openYtPlayer = (): Promise<void> => openAt(YTPLAYER_ID, { w: 480, h: 300 }, undefined, undefined, { w: 280, h: 180 });

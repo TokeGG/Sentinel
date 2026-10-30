@@ -1,4 +1,5 @@
 // Pure helpers for the Bot panel.
+import { numOption } from "../../ui/numOption.ts";
 import type { Action, Observation, Outcome } from "./actions.ts";
 import { MISTAKE_LABELS, type MistakeCounts, type MistakeKind } from "./mistakes.ts";
 import { parseTags } from "../skills/localModel.ts";
@@ -12,6 +13,13 @@ export const botSections = [
   { id: "jobs", label: "Scheduled jobs" },
   { id: "sites", label: "Site notebook" },
   { id: "weekly", label: "What I learned this week" },
+  { id: "coach", label: "Challenge Coach" },
+  { id: "models", label: "Local models" },
+  { id: "routines", label: "Routines" },
+  { id: "settings", label: "Run settings" },
+  { id: "rules", label: "Site rules" },
+  { id: "stats", label: "Skill usage" },
+  { id: "memory", label: "Bot memory" },
 ];
 
 /** First page of every run (a plain search page; the model goes elsewhere with goto). */
@@ -53,3 +61,4 @@ export function noteUrlOk(u: string): boolean {
 
 /** Terminal animations run unless reduced motion is requested and not overridden by the app setting. */
 export const fxOn = (reducedMotion: boolean, ignoreReduced: boolean) => !reducedMotion || ignoreReduced;
+export const botLimits = [numOption("jobRuns", "Job runs listed", 15, 5, 100), numOption("skillRows", "Skills in usage stats", 10, 3, 50)];

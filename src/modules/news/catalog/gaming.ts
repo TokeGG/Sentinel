@@ -28,4 +28,5 @@ export const GAMING: [string, string][] = [
   ["https://feeds.arstechnica.com/arstechnica/gaming", "Ars Technica Gaming"],
   ["https://www.theverge.com/rss/games/index.xml", "The Verge Games"],
   ["https://www.reddit.com/r/Games/.rss", "r/Games"],
+  ["https://www.hltv.org/rss/news", "HLTV (CS2)"],
 ];

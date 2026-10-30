@@ -1,15 +1,20 @@
 import { getDb } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { addItem, deleteItem, moveItem, exportIcs, importEvents, listItems, toggleDone, updateItem } from "./items";
+import { holidayRows } from "./holidayRows";
 import { ownRows } from "./ownRows";
-import { calendarSections, overdueCount } from "./panelLogic";
+import { addSub, allHolidays, importCsv, refreshHolidays, refreshSubs, removeSub } from "./sourcesStore";
+import { calendarLimits, calendarSections, overdueCount } from "./panelLogic";
+import { CAL_TABS } from "./tabs";
+import { VIEW_MODES } from "./views";
+import { startTabOption } from "../../ui/numOption";
 
 // Not a new data source — an aggregated view over dated rows other modules
 // already have. Each module keeps owning its own data; this just unions and
 // sorts what's upcoming. A module with no rows yet simply contributes none.
 async function loadAgenda(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
-  const rows: { id: string; title: string; due: string; source: string; text: string; task?: boolean }[] = [];
+  const rows: { id: string; title: string; due: string; source: string; text: string; task?: boolean; url?: string }[] = [];
 
   const weather = await d.select<{ label: string; created_at: string }[]>(
     "SELECT label, created_at FROM weather_locations"
@@ -18,8 +23,8 @@ async function loadAgenda(): Promise<Record<string, unknown>[]> {
   // included here as the template for a future module that does.
   void weather;
 
-  const deals = await d.select<{ id: number; title: string; published_at: string | null; fetched_at: string }[]>(
-    "SELECT id, title, published_at, fetched_at FROM deal_offers ORDER BY COALESCE(published_at, fetched_at) DESC LIMIT 20"
+  const deals = await d.select<{ id: number; title: string; link: string; published_at: string | null; fetched_at: string }[]>(
+    "SELECT id, title, link, published_at, fetched_at FROM deal_offers ORDER BY COALESCE(published_at, fetched_at) DESC LIMIT 20"
   );
   for (const row of deals) {
     rows.push({
@@ -27,6 +32,7 @@ async function loadAgenda(): Promise<Record<string, unknown>[]> {
       title: `Deal: ${row.title}`,
       text: row.title,
       source: "Deals",
+      url: row.link, // kept so the detail card can "Open deal"
       due: row.published_at ?? row.fetched_at,
     });
   }
@@ -62,6 +68,10 @@ async function loadAgenda(): Promise<Record<string, unknown>[]> {
   // The calendar's own events and tasks (calendar_items), repeating ones expanded near today.
   rows.push(...(ownRows(await listItems(), new Date()) as typeof rows));
 
+  // Built-in / country holidays (local math + cached Nager.Date; no network here).
+  const y = new Date().getFullYear();
+  rows.push(...(holidayRows(await allHolidays([y - 1, y, y + 1]).catch(() => [])) as typeof rows));
+
   rows.sort((a, b) => ((a.due ?? "") < (b.due ?? "") ? 1 : -1)); // newest/soonest first
   // title/label keep the generic list working; source/text/due/task feed the panel.
   return rows.map((r) => ({ ...r, label: r.due }));
@@ -74,10 +84,10 @@ export const calendarModule: ModuleManifest = {
   ring: "daily",
   icon: "calendar",
   description:
-    "Your own events and tasks (add, repeat, complete, ICS import/export) plus dated items other modules already track.",
+    "Your own events and tasks (add, repeat, complete, ICS/CSV import, subscriptions), holidays, plus dated items other modules already track.",
   panel: "custom",
   ui: () => import("./Panel"),
-  customize: { sections: calendarSections },
+  customize: { sections: calendarSections, options: [startTabOption(CAL_TABS), { key: "calView", label: "Calendar tab opens on", type: "select", choices: [...VIEW_MODES], default: "month" }, ...calendarLimits] },
   // Overdue items (unfiled notes dated before today): local rows only, no network.
   badge: async () => overdueCount(await loadAgenda(), new Date()),
   skills: [
@@ -88,7 +98,13 @@ export const calendarModule: ModuleManifest = {
     { name: "move_item", run: moveItem },
     { name: "import_ics", run: importEvents },
     { name: "export_ics", run: exportIcs },
+    { name: "import_csv", run: importCsv },
+    { name: "add_sub", run: addSub },
+    { name: "remove_sub", run: removeSub },
+    { name: "refresh_sources", run: async () => ({ ...(await refreshHolidays()), ...(await refreshSubs()) }) },
   ],
+  // Opt-in only (generic Auto-refresh toggle): country holidays + ICS URL subscriptions.
+  schedule: { skill: "refresh_sources", intervalMinutes: 720 },
   load: loadAgenda,
 };
 

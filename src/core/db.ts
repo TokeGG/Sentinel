@@ -39,7 +39,11 @@ export function getDb(deps: DbDeps = defaults): Promise<Database> {
       loadProblem = msg(e);
       db = await deps.load();
     }
-    await ensureSchema((sql) => db.execute(sql));
+    const failed = await ensureSchema(
+      (sql) => db.execute(sql),
+      async (t) => (await db.select<{ name: string }[]>("SELECT name FROM pragma_table_info($1)", [t])).map((r) => r.name),
+    );
+    if (failed.length) loadProblem = [loadProblem, `Bootstrap failed for ${failed.join("; ")}`].filter(Boolean).join(" | ");
     return db;
   })().catch((e) => {
     loading = null;
@@ -109,7 +113,8 @@ export async function logActivity(
 ) {
   const d = await getDb();
   await d.execute(
-    "INSERT INTO activity_log (module, skill, summary, result) VALUES ($1, $2, $3, $4)",
+    // Incognito session (Settings > Privacy): nothing is written while sys_prefs has "incognito":true.
+    "INSERT INTO activity_log (module, skill, summary, result) SELECT $1, $2, $3, $4 WHERE NOT EXISTS (SELECT 1 FROM app_settings WHERE key = 'sys_prefs' AND value LIKE '%\"incognito\":true%')",
     [module, skill, summary, result]
   );
 }

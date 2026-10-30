@@ -8,13 +8,16 @@ import { setClientId, setClientSecret } from "./clientStore.ts";
 export function ClientIdStep({ group, wantsSecret, onSaved, onError }: { group: string; wantsSecret: boolean; onSaved(): void; onError(e: unknown): void }) {
   const [id, setId] = useState("");
   const [secret, setSecret] = useState("");
+  const [msg, setMsg] = useState<string | null>(null);
   const save = async () => {
+    setMsg("Saving…");
     try {
       await setClientId(group, id);
       if (wantsSecret && secret) await setClientSecret(group, secret);
       setSecret("");
+      setMsg("Saved. Press Connect.");
       onSaved();
-    } catch (e) { onError(e); }
+    } catch (e) { setMsg(`Could not save: ${e instanceof Error ? e.message : String(e)}`); onError(e); }
   };
   return (
     <div className="st-clientid">
@@ -23,6 +26,7 @@ export function ClientIdStep({ group, wantsSecret, onSaved, onError }: { group: 
       <input placeholder="Client ID" value={id} onChange={(e) => setId(e.target.value)} autoComplete="off" spellCheck={false} />
       {wantsSecret && <input type="password" placeholder="Client secret (optional if your client has none)" value={secret} onChange={(e) => setSecret(e.target.value)} autoComplete="new-password" />}
       <button type="button" className="ui-btn" disabled={!id.trim()} onClick={() => void save()}>Save</button>
+      {msg && <span className="ui-meta" role="status">{msg}</span>}
     </div>
   );
 }

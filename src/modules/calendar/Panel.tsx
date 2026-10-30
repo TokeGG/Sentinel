@@ -1,3 +1,4 @@
+import { ClocksBar } from "./ClocksBar";
 import { useState } from "react";
 import type { ModuleManifest } from "../../core/module";
 import { EmptyState, ErrorLine } from "../../ui/kit";
@@ -13,6 +14,8 @@ import { BookmarksTab } from "./BookmarksTab";
 import { ContactsTab } from "./ContactsTab";
 import { FocusTab } from "./FocusTab";
 import { HabitsTab } from "./HabitsTab";
+import { HolidaysTab } from "./HolidaysTab";
+import { ImportsTab } from "./ImportsTab";
 import { MoneyTab } from "./MoneyTab";
 import { FloatingReminders, RemindersTab, useReminders } from "./RemindersTab";
 import { ViewsTab } from "./ViewsTab";
@@ -23,7 +26,7 @@ import { bucketRows } from "./panelLogic";
 import { agendaRows } from "./taskLogic";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
-  const { rows, error, busy, run } = useModule(module);
+  const { rows, error, busy, run, refresh } = useModule(module);
   const [editing, setEditing] = useState<ModuleRow | null>(null);
   const [sel, setSel] = useState<CardSubject | null>(null);
   const [tab, bar] = useSectionTabs(CAL_TABS);
@@ -60,6 +63,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         </Section>}
         {on("agenda") && <Section id="today">
           <h3 className="cal-day">Today</h3>
+          <ClocksBar rows={agenda} now={now} />
           {b.today.length ? <ul className="cal-list">{b.today.map((r) => item(r))}</ul> : <EmptyState title="Nothing dated today" />}
         </Section>}
         {on("agenda") && <Section id="week">
@@ -95,6 +99,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         {on("contacts") && <Section id="contacts"><ContactsTab /></Section>}
         {on("money") && <Section id="money"><MoneyTab /></Section>}
         {on("bookmarks") && <Section id="bookmarks"><BookmarksTab /></Section>}
+        {on("holidays") && <Section id="holidays"><HolidaysTab onChange={() => void refresh()} /></Section>}
+        {on("holidays") && <Section id="imports"><ImportsTab busy={busy} run={run} /></Section>}
       </Sections>
       {sel && <ItemCard key={String(sel.r.id)} s={sel} busy={busy} run={run} onClose={() => setSel(null)} />}
     </div>

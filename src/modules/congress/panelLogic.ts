@@ -1,4 +1,5 @@
 // Pure helpers for the Congress panel: sections, row typing, search/filter, follow updates.
+import { numOption, startTabOption } from "../../ui/numOption.ts";
 import type { Bill, Member, Vote } from "./parse.ts";
 
 type Row = Record<string, unknown>;
@@ -11,6 +12,10 @@ export const congressSections = [
   { id: "members", label: "Members" },
   { id: "mine", label: "My representatives" },
 ];
+
+/** Ids to honour. Outside a saved view (the News > Congress tab) useSections() is [] = show everything;
+ * treating [] as "nothing visible" hid every list, so Congress looked empty even after a sync. */
+export const visibleSections = (ids: string[]): string[] => (ids.length ? ids : congressSections.map((s) => s.id));
 
 export type Tab = "bills" | "votes" | "members" | "mine";
 export const TABS: { id: Tab; label: string }[] = [
@@ -75,3 +80,4 @@ export function followUpdates(follows: FollowRow[], bills: Pick<Bill, "id" | "st
     return s !== undefined && s !== f.last_status && f.last_status !== "" ? [{ ref: f.ref, status: s }] : [];
   });
 }
+export const congressOptions = [startTabOption(TABS), numOption("memberRows", "Members listed", 300, 50, 700), numOption("repVotes", "Recent votes per rep (My reps)", 8, 1, 30)];

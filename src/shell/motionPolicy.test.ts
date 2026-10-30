@@ -10,13 +10,14 @@ test("animates only when visible, no game mode, no reduced motion, motion on", (
   assert.equal(shouldAnimate({ ...on, gameMode: true }), false);
   assert.equal(shouldAnimate({ ...on, reducedMotion: true }), false);
   assert.equal(shouldAnimate({ ...on, motionOn: false }), false);
+  assert.equal(shouldAnimate({ ...on, lowPower: true }), false);
 });
 test("motion store notifies only on change and unsubscribes", () => {
   let n = 0;
   const un = subscribeMotion(() => n++);
   setGameMode(true); setGameMode(true); setStarMotion(false);
   assert.equal(n, 2);
-  assert.deepEqual(getMotion(), { gameMode: true, starMotion: false, orbitMotion: true, orbitSpeed: 1, notifMoons: true, ignoreReduced: true });
+  assert.deepEqual(getMotion(), { gameMode: true, starMotion: false, orbitMotion: true, orbitSpeed: 1, notifMoons: true, ignoreReduced: true, lowPower: false });
   un(); setGameMode(false);
   assert.equal(n, 2);
 });

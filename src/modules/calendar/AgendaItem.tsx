@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import { CardCtx } from "./ItemCard";
+import { useUiDefaults } from "../../shell/desk/useUiDefaults";
 import type { ModuleRow } from "../../ui/useModule";
 import { itemTitle, overdueText, sourceTag, timeText } from "./panelLogic";
 
@@ -10,12 +11,13 @@ type Run = (skill: string, args?: Record<string, unknown>) => Promise<unknown>;
 export function AgendaItem({ r, overdue, now, busy, run, onEdit }: { r: ModuleRow; overdue?: boolean; now: Date; busy: boolean; run: Run; onEdit(r: ModuleRow): void }) {
   const own = typeof r.itemId === "number";
   const open = useContext(CardCtx);
+  const { clock } = useUiDefaults();
   return (
-    <li className={`cal-item${overdue ? " overdue" : ""}`}>
+    <li className={`cal-item${overdue ? " overdue" : ""}${r.holiday === true ? " hol" : ""}`}>
       {own && r.kind === "task" ? (
         <input type="checkbox" className="cal-check" aria-label="Done" checked={r.done === true} disabled={busy} onChange={() => void run("toggle_done", { id: r.itemId })} />
       ) : (
-        <span className="cal-time">{overdue ? "!" : timeText(r) || "·"}</span>
+        <span className="cal-time">{overdue ? "!" : timeText(r, clock) || "·"}</span>
       )}
       <button type="button" className="cal-text cal-open" title={itemTitle(r)} onClick={() => open({ r })}>
         {itemTitle(r)}

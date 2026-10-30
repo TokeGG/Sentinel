@@ -5,6 +5,7 @@ export const skillsSections = [
   { id: "install", label: "Install from GitHub" },
   { id: "market", label: "Marketplace (suggested)" },
   { id: "model", label: "Local model" },
+  { id: "build", label: "Skill builder" },
 ];
 
 export interface Item {
