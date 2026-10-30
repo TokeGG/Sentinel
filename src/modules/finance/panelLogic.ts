@@ -1,4 +1,5 @@
 import { ago, utcDate } from "../../ui/kit/format.ts";
+import { fmtMoney } from "./prefs.ts";
 
 type Row = Record<string, unknown>;
 
@@ -9,6 +10,7 @@ export const financeSections = [
   { id: "add", label: "Add symbol" },
   { id: "actions", label: "Refresh & sync" },
   { id: "tools", label: "Portfolio, alerts, budgets, bills, vault" },
+  { id: "plan", label: "Plan: subscriptions, goals, net worth, report" },
 ];
 const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? v : null);
 const text = (v: unknown) => (typeof v === "string" && v.trim() ? v.trim() : null);
@@ -28,14 +30,8 @@ export function pctText(p: number | null): string {
   return p > 0 && t !== "0.00" ? `+${t}%` : p < 0 && t !== "0.00" ? `-${t}%` : "0.00%";
 }
 
-/** "$1,234.50"; prices under $1 keep ~4 significant digits (crypto), min 2 decimals; "—" if missing. */
-export function fmtPrice(n: unknown): string {
-  const v = num(n);
-  if (v === null) return "—";
-  if (v >= 1 || v <= 0) return "$" + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-  const decimals = Math.min(8, Math.max(4, 3 - Math.floor(Math.log10(v))));
-  return "$" + v.toFixed(decimals).replace(/(\.\d\d\d*?)0+$/, "$1");
-}
+/** Money in the chosen currency/number format (Settings tab); "—" if missing. */
+export const fmtPrice = (n: unknown): string => fmtMoney(n);
 
 const compact = (n: number) => (n >= 1e6 ? `$${Math.round(n / 1e5) / 10}M` : `$${Math.round(n / 1e3)}k`);
 

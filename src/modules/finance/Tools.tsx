@@ -5,6 +5,7 @@ import type { ModuleRow, ModuleState } from "../../ui/useModule";
 import { listAlerts, listBills, listBudgets, listLots, listVault, spentByCategory } from "./extraStore";
 import { AlertsPart, LotsPart } from "./ToolsMarket";
 import { BillsPart, BudgetsPart, VaultPart } from "./ToolsMoney";
+import type { FinPrefs } from "./prefs";
 
 const TABS = [
   { id: "portfolio", label: "Portfolio" }, { id: "crypto", label: "Crypto" }, { id: "alerts", label: "Alerts" },
@@ -16,11 +17,11 @@ export type ToolData = {
   budgets: Awaited<ReturnType<typeof listBudgets>>; spent: Map<string, number>;
   bills: Awaited<ReturnType<typeof listBills>>; vault: Awaited<ReturnType<typeof listVault>>;
 };
-export type PartProps = { data: ToolData; watch: ModuleRow[]; busy: boolean; act: (skill: string, args?: Record<string, unknown>) => Promise<void> };
+export type PartProps = { data: ToolData; watch: ModuleRow[]; busy: boolean; prefs: FinPrefs; act: (skill: string, args?: Record<string, unknown>) => Promise<void> };
 
 const empty: ToolData = { alerts: [], lots: [], budgets: [], spent: new Map(), bills: [], vault: [] };
 
-export function Tools({ watch, busy, run }: { watch: ModuleRow[]; busy: boolean; run: ModuleState["run"] }) {
+export function Tools({ watch, busy, run, prefs }: { watch: ModuleRow[]; busy: boolean; run: ModuleState["run"]; prefs: FinPrefs }) {
   const [tab, setTab] = useState("portfolio");
   const [data, setData] = useState<ToolData>(empty);
   const [tick, setTick] = useState(0);
@@ -31,7 +32,7 @@ export function Tools({ watch, busy, run }: { watch: ModuleRow[]; busy: boolean;
       .catch(() => {});
   }, [tick, watch]);
   const act = async (skill: string, args?: Record<string, unknown>) => { await run(skill, args); setTick((t) => t + 1); };
-  const p: PartProps = { data, watch, busy, act };
+  const p: PartProps = { data, watch, busy, prefs, act };
   return (
     <div className="fin-tools">
       <Tabs tabs={TABS} active={tab} onChange={setTab} />

@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fmtMoney } from "../finance/prefs";
+import { getPrefs } from "../finance/planStore";
+import { dealInfo } from "./price";
 import { openLink as openUrl } from "../../ui/openLink";
 import type { ModuleManifest } from "../../core/module";
 import { FeedPanel } from "../news/FeedPanel";
@@ -22,6 +25,10 @@ const FAIR: Record<string, string> = { lowest: "Lowest seen", fair: "Fair price"
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { taste, forYou, setForYou } = useTasteView(module.id, useOption("taste", true));
   const [cat, setCat] = useState<string | null>(null);
+  const [, setFmt] = useState(0);
+  // Currency/number format from Finance > Plan > Settings (display only, no conversion).
+  useEffect(() => { void getPrefs().then(() => setFmt((n) => n + 1)).catch(() => {}); }, []);
+  const toCal = module.skills.find((s) => s.name === "deal_to_calendar");
   return (
     <FeedPanel
       module={module}
@@ -43,7 +50,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           {taste.order(cat ? rows.filter((r) => r.category === cat) : rows, dealTaste, forYou).map((rk) => {
             const r = rk.item;
             const title = String(r.title);
-            const price = priceOf(title);
+            const num = dealInfo(title).price;
+            const price = num !== null ? fmtMoney(num) : priceOf(title);
             const off = percentOff(title);
             const link = safeLink(r.link);
             const src = sourceLabel(r);
@@ -59,6 +67,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                     <span className="dl-acts">
                       {forYou && <WhyBadge ranked={rk} />}
                       <TasteButtons taste={taste} item={item} />
+                      {link && toCal && (r.wished || r.fair === "lowest") && (
+                        <button type="button" className="dl-open" title="Add a Calendar task with the deal link" onClick={() => void toCal.run({ title, link })}>To calendar</button>
+                      )}
                       {link && (
                         <button type="button" className="dl-open" onClick={() => { void taste.record(item, "open"); void openUrl(link); }}>Open</button>
                       )}
