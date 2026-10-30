@@ -1,7 +1,7 @@
 // Home widgets layout (app_settings `home_widgets`); first run builds it from the old Terminal box order.
 import { useEffect, useState } from "react";
 import { getSetting, setSetting } from "../../ui/appSetting";
-import { defaultWidgets, parseWidgets, type Widget } from "./widgetGrid";
+import { defaultWidgets, parseWidgets, type Widget } from "./widgetLayout";
 
 export function useWidgets(seed: string[]): [Widget[], (f: (l: Widget[]) => Widget[]) => void] {
   const [list, setList] = useState<Widget[]>([]);

@@ -1,7 +1,7 @@
 // Home widget grid: drag a widget's title bar to move it, its corner to resize, x to unpin.
 // Unpinned widgets wait in the tray at the bottom; drag one up onto the grid (or click it) to pin it.
 import { useRef, useState, type ReactNode } from "react";
-import { addWidget, cellAt, COLS, moveWidget, removeWidget, resizeWidget, type Widget } from "./widgetGrid";
+import { addWidget, cellAt, COLS, moveWidget, removeWidget, resizeWidget, type Widget } from "./widgetLayout";
 
 const ROW_H = 56;
 type Props = { list: Widget[]; update(f: (l: Widget[]) => Widget[]): void; all: { id: string; title: string }[]; render(id: string): ReactNode };

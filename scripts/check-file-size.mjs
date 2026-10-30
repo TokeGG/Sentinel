@@ -33,14 +33,18 @@ function* walk(dir) {
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const root = join(fileURLToPath(import.meta.url), "..", "..");
   const bad = [];
+  const seen = new Map(); // Windows is case-insensitive: plan.ts + Plan.tsx break the Windows build
   for (const d of ["src", "src-tauri/src"])
     for (const f of walk(join(root, d))) {
       const rel = relative(root, f).split("\\").join("/");
+      const key = rel.toLowerCase().replace(/\.(test\.)?tsx?$/, (m) => (m.includes("test") ? ".test" : ""));
+      if (seen.has(key) && seen.get(key) !== rel) bad.push(`${rel}: same name as ${seen.get(key)} apart from letter case (breaks Windows)`);
+      seen.set(key, rel);
       const n = countLines(rel, readFileSync(f, "utf8"));
       if (n > MAX && !ALLOW.includes(rel)) bad.push(`${rel}: ${n} lines`);
     }
   if (bad.length) {
-    console.error(`Files over ${MAX} lines:\n` + bad.join("\n"));
+    console.error(`File-size/name problems:\n` + bad.join("\n"));
     process.exit(1);
   }
   console.log(`check-file-size: ok (limit ${MAX})`);
