@@ -16,6 +16,10 @@ import { useTermPrefs } from "./useTermPrefs";
 import { listLater } from "../../core/later";
 import type { LaterItem } from "../../core/laterLogic";
 import { openLink } from "../../ui/openLink";
+import { runSmartTerminal } from "./collectionsStore";
+import { searchClipboard } from "../../modules/clipboard/search";
+import { getOverlayStats } from "../../modules/pccare/sysOps";
+import { overlayLines } from "../../modules/pccare/alerts";
 import "./terminal.css";
 
 type Rows = Record<string, unknown>[];
@@ -61,13 +65,15 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
       case "home": echo(["toggling panels"]); return void sendCmd({ type: "home" }).catch(fail);
       case "palette": echo(["opening search"]); return void sendCmd({ type: "palette" }).catch(fail);
       case "settings": echo(["opening settings"]); return void openSettings().catch(fail);
-      case "clip": echo(["opening clipboard"]); return void openById("hub.clipboard").catch(fail);
+      case "clip": if (!c.q) { echo(["opening clipboard"]); return void openById("hub.clipboard").catch(fail); }
+        return void searchClipboard(c.q, 8).then((r) => echo(r.length ? r.map((x) => `- ${x.content.slice(0, 100)}`) : ["no matches"])).catch(fail);
+      case "stats": return void getOverlayStats().then((s) => echo(overlayLines(s))).catch(fail);
       case "note": { const s = skill("capture_note"); echo([s ? "note saved" : "no notes module"]); return void s?.run({ body: c.text }).catch(fail); }
       case "todo": { const s = skill("add_item"); echo([s ? "task added for today" : "no calendar module"]); return void s?.run({ kind: "task", title: c.text }).catch(fail); }
       case "timer": echo([`timer ${c.label} started`]); return setTimers((t) => [...t, { label: c.label, end: Date.now() + c.minutes * 60_000 }]);
       case "help": return echo(HELP_LINES);
       case "clear": return setLog([]);
-      default: if (c.text) echo([`unknown: ${c.text} (try help)`]);
+      default: if (c.text) void runSmartTerminal(c.text).then((ok) => echo([ok ? `running ${c.text}` : `unknown: ${c.text} (try help)`])).catch(fail);
     }
   };
   const box: Record<TermBox, ReactNode> = {
