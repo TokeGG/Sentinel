@@ -89,3 +89,7 @@ Pass over every module + shell: hard-coded limits, intervals, counts, defaults a
 
 ## Ideas round 7: 100 more (owner asked; see chat list, all accepted)
 Recorded in chat 2026-10-30; build order after round 6 + settings audit.
+
+## Progress (rounds 6+7)
+Done: auto skill choice; Terminal home (+ history, Tab, aliases, note/todo/timer/clip, clocks, box order/visibility; Settings > Terminal home); global DND countdown; title-bar pinned counts; briefing read-aloud (+voice/speed); undo window on deletes; "what changed" banner; weekday/weekend launch layouts.
+Next: cross-panel read-later, smart folders, rebindable shortcuts, bots/skills batch, Lab/learning, money, media, PC, privacy, look; then round 7 remainder; then settings audit.
