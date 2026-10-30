@@ -4,6 +4,7 @@ import { CredentialFields } from "./panel/CredentialFields";
 import { ScheduleToggle } from "./panel/ScheduleToggle";
 import { FormView } from "./panel/FormView";
 import { ListView } from "./panel/ListView";
+import { rowsToMarkdown } from "../shell/extras/textTools";
 
 // The generic panel: renders any module whose manifest declares panel:"list"
 // or "table" with no module-specific UI code. Composition only; each section
@@ -29,6 +30,11 @@ export function ModulePanel({ module }: { module: ModuleManifest }) {
         </div>
       )}
       <ScheduleToggle module={module} />
+      {rows.length > 0 && (
+        <button type="button" title="Copy the list as Markdown" onClick={() => void navigator.clipboard.writeText(rowsToMarkdown(module.name, rows))}>
+          Copy as Markdown
+        </button>
+      )}
       <FormView module={module} busy={busy} run={run} />
       <ListView module={module} rows={rows} busy={busy} run={run} />
     </div>

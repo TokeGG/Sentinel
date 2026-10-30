@@ -1,3 +1,4 @@
+import { ClocksBar } from "./ClocksBar";
 import { useState } from "react";
 import type { ModuleManifest } from "../../core/module";
 import { EmptyState, ErrorLine } from "../../ui/kit";
@@ -62,6 +63,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         </Section>}
         {on("agenda") && <Section id="today">
           <h3 className="cal-day">Today</h3>
+          <ClocksBar rows={agenda} now={now} />
           {b.today.length ? <ul className="cal-list">{b.today.map((r) => item(r))}</ul> : <EmptyState title="Nothing dated today" />}
         </Section>}
         {on("agenda") && <Section id="week">

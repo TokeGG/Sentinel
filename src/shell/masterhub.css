@@ -16,3 +16,4 @@
 .mh-btn:disabled { opacity: 0.5; cursor: default; }
 .mh-btn:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 1px; }
 .mh-sub { margin: var(--sp-2) 0 0; font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+.mh-find { width: 100%; margin-bottom: var(--sp-1); }

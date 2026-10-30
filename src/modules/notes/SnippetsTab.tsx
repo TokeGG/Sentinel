@@ -4,6 +4,7 @@ import { Chip, ErrorLine, Row } from "../../ui/kit";
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import { useStore } from "../../ui/useStore";
 import { tagCounts, tagFilter } from "./noteLogic";
+import { triggerOf } from "../../shell/extras/textTools";
 import { addSnippet, deleteSnippet, listSnippets } from "./storeExtra";
 
 export function SnippetsTab() {
@@ -27,7 +28,7 @@ export function SnippetsTab() {
         <Row key={x.id} end={<>
           <button type="button" className="ui-btn ui-sm" onClick={() => void navigator.clipboard.writeText(x.body)}>Copy</button>
           <ConfirmButton label="Delete" className="ui-btn ui-sm" onConfirm={() => void s.act(() => deleteSnippet(x.id))} />
-        </>}><strong>{x.title}</strong> <span className="ui-meta">{x.body.slice(0, 80)}</span></Row>
+        </>}><strong>{x.title}</strong> <code className="ui-meta" title="Type this to expand (Settings > Productivity)">{triggerOf(x.title)}</code> <span className="ui-meta">{x.body.slice(0, 80)}</span></Row>
       ))}
     </div>
   );
