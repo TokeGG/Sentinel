@@ -68,7 +68,7 @@ async function runLocked(r: RunRequest, model: string, cfg: RunConfig): Promise<
   if (!r.lab) await seedStarterNotes().catch(() => {});
   const st = await store.loadLearnState(cls);
   const variant = pickVariant(st.pop, seededRng(Date.now()));
-  const brain = variant.brain;
+  const brain = cfg.settings.wallClockSec ? { ...variant.brain, wallClockSec: cfg.settings.wallClockSec } : variant.brain;
   const lab = r.lab;
   const goal = lab ? lab.goal(r.goal) : r.goal;
   const notes = lab ? [] : noteLines(retrieve(await store.allNotes(), r.goal, int(brain, "lessonCount")));

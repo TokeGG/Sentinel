@@ -1,3 +1,7 @@
+import { DEFAULT_UI, parseUi, sanitizeUi } from "./uiDefaults.ts";
+import { parseBotSettings } from "../../modules/bot/botSettings.ts";
+import { socialOptions } from "../../modules/social/panelLogic.ts";
+import { describe, it } from "node:test";
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { cmdFor, comboOf, effective, normCombo, rebind } from "./keymapUser.ts";
@@ -57,4 +61,33 @@ test("look: title style, custom theme, seasons", () => {
   assert.equal(seasonOf(new Date(2026, 11, 20)), "holidays");
   assert.equal(seasonOf(new Date(2026, 6, 1)), "summer");
   assert.equal(seasonOf(new Date(2026, 0, 1)), "winter");
+});
+
+describe("ui defaults", () => {
+  it("falls back to the old hard-coded values", () => {
+    assert.deepEqual(parseUi(null), DEFAULT_UI);
+    assert.deepEqual(parseUi("nope"), DEFAULT_UI);
+    assert.deepEqual(DEFAULT_UI, { briefingRows: 5, terminalRows: 6, paletteResults: 40, terminalLog: 14 });
+  });
+  it("clamps and rounds, ignores junk", () => {
+    const u = sanitizeUi({ briefingRows: 99, terminalRows: 0, paletteResults: "60.4", terminalLog: "x" });
+    assert.deepEqual(u, { briefingRows: 20, terminalRows: 1, paletteResults: 60, terminalLog: 14 });
+    assert.deepEqual(sanitizeUi([1, 2]), DEFAULT_UI);
+  });
+});
+
+describe("bot time limit setting", () => {
+  it("0 / missing = learned; clamped to 30..600", () => {
+    assert.equal(parseBotSettings("{}").wallClockSec, 0);
+    assert.equal(parseBotSettings('{"wallClockSec":5}').wallClockSec, 30);
+    assert.equal(parseBotSettings('{"wallClockSec":9999}').wallClockSec, 600);
+    assert.equal(parseBotSettings('{"wallClockSec":-3}').wallClockSec, 0);
+  });
+});
+
+describe("social page size option", () => {
+  it("defaults to the old page size", () => {
+    const o = socialOptions.find((x) => x.key === "pageSize");
+    assert.equal(o?.default, 100);
+  });
 });

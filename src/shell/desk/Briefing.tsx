@@ -7,6 +7,7 @@ import { EmptyState, ErrorLine } from "../../ui/kit";
 import { errorText } from "../../ui/moduleRun";
 import { greeting, likedRows, movers, section, speechScript, todayRows, type Section } from "./briefingLogic";
 import { getSetting } from "../../ui/appSetting";
+import { loadUiDefaults } from "./useUiDefaults";
 import "./desk.css";
 
 type Rows = Record<string, unknown>[];
@@ -17,9 +18,10 @@ async function build(now: Date): Promise<{ parts: Section[]; unread: [string, nu
   const weather = mod("hub.weather"), cal = mod("hub.calendar"), deals = mod("hub.deals"), fin = mod("hub.finance");
   const [w, c, d, f] = await Promise.all([rows(weather), rows(cal), rows(deals), rows(fin)]);
   const parts: Section[] = [];
-  if (weather) parts.push(section(weather.id, weather.name, w, 3));
-  if (cal) parts.push(section(cal.id, "Today", todayRows(c, now)));
-  if (deals) parts.push(section(deals.id, "Liked deals", likedRows(d)));
+  const n = (await loadUiDefaults()).briefingRows;
+  if (weather) parts.push(section(weather.id, weather.name, w, Math.min(3, n)));
+  if (cal) parts.push(section(cal.id, "Today", todayRows(c, now), n));
+  if (deals) parts.push(section(deals.id, "Liked deals", likedRows(d), n));
   if (fin) { const lines = movers(f); parts.push({ id: fin.id, name: "Finance moves", lines, count: lines.length }); }
   const unread = await Promise.all(registry.filter((m) => m.badge).map(async (m) => [m.name, await m.badge!().catch(() => 0)] as [string, number]));
   return { parts, unread: unread.filter(([, n]) => n > 0) };

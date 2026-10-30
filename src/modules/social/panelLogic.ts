@@ -39,6 +39,7 @@ export const socialOptions: OptionDef[] = [
   { key: "minLen", label: "Hide posts shorter than (characters, 0 = off)", type: "number", default: 0, min: 0, max: 1000 },
   { key: "maxLen", label: "Hide posts longer than (characters, 0 = off)", type: "number", default: 0, min: 0, max: 10000 },
   { key: "hideReposts", label: "Hide reposts / boosts", type: "toggle", default: false },
+  { key: "pageSize", label: "Posts per page (Show more adds this many)", type: "number", default: 100, min: 10, max: 500 },
   { key: "quietOn", label: "Quiet hours (hide the feed)", type: "toggle", default: false },
   { key: "quietFrom", label: "Quiet from (hour, 0-23)", type: "number", default: 22, min: 0, max: 23 },
   { key: "quietTo", label: "Quiet until (hour, 0-23)", type: "number", default: 7, min: 0, max: 23 },

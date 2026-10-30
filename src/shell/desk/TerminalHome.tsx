@@ -13,6 +13,7 @@ import { countBoxes, expandAlias, HELP_LINES, parseCommand } from "./terminalLog
 import { clockLines, type TermBox } from "./termPrefs";
 import { TermPrompt } from "./TermPrompt";
 import { useTermPrefs } from "./useTermPrefs";
+import { useUiDefaults } from "./useUiDefaults";
 import { listLater } from "../../core/later";
 import type { LaterItem } from "../../core/laterLogic";
 import { openLink } from "../../ui/openLink";
@@ -31,6 +32,7 @@ const mmss = (ms: number) => { const s = Math.max(0, Math.ceil(ms / 1000)); retu
 
 export function TerminalHome({ onError }: { onError: (m: string) => void }) {
   const prefs = useTermPrefs();
+  const ui = useUiDefaults();
   const badges = useSyncExternalStore(subscribeBadges, getBadges);
   const [today, setToday] = useState<string[]>([]);
   const [feed, setFeed] = useState<string[]>([]);
@@ -39,12 +41,12 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
   const [timers, setTimers] = useState<Timer[]>([]);
   const [now, setNow] = useState(Date.now());
   const mods = registry.map((m) => ({ id: m.id, name: m.name }));
-  const say = (s: string[]) => setLog((l) => [...l, ...s].slice(-14));
+  const say = (s: string[]) => setLog((l) => [...l, ...s].slice(-ui.terminalLog));
   useEffect(() => {
-    rows("hub.calendar").then((r) => setToday(titles(todayRows(r, new Date()), 6))).catch(() => {});
-    rows("hub.news").then((r) => setFeed(titles(r, 6))).catch(() => {});
+    rows("hub.calendar").then((r) => setToday(titles(todayRows(r, new Date()), ui.terminalRows))).catch(() => {});
+    rows("hub.news").then((r) => setFeed(titles(r, ui.terminalRows))).catch(() => {});
     listLater(8).then(setLater).catch(() => {});
-  }, []);
+  }, [ui.terminalRows]);
   useEffect(() => { // tick only while a timer runs, or once a minute for the clocks
     const t = setInterval(() => setNow(Date.now()), timers.length ? 1000 : 60_000);
     return () => clearInterval(t);

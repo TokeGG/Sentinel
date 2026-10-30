@@ -25,7 +25,6 @@ import { ListsTool } from "./ListsTool";
 import { SpoilerGate, SpoilerWords, spoilerHit, useSocialPrefs } from "./useSocialPrefs";
 import "./social.css";
 
-const PAGE = 100;
 const TAB_KEY = "soc.tab"; // per-viewer convenience: a raise re-creates this webview
 
 function useTab(panelId: string, sites: EmbedSite[]) {
@@ -56,7 +55,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const [lastVisit, setLastVisit] = useState<string | null>(null);
   const [picked, setPicked] = useState<string[]>([]);
   const [query, setQuery] = useState("");
-  const [limit, setLimit] = useState(PAGE);
+  const page = Math.min(500, Math.max(10, Math.round(useOption("pageSize", 100))));
+  const [limit, setLimit] = useState(page);
 
   // The divider uses the previous visit; opening the panel marks it visited.
   useEffect(() => {
@@ -135,7 +135,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                   <SpoilerGate hit={spoilerHit(p.text, sp.spoil.words)}><PostCard onNote={() => sp.toNotes(p)} post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} actions={cardProps(p)} taste={taste} ranked={forYou ? rk : undefined} /></SpoilerGate>
                 </div>
               ); })}
-              {ranked.length > limit && <button type="button" className="ui-btn soc-more" onClick={() => setLimit(limit + PAGE)}>Show more</button>}
+              {ranked.length > limit && <button type="button" className="ui-btn soc-more" onClick={() => setLimit(limit + page)}>Show more</button>}
             </div>
           ) : (
             <EmptyState title={posts.length ? "No posts match" : "No posts yet"} hint={posts.length ? "Clear the filters or search." : "Connect an account under Accounts, then press Refresh."} />
