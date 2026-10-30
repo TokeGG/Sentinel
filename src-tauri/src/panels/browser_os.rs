@@ -96,3 +96,24 @@ mod tests {
         assert!(p[1].1.to_string_lossy().contains("Opera GX Stable"));
     }
 }
+
+/// Forced dark mode for in-app browser tabs (owner toggle, on by default). Pages that are already dark
+/// are left alone; light pages get an inverted filter with media re-inverted so photos look normal.
+pub(super) static DARK: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(true);
+pub(super) const DARK_JS: &str = r#"(function(){
+  var css="html{color-scheme:dark}html.sb-dark{filter:invert(.9) hue-rotate(180deg)!important;background:#fff}html.sb-dark img,html.sb-dark video,html.sb-dark picture,html.sb-dark canvas,html.sb-dark iframe,html.sb-dark svg image,html.sb-dark [style*='background-image']{filter:invert(1) hue-rotate(180deg)!important}";
+  function lum(c){var m=c.match(/\d+(\.\d+)?/g);if(!m||m.length<3||(m[3]!==undefined&&+m[3]===0))return 1;return (0.2126*m[0]+0.7152*m[1]+0.0722*m[2])/255;}
+  function apply(){
+    if(!document.getElementById("sb-dark-css")){var s=document.createElement("style");s.id="sb-dark-css";s.textContent=css;(document.head||document.documentElement).appendChild(s);}
+    var b=document.body?getComputedStyle(document.body).backgroundColor:"";var h=getComputedStyle(document.documentElement).backgroundColor;
+    var light=Math.min(lum(b||"rgb(255,255,255)"),lum(h))>0.5||(lum(b||"")===1&&lum(h)===1);
+    document.documentElement.classList.toggle("sb-dark",light);
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",apply);else apply();
+  window.addEventListener("load",apply);
+})();"#;
+
+#[tauri::command]
+pub fn browser_set_dark(on: bool) {
+    DARK.store(on, std::sync::atomic::Ordering::Relaxed);
+}

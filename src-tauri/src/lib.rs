@@ -123,7 +123,7 @@ pub fn run() {
             panels::browser::browser_close_tab,
             panels::browser_os::opera_bookmarks,
             panels::browser_os::open_in_opera,
-            panels::browser_os::browser_open_downloads,
+            panels::browser_os::browser_open_downloads, panels::browser_os::browser_set_dark,
             get_panel,
             toggle_full_window,
             restore_layout,

@@ -23,6 +23,7 @@ pub(super) fn add_tab(app: &AppHandle, id: &str, em: &EmbedSpec, outer: super::p
     let (tab, panel, pid) = (tab_of(&em.site), label(id), id.to_string());
     let (a1, a2, a3, a4, p1, p2, p3, p4) = (app.clone(), app.clone(), app.clone(), app.clone(), panel.clone(), panel.clone(), panel.clone(), panel);
     let dl = app.path().download_dir().ok();
+    if super::browser_os::DARK.load(std::sync::atomic::Ordering::Relaxed) { b = b.initialization_script(super::browser_os::DARK_JS); }
     b = b
         .on_navigation(|u| matches!(u.scheme(), "http" | "https"))
         .on_new_window(move |u, _| {

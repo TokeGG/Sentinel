@@ -14,3 +14,21 @@
 .term-link:hover, .term-link:focus-visible { color: #3cff8a; outline: 0; }
 .term-apps { display: flex; flex-wrap: wrap; gap: 4px 16px; border-top: 1px dashed #12302a; padding-top: 8px; }
 .term-apps .term-link::before { content: "> "; color: #5d8f78; }
+.term-home { display: flex; flex-direction: column; gap: 10px; grid-template-columns: none; }
+.term-top { flex: none; }
+.term-log { max-height: 7.5em; overflow-y: auto; }
+.wg-grid { flex: 1; min-height: 0; overflow: auto; display: grid; gap: 10px; padding-bottom: 8px; }
+.wg-item { position: relative; display: flex; flex-direction: column; min-width: 0; min-height: 0; border: 1px solid #12302a; background: #0a1214; }
+.wg-bar { display: flex; justify-content: space-between; align-items: center; padding: 2px 8px; font-size: 11px; letter-spacing: .12em; color: #5d8f78; cursor: move; user-select: none; border-bottom: 1px solid #12302a; touch-action: none; }
+.wg-x { background: none; border: 0; color: #5d8f78; font: inherit; cursor: pointer; }
+.wg-x:hover, .wg-x:focus-visible { color: #3cff8a; outline: 0; }
+.wg-body { flex: 1; min-height: 0; overflow: auto; padding: 6px 10px; }
+.wg-body .term-box, .wg-body .term-counts, .wg-body .term-apps { border: 0; background: none; padding: 0; }
+.wg-body h3 { display: none; }
+.wg-size { position: absolute; right: 0; bottom: 0; width: 14px; height: 14px; cursor: nwse-resize; touch-action: none; background: linear-gradient(135deg, transparent 50%, #3cff8a 50%); opacity: .5; }
+.wg-tray { flex: none; border-top: 1px dashed #12302a; padding-top: 4px; }
+.wg-tray-btn { background: none; border: 0; color: #5d8f78; font: inherit; cursor: pointer; }
+.wg-tray-btn:hover, .wg-tray-btn:focus-visible { color: #3cff8a; outline: 0; }
+.wg-tray-list { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 0; }
+.wg-chip { border: 1px solid #12302a; background: #0a1214; color: #c9f7dc; font: inherit; padding: 2px 10px; cursor: grab; }
+.wg-chip:hover, .wg-chip:focus-visible { border-color: #3cff8a; outline: 0; }

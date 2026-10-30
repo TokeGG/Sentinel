@@ -26,6 +26,7 @@ import { Briefing } from "./desk/Briefing";
 import { HelpPanel } from "./desk/HelpPanel";
 import { CaptureBox } from "./desk/CaptureBox";
 import { useAppKeys } from "./desk/useAppKeys";
+import { useThemeSync } from "./desk/themeApply";
 import { usePanelView } from "./desk/usePanelView";
 import { useSnippetExpand } from "./extras/useSnippetExpand";
 import { viewStyle } from "./desk/panelView";
@@ -60,6 +61,7 @@ function customBody(m: ModuleManifest): Body {
 
 export function PanelRoute({ id }: { id: string }) {
   useSnippetExpand(); // opt-in ;trigger -> snippet body
+  useThemeSync();
   useAppKeys(); // Ctrl+K etc. work inside panels too (forwarded to the main window)
   useTimeTrack(id);
   const Special = SPECIAL[id];
