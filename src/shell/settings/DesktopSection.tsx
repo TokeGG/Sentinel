@@ -53,7 +53,7 @@ export function DesktopSection({ onError }: { onError(e: unknown): void }) {
       <Row><label className="st-switch">Theme
         <select value={text.theme || "default"} onChange={(e) => saveText("theme", e.target.value)}>{Object.keys(THEMES).map((t) => <option key={t}>{t}</option>)}</select></label></Row>
       <Row><label className="st-switch">Home screen
-        <select value={text.home_style || "planets"} onChange={(e) => saveText("home_style", e.target.value)}><option value="planets">Planets</option><option value="terminal">Terminal</option></select></label></Row>
+        <select value={text.home_style || "terminal"} onChange={(e) => saveText("home_style", e.target.value)}><option value="planets">Planets</option><option value="terminal">Terminal</option></select></label></Row>
       <VoiceRows onError={onError} />
       <Row><label className="st-switch">Launch into layout
         <select value={text.launch_layout ?? ""} onChange={(e) => saveText("launch_layout", e.target.value)}>

@@ -74,7 +74,7 @@ src/
                         useCustomize + Section/Sections, CustomizeDrawer +
                         drawer/*, QuickAdd, safeLink (http(s)-only openUrl),
                         useDebounced, useOption
-  shell/              — home: planets (default) or Terminal (`desk/TerminalHome.tsx`, `terminalLogic.ts`, app_settings `home_style`, Settings > Desktop; Ctrl+Space = home/hide all panels via focus mode); solar-system map: orbit.ts (pure orbit math), mapLayout.ts, planetDrag.ts/planetPosStore.ts (drag a planet -> nearest ring + phase, app_settings `planet_pos`; no parallax, no pan),
+  shell/              — home: Terminal (default) or planets (`desk/TerminalHome.tsx`, `terminalLogic.ts`, app_settings `home_style`, Settings > Desktop; Ctrl+Space = home/hide all panels via focus mode); solar-system map: orbit.ts (pure orbit math), mapLayout.ts, planetDrag.ts/planetPosStore.ts (drag a planet -> nearest ring + phase, app_settings `planet_pos`; no parallax, no pan),
                         snap/ (Win11-style snapping: zones.ts pure edge zones/Snap Layouts/assist/shared-divider resize, dragSnap.ts, SnapPreview, SnapLayouts panel `hub.snap`, Ctrl+Alt+Z; `snap_prefs` mirrored to localStorage),
                         mapDraw.ts, mapHit.ts, icons.ts (planet glyphs), moons.ts/
                         moonDraw.ts/badges.ts/badgeStore.ts/useBadges.ts (notification
