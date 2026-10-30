@@ -33,9 +33,8 @@ fn create_both(app: &AppHandle, id: &str, s: &Spec) -> Result<(), String> {
         // `p` already passed is_safe_profile in validate().
         b = b.data_directory(app.path().app_data_dir().map_err(e)?.join("profiles").join(p));
     }
-    if s.url.is_some() {
-        b = guard(b, app, id, &s.hosts, true);
-    }
+    // App panels (and iframes in them, e.g. embedded chat) never spawn extra windows.
+    b = if s.url.is_some() { guard(b, app, id, &s.hosts, true) } else { let a = app.clone(); b.on_new_window(move |u, _| { external(&a, &u); NewWindowResponse::Deny }) };
     let (chrome, content) = geometry(s.rect);
     add(app, b, content)?;
     if let Some(em) = &s.embed {

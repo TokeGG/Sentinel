@@ -161,7 +161,7 @@ reference a skill name that doesn't exist (or `accent`/`ring`/`icon`/`customize`
 is malformed, or `custom` has no `ui`), so a typo fails loud, not silent.
 
 **Custom panels** exist for games, media, bot, congress, notes, news, deals, pccare, weather, homenet,
-github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email, skills, pentest. To add one:
+github, finance, calendar, backup, clipboard, filesearch, youtube, chat, social, email, skills, pentest, courses. To add one:
 1. `panel: "custom"` + `ui: () => import("./Panel")` + `accent`/`icon` in `index.ts`.
 2. `Panel.tsx`: `useModule(module)` for load/run/status; build with `src/ui/kit`.
 3. Wrap each user-hideable part in `<Section id="...">` inside `<Sections>`.
@@ -214,7 +214,7 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-1370 TS tests + 4 size-guard tests + 156 Rust tests as of this commit. Run the
+1408 TS tests + 4 size-guard tests + 156 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
@@ -303,6 +303,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
 - Challenge Coach (`modules/bot/coach`, Bot panel section `coach`): AoC (cookie keychain `hub.bot`/`aoc_session`, Rust `coach_aoc_fetch` GET only, each page/input cached in `coach_puzzles`, 15 s spacing, never submits), pasted/bundled puzzles, Make your own (model puzzles with hidden tests / quizzes, `gen.ts` difficulty adapts), CTF dailies (notebook + tutor, no CTF-site requests; linked from Lab Learn > Practice), offline Practice CTF (`ctfGen.ts` seeded, flag{...}). Run = Rust `coach_run_code` (owner's python/node, temp file, 10 s, capped; no network sandbox exists). Mistakes go to the site notebook (`coach.practice` / `adventofcode.com`). Daily prep: `coach_daily` + module Auto-refresh (via `run_due_jobs`). Live AoC, real interpreters on Windows, model output quality and GUI unverified.
 - Ask bar / knowledge / data sources / Settings > Modules: never run against a real Ollama or the live APIs (parsers tested on hand-written fixtures only); view-based module settings apply when the panel reopens.
 - Learning/productivity batch (migration 47 `lab_mistakes`/`lab_exams`, 48 `kanban_cards`/`journal_mood`/`goals`/`panel_time`; mirrors `core/schemaStudy.ts`, `core/schemaProd2.ts`): Lab Learn views Study plan|Mock exam|Teach me|Concept map (`pentest/learn/study.ts`, `concepts.ts`, `teach.ts`), streak moon on Pentest; Bot "Local models" section (Rust `ollama_pull` emits `ollama-pull`, `ollama_delete`, `ollama_unload` in `commands/ollama_admin.rs`; opt-in `ollama_unload_game` called from GameHud); Settings > Knowledge import (`core/knowledge/importText.ts`, .txt/.md or pasted PDF text); Notes tabs Board|Goals|Meeting|2FA + journal mood + template library (`notes/prod.ts`); TOTP secrets keychain-only (`core/totp.ts`, `core/totpStore.ts`, service `hub.totp`, names in `totp_labels`); Calendar Focus stats + opt-in per-panel time (`time_track`, `shell/useTimeTrack.ts`); Email "To task" (`email/mailTask.ts`). All GUI, Ollama pull/delete/unload and keychain paths unverified on Windows.
+- Courses (`modules/courses`, `hub.courses`): app_settings JSON `courses` (no table), pure `logic.ts`/`plan.ts`; imports the Lab hub (`lab_hub`) course list once on first load; dates go to Calendar via `add_item` on a click. Lab tabs map to sections in `pentest/tabLayout.ts` (side card = engagements on every tab); Start here cards `startCards.ts`; bot plain lines `botPlain.ts` (observes the gate verdict only). GUI unverified.
 - Data semantics: Finance day-change is session-based (DB keeps only the latest
   price); Home Network "new" means new this session; Calendar "overdue" means
   unfiled notes.

@@ -1,0 +1,22 @@
+/* Courses panel: tokens only. Two columns (courses | coming up, time, add) on a normal window. */
+.co-root { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.co-grid { display: grid !important; grid-template-columns: minmax(0, 2fr) minmax(220px, 1fr); gap: var(--sp-3); align-items: start; }
+.co-grid > [data-section="courses"] { grid-column: 1; grid-row: 1 / span 3; }
+.co-grid > .ui-section:not([data-section="courses"]) { grid-column: 2; }
+@media (max-width: 720px) { .co-grid { grid-template-columns: minmax(0, 1fr); } .co-grid > .ui-section { grid-column: 1 !important; grid-row: auto !important; } }
+.co-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-2); }
+.co-card { display: flex; flex-direction: column; gap: var(--sp-2); padding: var(--pad); background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); min-width: 0; }
+.co-card p { margin: 0; }
+.co-head { display: flex; gap: var(--sp-2); align-items: baseline; flex-wrap: wrap; font-size: var(--fs-md); }
+.co-pair { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: center; }
+.co-pair > .ui-input { flex: 1 1 90px; min-width: 0; }
+.co-form { display: flex; flex-direction: column; gap: var(--sp-2); }
+.co-form label { display: flex; flex-direction: column; gap: var(--sp-1); font-size: var(--fs-sm); color: var(--text-dim); }
+.co-bar { display: block; flex: 1; height: 8px; background: var(--accent-soft); border-radius: var(--r-sm); overflow: hidden; min-width: 40px; }
+.co-bar > i { display: block; height: 100%; background: var(--accent); }
+.co-dates { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.co-dates li { display: flex; gap: var(--sp-2); flex-wrap: wrap; align-items: baseline; }
+.co-dates li.past { color: var(--text-faint); }
+.co-weeks { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--sp-1); }
+.co-weeks li { display: grid; grid-template-columns: 11ch 1fr 9ch; gap: var(--sp-2); align-items: center; }
+.co-notes { white-space: pre-wrap; color: var(--text-dim); }

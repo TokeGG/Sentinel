@@ -8,6 +8,7 @@ import { saveGameModeAuto, saveStarMotion } from "./generalSettings";
 import { openMaster } from "./panelApi";
 import { setGameMode as shareGameMode, setStarMotion as shareStarMotion } from "./motionStore";
 import { OrbitControls } from "./OrbitControls";
+import { useHomeStyle } from "./desk/useHomeStyle";
 import { sendCmd } from "./desk/shellCmd";
 import { BRIEFING_ID } from "./desk/ids";
 import { unloadOnGameMode } from "../modules/bot/ollamaAdmin";
@@ -16,6 +17,7 @@ import { unloadOnGameMode } from "../modules/bot/ollamaAdmin";
 // rendered as the toolbar inside the title bar (the error line lives in App).
 // `refresh` bumps when the Settings panel (another webview) changed a toggle.
 export function GameHud({ setError, refresh = 0 }: { setError: (e: string | null) => void; refresh?: number }) {
+  const homeStyle = useHomeStyle(); // star/orbit buttons only make sense on the planets home
   const [auto, setAuto] = useState<boolean | null>(null);
   const [active, setActive] = useState(false);
   const [manual, setManual] = useState(false);
@@ -90,10 +92,10 @@ export function GameHud({ setError, refresh = 0 }: { setError: (e: string | null
       <button className={auto ? "on" : ""} disabled={auto === null} onClick={toggleAuto}>
         Auto {auto ? "on" : "off"}
       </button>
-      <button className={motion ? "on" : ""} disabled={motion === null} onClick={toggleMotion}>
+      {homeStyle === "planets" && <button className={motion ? "on" : ""} disabled={motion === null} onClick={toggleMotion}>
         Stars: {motion ? "on" : "off"}
-      </button>
-      <OrbitControls refresh={refresh} fail={fail} />
+      </button>}
+      {homeStyle === "planets" && <OrbitControls refresh={refresh} fail={fail} />}
       <button className="hud-settings" onClick={() => openMaster().catch(fail)}>Master Hub</button>
     </div>
   );

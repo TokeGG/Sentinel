@@ -47,6 +47,7 @@ import "./modules/bot";
 import "./modules/games";
 import "./modules/browser";
 import "./modules/media";
+import "./modules/courses";
 import "./App.css";
 import "./shell/desk/desk.css";
 
