@@ -93,3 +93,10 @@ Recorded in chat 2026-10-30; build order after round 6 + settings audit.
 ## Progress (rounds 6+7)
 Done: auto skill choice; Terminal home (+ history, Tab, aliases, note/todo/timer/clip, clocks, box order/visibility; Settings > Terminal home); global DND countdown; title-bar pinned counts; briefing read-aloud (+voice/speed); undo window on deletes; "what changed" banner; weekday/weekend launch layouts.
 Next: cross-panel read-later, smart folders, rebindable shortcuts, bots/skills batch, Lab/learning, money, media, PC, privacy, look; then round 7 remainder; then settings audit.
+
+## Ideas round 8: 50 Lab/learning (owner: "ADD THEM ALL")
+Path: skill tree; placement quiz; weekly goals; streak freeze; reading list; course tracker; lesson notes; explain 3 ways; post-lesson card; mixed review.
+Practice (offline only): CTF packs by category; hint ladder costs points; timed mode; write-up template; history/time; difficulty rating; retry queue; daily generated challenge; pair mode with bot; mistake journal by topic.
+Home lab (scope gate unchanged): inventory; setup checklists; snapshot reminder; scope wizard from own devices; run diff; port explainer cards; hardening checklist per service; fix tracker + re-check; home security score; router checklist.
+Defensive: log-reading drills; phishing quiz (made-up); password trainer (local); firewall puzzles; IR drills; threat model sheet; privacy audit; backup drill; secure-config quizzes; CVE summary practice.
+Certs: exam countdown + schedule; domain heatmap; mock review -> lessons; study hours chart; cert wallet; resume lines; badges; progress export; buddy reminders (opt-in); monthly recap (local model).
