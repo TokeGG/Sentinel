@@ -6,8 +6,8 @@ export interface Course {
   id: string; name: string; provider: string; url: string; total: number; done: number;
   next: string; notes: string; dates: CourseDate[]; log: StudyLog[];
 }
-export interface CoursesState { courses: Course[]; imported: boolean }
-export const EMPTY: CoursesState = { courses: [], imported: false };
+export interface CoursesState { courses: Course[]; imported: boolean; /** free-course list added once */ seeded?: boolean }
+export const EMPTY: CoursesState = { courses: [], imported: false, seeded: false };
 export const KEY = "courses";
 
 const isObj = (x: unknown): x is Record<string, unknown> => !!x && typeof x === "object" && !Array.isArray(x);
@@ -36,7 +36,7 @@ export function parseState(raw: string | null | undefined): CoursesState {
     if (!isObj(o)) return EMPTY;
     const list = (Array.isArray(o.courses) ? o.courses : []).map((c, i) => cleanCourse(c, `c${i + 1}`)).filter((c): c is Course => !!c);
     const seen = new Set<string>();
-    return { courses: list.filter((c) => !seen.has(c.id) && seen.add(c.id)), imported: o.imported === true };
+    return { courses: list.filter((c) => !seen.has(c.id) && seen.add(c.id)), imported: o.imported === true, seeded: o.seeded === true };
   } catch { return EMPTY; }
 }
 

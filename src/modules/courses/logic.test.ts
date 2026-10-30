@@ -77,3 +77,16 @@ describe("courses views", () => {
     assert.deepEqual(used, coursesSections.map((s) => s.id).sort());
   });
 });
+
+import { FREE_COURSES } from "./freeCourses.ts";
+import { seedFree, sortCourses as sortC } from "./plan.ts";
+import { parseState as ps } from "./logic.ts";
+it("free courses are added once, in order, skipping names already present", () => {
+  const s0 = ps(JSON.stringify({ courses: [{ id: "a", name: "2. Introduction to Cybersecurity", total: 6 }], imported: true }));
+  const s1 = seedFree(s0, FREE_COURSES, 1);
+  assert.equal(s1.courses.length, FREE_COURSES.length);
+  assert.equal(s1.seeded, true);
+  assert.equal(seedFree(s1, FREE_COURSES, 2).courses.length, FREE_COURSES.length);
+  assert.ok(FREE_COURSES.every((c, i) => c.name.startsWith(`${i + 1}.`) && /^https:\/\//.test(c.url)));
+  assert.deepEqual(sortC(s1.courses, "order", true, "2026-01-01").map((c) => c.id), s1.courses.map((c) => c.id));
+});
