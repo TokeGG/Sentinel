@@ -103,10 +103,13 @@ fn backup(path: &Path) -> Result<String, String> {
     Ok(dest.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default())
 }
 
-pub fn run_blocking(app: &tauri::AppHandle) -> RepairReport {
-    let Some(path) = db_path(app) else { return RepairReport::default() };
-    tauri::async_runtime::block_on(repair_file(&path))
-        .unwrap_or_else(|e| RepairReport { error: Some(e), ..Default::default() })
+pub fn init(app: &tauri::AppHandle) {
+    let rep = match db_path(app) {
+        Some(p) => tauri::async_runtime::block_on(repair_file(&p))
+            .unwrap_or_else(|e| RepairReport { error: Some(e), ..Default::default() }),
+        None => RepairReport::default(),
+    };
+    app.manage(LastRepair(std::sync::Mutex::new(rep)));
 }
 
 /// Settings > Database check: last startup result, or run again (takes effect on restart).

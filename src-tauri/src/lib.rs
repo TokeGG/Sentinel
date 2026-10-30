@@ -18,9 +18,7 @@ pub fn run() {
         .manage(gamemode::GameMode::default())
         .manage(desktop::hotkeys::Hotkeys::default())
         .setup(|app| {
-            // Before any webview loads the db: align sqlx's ledger (see db_repair.rs).
-            let rep = db_repair::run_blocking(app.handle());
-            app.manage(db_repair::LastRepair(std::sync::Mutex::new(rep)));
+            db_repair::init(app.handle()); // before any webview loads the db
             gamemode::start_poll(app.handle().clone());
             if let Err(e) = desktop::tray::create(app.handle()) {
                 eprintln!("tray icon unavailable: {e}");
@@ -44,13 +42,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_pc_metrics,
             get_network_devices,
-            clone_repo,
-            project_info,
-            open_cloned,
-            delete_cloned_dir,
-            oauth_listen_once,
-            oauth_http,
-            oauth_cancel,
+            clone_repo, project_info, open_cloned, delete_cloned_dir,
+            oauth_listen_once, oauth_http, oauth_cancel,
             ollama_request,
             db_repair::db_repair,
             coach_aoc::coach_aoc_fetch,

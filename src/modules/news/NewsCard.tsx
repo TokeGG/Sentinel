@@ -32,6 +32,7 @@ export function NewsCard({ r, rk, more, item, taste, forYou, run }: {
       {link ? (
         <button type="button" className="nw-title" title={String(r.title)} onClick={() => { void taste.record(item, "open"); void openUrl(link); }}>{String(r.title)}</button>
       ) : <span className="nw-title">{String(r.title)}</span>}
+      {r.summary ? <p className="np-sum">{String(r.summary)}</p> : null}
       {more > 0 && <span className="ui-meta">+{more} similar {more === 1 ? "story" : "stories"}</span>}
       {audio && <audio className="nw-audio" controls preload="none" src={audio} />}
       {hl && !editing && <blockquote className="nw-hl">{hl}</blockquote>}

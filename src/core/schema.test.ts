@@ -3,11 +3,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { readdirSync } from "node:fs";
 import { SCHEMA_STATEMENTS, ensureSchema, describeDb, redactPaths } from "./schema.ts";
+import { BASE_STATEMENTS } from "./schemaBase.ts";
 
 const norm = (s: string) => s.replace(/IF NOT EXISTS/gi, "").replace(/\s+/g, "").replace(/;$/, "");
-const files = ["17_panel_layout", "18_game_mode_auto", "19_panel_prefs", "20_youtube_channels", "21_youtube_watched", "22_chat_rooms", "23_social_feed", "24_mail", "25_pentest_workspace", "26_social_post_meta", "27_skills_mcp", "28_bot", "29_cloned_projects", "30_youtube_library", "31_congress", "32_calendar_items", "33_notif_log", "34_pentest_lab", "35_taste", "36_accounts", "37_productivity", "38_media_extras", "39_feeds_finance", "40_pc_net_dev", "41_bot_extras", "42_games_media", "43_browser", "44_knowledge", "45_lab_learn", "46_coach", "47_study", "48_productivity2"];
+const files = ["17_panel_layout", "18_game_mode_auto", "19_panel_prefs", "20_youtube_channels", "21_youtube_watched", "22_chat_rooms", "23_social_feed", "24_mail", "25_pentest_workspace", "26_social_post_meta", "27_skills_mcp", "28_bot", "29_cloned_projects", "30_youtube_library", "31_congress", "32_calendar_items", "33_notif_log", "34_pentest_lab", "35_taste", "36_accounts", "37_productivity", "38_media_extras", "39_feeds_finance", "40_pc_net_dev", "41_bot_extras", "42_games_media", "43_browser", "44_knowledge", "45_lab_learn", "46_coach", "47_study", "48_productivity2", "49_news_media"];
 
-test("SCHEMA_STATEMENTS match migrations 17-39 exactly", () => {
+test("SCHEMA_STATEMENTS match migrations 17+ exactly", () => {
+  const later = SCHEMA_STATEMENTS.slice(BASE_STATEMENTS.length);
   // A migration file may hold several statements; they map to consecutive entries.
   const expected = files.flatMap((f) => {
     const sql = readFileSync(new URL(`../../src-tauri/migrations/${f}.sql`, import.meta.url), "utf8");
@@ -15,10 +17,10 @@ test("SCHEMA_STATEMENTS match migrations 17-39 exactly", () => {
     parts.forEach((p) => assert.match(p, /CREATE TABLE IF NOT EXISTS/, `${f} must be idempotent`));
     return parts;
   });
-  assert.equal(SCHEMA_STATEMENTS.length, expected.length);
+  assert.equal(later.length, expected.length);
   expected.forEach((sql, i) => {
-    assert.equal(norm(SCHEMA_STATEMENTS[i]), norm(sql), `statement ${i}`);
-    assert.match(SCHEMA_STATEMENTS[i], /CREATE TABLE IF NOT EXISTS/);
+    assert.equal(norm(later[i]), norm(sql), `statement ${i}`);
+    assert.match(later[i], /CREATE TABLE IF NOT EXISTS/);
   });
 });
 
@@ -28,13 +30,12 @@ test("ensureSchema runs every statement in order", async () => {
   assert.deepEqual(seen, SCHEMA_STATEMENTS);
 });
 
-test("ensureSchema stops and rethrows on first failure", async () => {
+test("ensureSchema keeps going past a failure and reports it", async () => {
   const seen: string[] = [];
-  await assert.rejects(
-    ensureSchema(async (s) => { seen.push(s); if (seen.length === 2) throw new Error("boom"); }),
-    /boom/
-  );
-  assert.equal(seen.length, 2);
+  const failed = await ensureSchema(async (s) => { seen.push(s); if (seen.length === 2) throw new Error("boom"); });
+  assert.equal(seen.length, SCHEMA_STATEMENTS.length);
+  assert.equal(failed.length, 1);
+  assert.match(failed[0], /notes: boom/);
 });
 
 test("ensureSchema is safe to run twice", async () => {
@@ -62,10 +63,10 @@ const tableOf = (sql: string) => /CREATE TABLE(?: IF NOT EXISTS)?\s+(\w+)/i.exec
 // A new migration (20+) must be mirrored in SCHEMA_STATEMENTS, or it never
 // applies on a DB whose plugin migrate failed. NOTE: ALTER TABLE ADD COLUMN is
 // not covered by IF NOT EXISTS; mirror it with a pragma_table_info guard.
-test("every migration >= 17 has a bootstrap entry and vice versa", () => {
+test("every migration has a bootstrap entry and vice versa", () => {
   const dir = new URL("../../src-tauri/migrations/", import.meta.url);
   const tables = readdirSync(dir)
-    .filter((f) => f.endsWith(".sql") && parseInt(f, 10) >= 17)
+    .filter((f) => f.endsWith(".sql"))
     .flatMap((f) => {
       const ts = [...readFileSync(new URL(f, dir), "utf8").matchAll(/CREATE TABLE(?: IF NOT EXISTS)?\s+(\w+)/gi)].map((m) => m[1]);
       assert.ok(ts.length, `${f} must be a CREATE TABLE (add a guarded bootstrap entry for other DDL)`);

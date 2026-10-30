@@ -39,7 +39,11 @@ export function getDb(deps: DbDeps = defaults): Promise<Database> {
       loadProblem = msg(e);
       db = await deps.load();
     }
-    await ensureSchema((sql) => db.execute(sql));
+    const failed = await ensureSchema(
+      (sql) => db.execute(sql),
+      async (t) => (await db.select<{ name: string }[]>("SELECT name FROM pragma_table_info($1)", [t])).map((r) => r.name),
+    );
+    if (failed.length) loadProblem = [loadProblem, `Bootstrap failed for ${failed.join("; ")}`].filter(Boolean).join(" | ");
     return db;
   })().catch((e) => {
     loading = null;
