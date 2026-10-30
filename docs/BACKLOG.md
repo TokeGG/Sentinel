@@ -91,7 +91,7 @@ Pass over every module + shell: hard-coded limits, intervals, counts, defaults a
 Recorded in chat 2026-10-30; build order after round 6 + settings audit.
 
 ## Progress (rounds 6+7)
-Done: auto skill choice; Terminal home (+ history, Tab, aliases, note/todo/timer/clip, clocks, box order/visibility; Settings > Terminal home); global DND countdown; title-bar pinned counts; briefing read-aloud (+voice/speed); undo window on deletes; "what changed" banner; weekday/weekend launch layouts.
+Done: cross-panel read later; Lab Learn My progress (goals, streak freeze, hours chart, exam countdown, badges, reading list, courses, cert wallet, resume lines, summary), Drills (6 kinds), Checklists (10), Home lab (score, inventory, port cards), Practice CTF extras (hint points, timer, daily, retry, rating, write-up), Explain 3 ways, lesson notes, placement quiz; auto skill choice; Terminal home (+ history, Tab, aliases, note/todo/timer/clip, clocks, box order/visibility; Settings > Terminal home); global DND countdown; title-bar pinned counts; briefing read-aloud (+voice/speed); undo window on deletes; "what changed" banner; weekday/weekend launch layouts.
 Next: cross-panel read-later, smart folders, rebindable shortcuts, bots/skills batch, Lab/learning, money, media, PC, privacy, look; then round 7 remainder; then settings audit.
 
 ## Ideas round 8: 50 Lab/learning (owner: "ADD THEM ALL")
