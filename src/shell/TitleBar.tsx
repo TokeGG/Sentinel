@@ -3,6 +3,8 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { openMaster, openSettings, reclampPanels } from "./panelApi";
 import { getShown, subscribeShown } from "./notifStore";
 import { totalOf } from "./notifLogic";
+import { subscribeSys, sysNow } from "./privacy/sysPrefsStore";
+import { countsHidden } from "./privacy/sysPrefs";
 
 // The one title bar (main window is frameless, like Discord): app name left,
 // the HUD controls (children) next to it, drag region in between, window
@@ -22,8 +24,10 @@ const Glyph = ({ d }: { d: string }) => (
 // Unread total (read/snooze/DND/quiet hours applied); click opens the Master Hub.
 function UnreadPill({ onError }: { onError: (e: string) => void }) {
   const [n, setN] = useState(() => totalOf(getShown()));
+  const [hidden, setHidden] = useState(() => countsHidden(sysNow()));
   useEffect(() => subscribeShown(() => setN(totalOf(getShown()))), []);
-  if (n === 0) return null;
+  useEffect(() => subscribeSys(() => setHidden(countsHidden(sysNow()))), []); // hide counts / presentation mode
+  if (n === 0 || hidden) return null;
   return (
     <button className="titlebar-pill" title="Open Master Hub" aria-label={`${n} unread, open Master Hub`}
       onClick={() => openMaster().catch((e) => onError(String(e)))}>{n > 99 ? "99+" : n}</button>

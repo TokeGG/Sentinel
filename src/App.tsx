@@ -9,7 +9,7 @@ import { GameHud } from "./shell/GameHud";
 import { SnapPreview } from "./shell/snap/SnapPreview";
 import { TitleBar } from "./shell/TitleBar";
 import { PanelRoute, panelIdFromHash } from "./shell/PanelRoute";
-import { restore, LAYOUT_COMMIT, LAYOUT_DELETE, type SavedPanel } from "./shell/panelApi";
+import { LAYOUT_COMMIT, LAYOUT_DELETE, type SavedPanel } from "./shell/panelApi";
 import { saveLayout, deleteLayout } from "./shell/layoutStore";
 import { SETTINGS_CHANGED } from "./shell/generalSettings";
 import { useBadges } from "./shell/useBadges";
@@ -20,6 +20,8 @@ import { useShellCommands } from "./shell/desk/useShellCommands";
 import { useDesktopSync } from "./shell/desk/useDesktopSync";
 import { useAppKeys } from "./shell/desk/useAppKeys";
 import { Tour } from "./shell/desk/Tour";
+import { delayedRestore, useSysSync } from "./shell/privacy/useSysSync";
+import { LockScreen } from "./shell/privacy/LockScreen";
 import "./modules/notes"; // self-registers into `registry` on import
 import "./modules/news";
 import "./modules/pccare";
@@ -56,6 +58,7 @@ function MainShell() {
   const deskFail = (e: unknown) => setError(String(e));
   useShellCommands(deskFail); // palette / keys / tray commands, nav history, pins
   useAppKeys();
+  useSysSync(deskFail);
   const skyTint = useDesktopSync(deskFail);
   useEffect(() => {
     getDb()
@@ -85,7 +88,7 @@ function MainShell() {
     });
     // The Settings panel is another webview: it saves, then tells us to re-read.
     const unSettings = listen(SETTINGS_CHANGED, () => setSettingsTick((t) => t + 1));
-    restore().catch(fail("Restore layout"));
+    delayedRestore().catch(fail("Restore layout"));
     return () => {
       un.then((f) => f());
       unCommit.then((f) => f());
@@ -102,6 +105,7 @@ function MainShell() {
         <StarMap modules={registry} onError={setError} />
         <div className="sky-tint" style={{ background: skyTint }} />
         <Tour />
+        <LockScreen />
         <SnapPreview />
         {error && (
           <div className="hud-error" role="alert">
