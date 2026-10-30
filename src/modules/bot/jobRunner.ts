@@ -3,6 +3,7 @@
 // Jobs run hidden, with no one to ask: every irreversible action is denied, so a job can never submit/buy/delete/log in.
 import { dueJobs, jobSummary } from "./jobs";
 import { runBot } from "./runner";
+import { prepareDaily } from "./coach/daily";
 import { getWorkflow, listJobs, recordJobRun } from "./storeExtras";
 
 export async function runDueJobs() {
@@ -17,5 +18,6 @@ export async function runDueJobs() {
       await recordJobRun(j.id, "error", String((e as Error)?.message ?? e).slice(0, 300));
     }
   }
-  return { ok: true, ran: due.length };
+  const daily = await prepareDaily().catch(() => null); // own opt-in switch, off by default
+  return { ok: true, ran: due.length, daily };
 }

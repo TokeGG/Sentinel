@@ -91,3 +91,13 @@
 .bot-steps li.bad { color: var(--ph-dim); }
 .bot-wf-step { display: flex; gap: 6px; align-items: center; }
 .bot-wf-step input { flex: 1; min-width: 0; }
+
+/* Challenge Coach */
+.coach-col { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.coach-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.coach-num { width: 6em; }
+.coach-area, .coach-code { width: 100%; box-sizing: border-box; font-family: var(--font-mono); }
+.coach-pre { white-space: pre-wrap; word-break: break-word; max-height: 260px; overflow: auto; margin: 0; padding: 6px; border: 1px solid var(--ph-line); }
+.coach-err { color: var(--bad); }
+.coach-hints { margin: 0; padding-left: 18px; }
+.coach-q { border: 1px solid var(--ph-line); display: flex; flex-direction: column; gap: 2px; }

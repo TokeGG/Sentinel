@@ -40,6 +40,8 @@
 .fin-bar { flex: 1; min-width: 60px; height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
 .fin-bar span { display: block; height: 100%; background: var(--accent); }
 .fin-line.fired .fin-bar span { background: var(--bad, var(--accent)); }
+.fin-upd { color: var(--text-faint); font-size: 0.7em; }
+.fin-err { color: var(--bad); font-size: 0.7em; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 
 /* Plan section + privacy blur (amounts only; hover does not reveal). */
 .fin-blur .fin-price, .fin-blur .fin-money, .fin-blur .fin-tools:not(.fin-plan) .fin-line { filter: blur(6px); }

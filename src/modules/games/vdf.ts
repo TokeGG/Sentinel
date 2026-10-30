@@ -73,3 +73,13 @@ export function parseAcf(text: string): SteamApp | null {
   if (!/^\d+$/.test(appid) || !name) return null;
   return { appid, name, installdir: g("installdir"), lastPlayed: Number(g("LastPlayed")) || 0, sizeOnDisk: Number(g("SizeOnDisk")) || 0 };
 }
+
+const norm = (p: string) => p.replace(/\//g, "\\").replace(/\\+$/, "").toLowerCase();
+
+/** Every library to read: the Steam root itself (old-format vdf omits it, or the vdf is missing) + vdf paths. */
+export function steamLibraries(root: string | null, vdf: string | null): string[] {
+  const out: string[] = [];
+  for (const p of [...(root ? [root] : []), ...(vdf ? libraryPaths(vdf) : [])])
+    if (!out.some((x) => norm(x) === norm(p))) out.push(p);
+  return out;
+}

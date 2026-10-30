@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
+import { CredentialFields } from "../../core/panel/CredentialFields";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
 import { Chip, EmptyState, ErrorLine, Spark, Table, Tabs } from "../../ui/kit";
 import { ConfirmButton } from "../../ui/ConfirmButton";
@@ -11,6 +12,7 @@ import { Tools } from "./Tools";
 import { Plan } from "./Plan";
 import { getPrefs } from "./planStore";
 import { DEFAULT_PREFS } from "./prefs";
+import { absText, dayChange, updatedText } from "./tileInfo";
 import { changeInfo, emptyHistory, fmtPrice, pctText, shownParts, sortTrades, priceKey, trackPrices, tradeView } from "./panelLogic";
 
 type Part = "watchlist" | "congress";
@@ -66,7 +68,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
               <ul className="fin-tiles">
                 {watch.map((r) => {
                   const series = hist.current.series[priceKey(r)] ?? [];
-                  const { pct: chg, caption } = changeInfo(series, now);
+                  const { pct: chg, abs, caption } = dayChange(r, changeInfo(series, now));
+                  const upd = updatedText(r);
                   const tone = chg === null || chg === 0 ? "flat" : chg > 0 ? "up" : "down";
                   return (
                     <li key={String(r.id)} className={`fin-tile ${tone}`}>
@@ -76,10 +79,12 @@ export default function Panel({ module }: { module: ModuleManifest }) {
                       </div>
                       <div className="fin-price">{fmtPrice(r.price)}</div>
                       <div className="fin-chg">
-                        {chg !== null && <span className={`fin-pill ${tone}`}>{tone === "up" ? "▲" : tone === "down" ? "▼" : "•"} {pctText(chg)}</span>}
+                        {chg !== null && <span className={`fin-pill ${tone}`}>{tone === "up" ? "▲" : tone === "down" ? "▼" : "•"} {absText(abs)} {pctText(chg)}</span>}
                         {caption && <small>{caption}</small>}
                         {r.asset === "crypto" && <span className="fin-kind">crypto</span>}
                       </div>
+                      {upd && <small className="fin-upd">{upd}</small>}
+                      {typeof r.quote_error === "string" && <small className="fin-err" role="alert" title={r.quote_error}>No price: {r.quote_error}</small>}
                       <input className="fin-grp" defaultValue={String(r.group ?? "")} placeholder="group" aria-label="Group" onBlur={(e) => e.target.value !== String(r.group ?? "") && void run("set_group", { id: r.dbId, group: e.target.value })} />
                       <ConfirmButton label="Remove" className="ui-btn ui-sm" disabled={busy} onConfirm={() => void run("remove_symbol", { id: r.dbId })} />
                     </li>
@@ -121,6 +126,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             ))}
             <ScheduleToggle module={module} />
           </div>
+          <details><summary>Optional API keys</summary><CredentialFields module={module} /></details>
         </Section>
         <Section id="tools">
           <Tools watch={allWatch} busy={busy} run={run} prefs={prefs} />

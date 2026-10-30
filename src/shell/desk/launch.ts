@@ -3,8 +3,12 @@
 import type { LayoutRow } from "../layoutStore";
 import { getDesk, getLayouts } from "./store";
 
+/** Saturday or Sunday: the weekend profile layout applies (falls back to the weekday one). */
+export const isWeekend = (d: Date) => d.getDay() === 0 || d.getDay() === 6;
+
 export async function launchRows(known: Map<string, unknown>): Promise<LayoutRow[] | null> {
-  const name = await getDesk("launch_layout");
+  const weekend = isWeekend(new Date());
+  const name = (weekend && (await getDesk("launch_layout_weekend"))) || (await getDesk("launch_layout"));
   if (!name) return null;
   const l = (await getLayouts())[name];
   if (!l) return null;

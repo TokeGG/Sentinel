@@ -5,7 +5,8 @@ import { useEffect, useState } from "react";
 import { registry, type ModuleManifest } from "../../core/module";
 import { EmptyState, ErrorLine } from "../../ui/kit";
 import { errorText } from "../../ui/moduleRun";
-import { greeting, likedRows, movers, section, todayRows, type Section } from "./briefingLogic";
+import { greeting, likedRows, movers, section, speechScript, todayRows, type Section } from "./briefingLogic";
+import { getSetting } from "../../ui/appSetting";
 import "./desk.css";
 
 type Rows = Record<string, unknown>[];
@@ -24,6 +25,17 @@ async function build(now: Date): Promise<{ parts: Section[]; unread: [string, nu
   return { parts, unread: unread.filter(([, n]) => n > 0) };
 }
 
+async function speak(text: string) {
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const rate = Number(await getSetting("brief_voice_rate").catch(() => null));
+  if (rate >= 0.5 && rate <= 2) u.rate = rate;
+  const name = await getSetting("brief_voice").catch(() => null);
+  const v = speechSynthesis.getVoices().find((x) => x.name === name);
+  if (v) u.voice = v;
+  speechSynthesis.speak(u);
+}
+
 export function Briefing() {
   const [data, setData] = useState<Awaited<ReturnType<typeof build>> | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +45,7 @@ export function Briefing() {
     <div className="brf">
       {error && <ErrorLine message={error} onDismiss={() => setError(null)} />}
       <h2>{greeting(now)}</h2>
+      {data && "speechSynthesis" in window && <button className="mh-btn" onClick={() => speak(speechScript(greeting(now), data.unread, data.parts))}>Read aloud</button>}
       <p className="ui-meta">{now.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" })}</p>
       {!data ? <EmptyState title="Gathering your day..." /> : (
         <>

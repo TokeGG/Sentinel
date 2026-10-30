@@ -24,6 +24,10 @@ export const notesSections = [
   { id: "snippets", label: "Snippets" },
   { id: "vault", label: "Document vault" },
   { id: "clipper", label: "Web clipper" },
+  { id: "board", label: "Kanban boards" },
+  { id: "goals", label: "Goals and milestones" },
+  { id: "meeting", label: "Meeting notes (timestamped)" },
+  { id: "totp", label: "2FA codes (keychain)" },
 ];
 
 /** Panel tabs: each groups section ids above. */
@@ -36,6 +40,10 @@ export const NOTES_TABS: TabDef[] = [
   { id: "snippets", label: "Snippets", sections: ["snippets"] },
   { id: "vault", label: "Vault", sections: ["vault"] },
   { id: "clip", label: "Clip", sections: ["clipper"] },
+  { id: "board", label: "Board", sections: ["board"] },
+  { id: "goals", label: "Goals", sections: ["goals"] },
+  { id: "meeting", label: "Meeting", sections: ["meeting"] },
+  { id: "totp", label: "2FA", sections: ["totp"] },
 ];
 
 /** app_settings key: "1" = create today's daily note when the panel opens (opt-in). */
