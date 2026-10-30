@@ -7,6 +7,7 @@ export const gamesSections = [
   { id: "recent", label: "Recently played" },
   { id: "library", label: "Library" },
   { id: "news", label: "Patch notes" },
+  { id: "cs2", label: "CS2 (HLTV news + match reminders)", default: false },
   { id: "actions", label: "Scan + refresh" },
 ];
 

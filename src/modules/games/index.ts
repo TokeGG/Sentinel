@@ -14,7 +14,7 @@ export const gamesModule: ModuleManifest = {
   description: "Your installed Steam, Epic, GOG, Ubisoft, Battle.net and EA games, launch, favourites and patch notes.",
   panel: "custom",
   ui: () => import("./Panel"),
-  customize: { sections: gamesSections },
+  customize: { sections: gamesSections, options: [{ key: "matchHours", label: "CS2 match counts as live for (hours)", type: "number", default: 3, min: 1, max: 12 }] },
   skills: [
     { name: "scan", run: async () => ({ ok: true, count: (await scanLibrary(true)).length }) },
     { name: "launch", run: launch },
