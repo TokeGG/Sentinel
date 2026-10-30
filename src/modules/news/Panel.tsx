@@ -13,6 +13,10 @@ import { Tabs } from "../../ui/kit";
 import { CongressTab } from "./CongressTab";
 import { NewsSources } from "./NewsSources";
 import { FrontPage } from "./FrontPage";
+import { NewsViewCtx } from "./Reader";
+import { NewsPrefs } from "./NewsPrefs";
+import { useSpoilers, useWordList } from "../../ui/wordList";
+import { ALERT_KEY, BLOCK_KEY, withoutBlocked } from "./newsPrefs";
 import { SECTIONS, masthead, sectionOf, trending, type SectionId } from "./front";
 
 const EMPTY: Record<string, string> = { front: "No headlines yet", foryou: "Nothing to recommend yet", later: "Nothing saved for later" };
@@ -23,6 +27,12 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const { topics, reload } = useTopics();
   const [view, setView] = useState<NewsView>("all");
   const [sec, setSec] = useState<SectionId>("front");
+  const spoil = useSpoilers();
+  const blocked = useWordList(BLOCK_KEY);
+  const alerts = useWordList(ALERT_KEY);
+  const fontPx = useOption("fontSize", 15);
+  const widthCh = useOption("readWidth", 70);
+  const vp = { headlineOnly: useOption("headlineOnly", false), fontPx, widthCh, spoilers: spoil.words };
   const head = useMemo(() => masthead(new Date()), []);
   const tabs = <Tabs className="np-tabs" tabs={[...SECTIONS]} active={sec} onChange={(id) => setSec(id as SectionId)} />;
   const top = (
@@ -31,7 +41,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
       <h1 className="np-title">The Sentinel</h1>
     </header>
   );
-  const frame = (body: React.ReactNode) => <div className="nw-top np-paper">{top}{tabs}{body}</div>;
+  const style = { "--nw-fs": `${fontPx}px`, "--nw-w": `${widthCh}ch` } as React.CSSProperties;
+  const frame = (body: React.ReactNode) => <NewsViewCtx.Provider value={vp}><div className="nw-top np-paper" style={style}>{top}{tabs}{body}</div></NewsViewCtx.Provider>;
   if (sec === "sources") return frame(<NewsSources />);
   if (sec === "congress") return frame(<CongressTab />);
   return frame(
@@ -43,10 +54,12 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <details className="np-tools">
           <summary className="ui-meta">Topics, views & presets</summary>
           <TasteBar taste={taste} name="News" forYou={forYou} onForYou={setForYou} />
+          <NewsPrefs blocked={blocked} alerts={alerts} spoil={spoil} />
           <NewsTools rows={rows} busy={busy} run={run} taste={taste} topics={topics} reloadTopics={reload} view={view} setView={setView} />
         </details>
       )}
-      list={(rows, _busy, run) => {
+      list={(all, _busy, run) => {
+        const rows = withoutBlocked(all, blocked.words);
         const base = sec === "later" ? viewRows(rows, "later", topics) : sec === "front" || sec === "foryou" ? viewRows(rows, view, topics) : rows.filter((r) => sectionOf(r) === sec);
         const ranked = taste.order(base, newsTaste, forYou || sec === "foryou");
         const items = ranked.map((rk) => ({ ...rk.item, _rk: rk }) as ModuleRow & { _rk: typeof rk });
