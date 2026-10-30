@@ -2,6 +2,7 @@
 import { getDb } from "../../core/db";
 import { deviceInfo, portsByIp } from "./deviceInfo";
 import { portChanges } from "./netLogic";
+import { NICK_KEY, nickOf, parseNicknames } from "./extras";
 
 export interface DeviceRow extends Record<string, unknown> {
   id: number; ip: string; mac: string; tag: string | null; last_seen: string; hostname: string | null; notes: string | null; first_seen: string | null; icon: string | null; uptime: number | null;
@@ -15,9 +16,11 @@ export async function loadDevices(): Promise<Record<string, unknown>[]> {
   const runs = await d.select<{ target: string; summary: string }[]>("SELECT target, summary FROM pentest_runs WHERE tool_id = 'port-scan' AND verdict = 'allowed' ORDER BY id");
   const ports = portsByIp(runs);
   const changes = portChanges(runs);
+  const nicks = parseNicknames((await d.select<{ value: string }[]>("SELECT value FROM app_settings WHERE key = $1", [NICK_KEY]))[0]?.value ?? null);
   return rows.map((r) => {
     const i = deviceInfo(r, ports);
-    return { id: r.id, title: `${r.ip} — ${r.mac}`, label: r.tag, ip: r.ip, mac: r.mac, tag: r.tag, last_seen: r.last_seen, hostname: i.hostname, notes: i.notes, first_seen: r.first_seen, vendor: i.vendor, ports: i.ports, portChange: changes.get(r.ip.trim()) ?? null, icon: r.icon ?? "", uptime: r.uptime };
+    const nick = nickOf(nicks, r.mac);
+    return { id: r.id, title: nick ? `${nick} (${r.ip})` : `${r.ip} — ${r.mac}`, nickname: nick, label: r.tag, ip: r.ip, mac: r.mac, tag: r.tag, last_seen: r.last_seen, hostname: i.hostname, notes: i.notes, first_seen: r.first_seen, vendor: i.vendor, ports: i.ports, portChange: changes.get(r.ip.trim()) ?? null, icon: r.icon ?? "", uptime: r.uptime };
   });
 }
 

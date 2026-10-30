@@ -19,6 +19,11 @@ import { UpdatesSection } from "./settings/UpdatesSection";
 import { ModulesSection } from "./settings/ModulesSection";
 import { KnowledgeSection } from "./settings/KnowledgeSection";
 import { DataSourcesSection } from "./settings/DataSourcesSection";
+import { SystemSection } from "./settings/SystemSection";
+import { PrivacySection } from "./settings/PrivacySection";
+import { LockSection } from "./settings/LockSection";
+import { DataMapSection } from "./settings/DataMapSection";
+import { LogSection } from "./settings/LogSection";
 import "./settings/settings.css";
 
 export function SettingsPanel() {
@@ -43,6 +48,11 @@ export function SettingsPanel() {
       <DiagnosticsSection onError={onError} />
       <UpdatesSection onError={onError} />
       <AboutSection onError={onError} />
+      <SystemSection onError={onError} />
+      <PrivacySection onError={onError} />
+      <LockSection onError={onError} />
+      <DataMapSection onError={onError} />
+      <LogSection onError={onError} />
     </div>
   );
 }

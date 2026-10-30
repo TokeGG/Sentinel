@@ -41,6 +41,7 @@ pub fn run() {
         )
         .invoke_handler(tauri::generate_handler![
             get_pc_metrics,
+            app_data_paths,
             get_network_devices,
             clone_repo, project_info, open_cloned, delete_cloned_dir,
             oauth_listen_once, oauth_http, oauth_cancel,

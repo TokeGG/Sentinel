@@ -23,7 +23,7 @@ test("wipe deletes tables + keys; reset keeps data", () => {
   assert.ok(!w.some((s) => s.sql.includes("bad")));
   const r = resetPlan(m, ["modset:hub.email"]);
   assert.ok(r.every((s) => !s.sql.includes("mail_")));
-  assert.deepEqual(r.at(-1)!.args, ["hub.email"]);
+  assert.deepEqual(r[r.length - 1].args, ["hub.email"]);
 });
 test("purge off at 0, cutoffs otherwise", () => {
   assert.deepEqual(purgeSteps(0, 0), []);
