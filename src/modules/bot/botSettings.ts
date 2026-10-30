@@ -7,10 +7,12 @@ export interface BotSettings {
   /** null = the learned brain value. */ temperature: number | null;
   /** 0 = the model's default context. */ numCtx: number;
   /** Extra pause between steps, ms. */ stepDelayMs: number;
+  /** Per-goal time limit, s; 0 = the learned brain value. */ wallClockSec: number;
 }
 export const BOT_SETTINGS_KEY = "bot_settings";
 export const PRESET_IDS: readonly PresetId[] = ["default", "fast", "smart", "tiny"];
-export const DEFAULT_SETTINGS: BotSettings = { preset: "default", presets: { fast: "", smart: "", tiny: "" }, temperature: null, numCtx: 0, stepDelayMs: 0 };
+export const DEFAULT_SETTINGS: BotSettings = { preset: "default", presets: { fast: "", smart: "", tiny: "" }, temperature: null, numCtx: 0, stepDelayMs: 0, wallClockSec: 0 };
+export const WALL_MIN = 30, WALL_MAX = 600;
 export const CTX_CHOICES = [0, 2048, 4096, 8192, 16384, 32768] as const;
 export const MAX_DELAY_MS = 10_000;
 
@@ -25,12 +27,14 @@ export function parseBotSettings(json: string | null): BotSettings {
   const t = typeof o.temperature === "number" && Number.isFinite(o.temperature) ? clamp(o.temperature, 0, 2) : null;
   const ctx = Number(o.numCtx);
   const delay = Number(o.stepDelayMs);
+  const wall = Number(o.wallClockSec);
   return {
     preset: PRESET_IDS.includes(o.preset as PresetId) ? (o.preset as PresetId) : "default",
     presets: { fast: name(p.fast), smart: name(p.smart), tiny: name(p.tiny) },
     temperature: t === null ? null : Math.round(t * 100) / 100,
     numCtx: Number.isFinite(ctx) ? clamp(Math.round(ctx), 0, 131072) : 0,
     stepDelayMs: Number.isFinite(delay) ? clamp(Math.round(delay), 0, MAX_DELAY_MS) : 0,
+    wallClockSec: Number.isFinite(wall) && wall > 0 ? clamp(Math.round(wall), WALL_MIN, WALL_MAX) : 0,
   };
 }
 

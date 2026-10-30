@@ -1,6 +1,6 @@
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import type { ModuleState } from "../../ui/useModule";
-import { CTX_CHOICES, DEFAULT_SETTINGS, MAX_DELAY_MS, PRESET_IDS, suggestPresets, type BotSettings, type PresetId } from "./botSettings";
+import { CTX_CHOICES, DEFAULT_SETTINGS, MAX_DELAY_MS, PRESET_IDS, WALL_MAX, WALL_MIN, suggestPresets, type BotSettings, type PresetId } from "./botSettings";
 import type { More } from "./useMore";
 
 /** Model presets (fast/smart/tiny -> installed models), temperature, context size, step speed, skill-score weight. */
@@ -44,6 +44,9 @@ export function SettingsPane({ more, run, busy }: { more: More; run: ModuleState
       <div className="ui-controls">
         <label className="schedule-toggle">Step speed: {s.stepDelayMs ? `${(s.stepDelayMs / 1000).toFixed(1)} s pause` : "no extra pause"}{" "}
           <input type="range" min={0} max={MAX_DELAY_MS} step={250} value={s.stepDelayMs} disabled={busy} aria-label="Delay between steps" onChange={(e) => void put({ ...s, stepDelayMs: Number(e.target.value) })} />
+        </label>
+        <label className="schedule-toggle">Time limit per goal: {s.wallClockSec ? `${s.wallClockSec} s` : "learned"}{" "}
+          <input type="range" min={WALL_MIN - 30} max={WALL_MAX} step={30} value={s.wallClockSec || WALL_MIN - 30} disabled={busy} aria-label="Time limit per goal (leftmost = learned)" onChange={(e) => void put({ ...s, wallClockSec: Number(e.target.value) })} />
         </label>
       </div>
       <div className="ui-controls">

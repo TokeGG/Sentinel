@@ -11,6 +11,7 @@ import { DataSection } from "./settings/DataSection";
 import { DesktopSection } from "./settings/DesktopSection";
 import { SnapSection } from "./settings/SnapSection";
 import { TerminalSection } from "./settings/TerminalSection";
+import { DefaultsSection } from "./settings/DefaultsSection";
 import { ExportSection } from "./settings/ExportSection";
 import { GeneralSection } from "./settings/GeneralSection";
 import { NotificationsSection } from "./settings/NotificationsSection";
@@ -50,6 +51,7 @@ export function SettingsPanel() {
       <PanelsSection onError={onError} />
       <ProductivitySection onError={onError} />
       <TerminalSection onError={onError} />
+      <DefaultsSection onError={onError} />
       <SnapSection onError={onError} />
       <DataSection onError={onError} />
       <ExportSection onError={onError} />
