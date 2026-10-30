@@ -17,6 +17,7 @@ export function useMotionPolicy(onChange: (on: boolean) => void) {
         gameMode: getMotion().gameMode,
         reducedMotion: mq.matches && !getMotion().ignoreReduced,
         motionOn: anyMotion(),
+        lowPower: getMotion().lowPower,
       });
       if (on === cur) return;
       cur = on;

@@ -1,6 +1,6 @@
 // The one rule for whether the star map may run an animation loop.
-export type MotionInputs = { visible: boolean; gameMode: boolean; reducedMotion: boolean; motionOn: boolean };
+export type MotionInputs = { visible: boolean; gameMode: boolean; reducedMotion: boolean; motionOn: boolean; lowPower?: boolean };
 
 export function shouldAnimate(i: MotionInputs): boolean {
-  return i.visible && !i.gameMode && !i.reducedMotion && i.motionOn;
+  return i.visible && !i.gameMode && !i.reducedMotion && i.motionOn && !i.lowPower; // low-power mode: no star/orbit animation
 }

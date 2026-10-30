@@ -23,6 +23,11 @@ import { PanelsSection } from "./settings/PanelsSection";
 import { AlertRulesSection } from "./settings/AlertRulesSection";
 import { ProductivitySection } from "./settings/ProductivitySection";
 import { ThemeBuilderSection } from "./settings/ThemeBuilderSection";
+import { SystemSection } from "./settings/SystemSection";
+import { PrivacySection } from "./settings/PrivacySection";
+import { LockSection } from "./settings/LockSection";
+import { DataMapSection } from "./settings/DataMapSection";
+import { LogSection } from "./settings/LogSection";
 import "./settings/settings.css";
 
 export function SettingsPanel() {
@@ -51,6 +56,11 @@ export function SettingsPanel() {
       <DiagnosticsSection onError={onError} />
       <UpdatesSection onError={onError} />
       <AboutSection onError={onError} />
+      <SystemSection onError={onError} />
+      <PrivacySection onError={onError} />
+      <LockSection onError={onError} />
+      <DataMapSection onError={onError} />
+      <LogSection onError={onError} />
     </div>
   );
 }

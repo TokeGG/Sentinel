@@ -113,7 +113,8 @@ export async function logActivity(
 ) {
   const d = await getDb();
   await d.execute(
-    "INSERT INTO activity_log (module, skill, summary, result) VALUES ($1, $2, $3, $4)",
+    // Incognito session (Settings > Privacy): nothing is written while sys_prefs has "incognito":true.
+    "INSERT INTO activity_log (module, skill, summary, result) SELECT $1, $2, $3, $4 WHERE NOT EXISTS (SELECT 1 FROM app_settings WHERE key = 'sys_prefs' AND value LIKE '%\"incognito\":true%')",
     [module, skill, summary, result]
   );
 }

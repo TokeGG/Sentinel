@@ -42,3 +42,27 @@ pub fn get_pc_metrics() -> PcMetrics {
     PcMetrics { cpu_percent, ram_used_mb, ram_total_mb, disks }
 }
 
+
+#[derive(Serialize)]
+pub struct DataPath {
+    label: &'static str,
+    path: String,
+}
+
+// "Where is my data" (Settings > Data map): read-only list of Sentinel's own folders.
+#[tauri::command]
+pub fn app_data_paths(app: tauri::AppHandle) -> Vec<DataPath> {
+    use tauri::Manager;
+    let p = app.path();
+    let items = [
+        ("Database and app data", p.app_data_dir()),
+        ("Config", p.app_config_dir()),
+        ("Local data (web profiles)", p.app_local_data_dir()),
+        ("Cache", p.app_cache_dir()),
+        ("Logs", p.app_log_dir()),
+    ];
+    items
+        .into_iter()
+        .filter_map(|(label, r)| r.ok().map(|d| DataPath { label, path: d.to_string_lossy().into_owned() }))
+        .collect()
+}
