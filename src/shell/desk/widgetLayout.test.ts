@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { addWidget, cellAt, defaultWidgets, moveWidget, parseWidgets, removeWidget, resizeWidget, sanitizeWidgets } from "./widgetGrid.ts";
+import { addWidget, cellAt, defaultWidgets, moveWidget, parseWidgets, removeWidget, resizeWidget, sanitizeWidgets } from "./widgetLayout.ts";
 
 const noOverlap = (l: { x: number; y: number; w: number; h: number }[]) => l.every((a, i) => l.every((b, j) => i === j || !(a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h)));
 
