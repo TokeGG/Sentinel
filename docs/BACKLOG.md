@@ -72,3 +72,14 @@ Productivity: kanban; pomodoro stats; timestamped meeting notes; email→task; s
 Finance: bank CSV import + categories; net worth; subscription cancel reminders; cross-store price drops; receipt OCR; tax folder checklist; watch-only crypto; dividend calendar; shopping list ↔ deals; gift list.
 PC/network: driver info; startup boost profiles; per-app bandwidth; game-server ping graph; router links + firmware check; opt-in blocklists; SMART disk health; backup to chosen cloud folders; restore point (confirm); per-app power.
 Social/chat: Discord voice status; unified DMs (where APIs allow); scheduled posts; chat translation; opt-in go-live alerts; emote favorites; saved posts library; morning social digest.
+
+## Ideas round 6: 50 features/settings (owner: "All")
+Everyday: DND-until countdown; spoken briefing (OS voice); cross-panel read-later; undo toast on deletes; rebindable panel shortcuts; pin any number to title bar; smart folders (saved cross-module searches); "what changed since last look" banner; workday/weekend profiles; title-bar timer/stopwatch.
+Bots/skills: skill builder (local model writes SKILL.md); thumbs on skills used per run; dry-run preview for scheduled jobs; skill chains/routines; per-site bot rules; run cost meter; step replay with captures; skill usage stats; recipe export/import; voice start of workflows.
+Lab/learning: daily 5-min lesson card; glossary hover anywhere; badges + cert roadmap timeline; flashcard spaced reminders; practice-CTF write-up template; "explain like I'm new" on every run.
+Money/deals: subscription tracker; price drop -> calendar with link; net worth chart; receipt vault search; afford-it calculator; Steam/Epic wishlist sync.
+Media/social: merged new-items feed (YouTube/Twitch/podcasts); watch party countdown; HLTV match reminders + live badge; spoiler auto-mute; timestamp clip saver; streamer schedule calendar.
+PC/system: per-game game-mode profiles; disk-full forecast; manual update checker list; per-app power; speed history chart; clean-desktop sorter with preview.
+Privacy: app lock (Windows Hello/PIN); hide sensitive panels while screen sharing; data map + per-module wipe; on-demand breach check.
+Look: theme builder with live preview; opt-in seasonal themes.
+Done: auto skill choice by goal (core/skillPick.ts).
