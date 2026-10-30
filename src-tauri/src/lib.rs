@@ -48,6 +48,8 @@ pub fn run() {
             oauth_http,
             oauth_cancel,
             ollama_request,
+            coach_aoc::coach_aoc_fetch,
+            coach_run::coach_run_code,
             ollama_installed,
             mail_list_folders,
             mail_fetch_headers,

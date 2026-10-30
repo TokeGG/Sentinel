@@ -10,7 +10,7 @@ describe("bot panelLogic", () => {
   it("manifest sections match the <Section id> values in Panel.tsx", () => {
     const used = [...read("./Panel.tsx").matchAll(/<Section id="([^"]+)"/g)].map((m) => m[1]);
     assert.deepEqual(used.sort(), botSections.map((s) => s.id).sort());
-    assert.deepEqual(botSections.map((s) => s.id), ["run", "log", "knowledge", "brain", "workflows", "jobs", "sites", "weekly"]);
+    assert.deepEqual(botSections.map((s) => s.id), ["run", "log", "knowledge", "brain", "workflows", "jobs", "sites", "weekly", "coach"]);
   });
   it("the module manifest uses the same sections and is a custom panel with static ring/icon/accent", () => {
     const src = read("./index.ts");

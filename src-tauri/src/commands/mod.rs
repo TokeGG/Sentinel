@@ -81,5 +81,7 @@ pub use media_local::{now_playing, read_image_data};
 pub mod http_out;
 pub mod oauth_http;
 pub mod ollama;
+pub mod coach_aoc;
+pub mod coach_run;
 pub use oauth_http::oauth_http;
 pub use ollama::{ollama_installed, ollama_request};
