@@ -21,8 +21,13 @@ import { runSmartTerminal } from "./collectionsStore";
 import { searchClipboard } from "../../modules/clipboard/search";
 import { getOverlayStats } from "../../modules/pccare/sysOps";
 import { overlayLines } from "../../modules/pccare/alerts";
+import { WidgetGrid } from "./WidgetGrid";
+import { ModWidget } from "./ModWidget";
+import { useWidgets } from "./useWidgets";
+import { TERM_BOXES } from "./termPrefs";
 import "./terminal.css";
 
+const BOX_TITLE: Record<TermBox, string> = { today: "Today", feed: "Feed", counts: "Unread counts", clocks: "Clocks", timers: "Timers", later: "Read later", apps: "Apps" };
 type Rows = Record<string, unknown>[];
 type Timer = { label: string; end: number };
 const rows = async (id: string): Promise<Rows> => registry.find((m) => m.id === id)?.load?.().catch(() => []) ?? [];
@@ -41,6 +46,7 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
   const [timers, setTimers] = useState<Timer[]>([]);
   const [now, setNow] = useState(Date.now());
   const mods = registry.map((m) => ({ id: m.id, name: m.name }));
+  const [widgets, setWidgets] = useWidgets(prefs.order.filter((b) => !prefs.hidden.includes(b)));
   const say = (s: string[]) => setLog((l) => [...l, ...s].slice(-ui.terminalLog));
   useEffect(() => {
     rows("hub.calendar").then((r) => setToday(titles(todayRows(r, new Date()), ui.terminalRows))).catch(() => {});
@@ -82,8 +88,8 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
     today: <div key="today" className="term-box term-tall"><h3>TODAY</h3>{today.length ? today.map((t, i) => <div key={i}>{t}</div>) : <div className="term-dim">nothing scheduled</div>}</div>,
     feed: <div key="feed" className="term-box term-tall"><h3>FEED</h3>{feed.length ? feed.map((t, i) => <button key={i} className="term-link" onClick={() => run("news")}>{t}</button>) : <div className="term-dim">no stories yet</div>}</div>,
     counts: <div key="counts" className="term-counts">{countBoxes(badges, mods).map((b) => <button key={b.id} className="term-box term-count" onClick={() => run(`open ${b.name}`)}><h3>{b.name.toUpperCase()}</h3><span className="term-n">{b.n}</span></button>)}</div>,
-    clocks: prefs.clocks.length ? <div key="clocks" className="term-box"><h3>CLOCKS</h3>{clockLines(new Date(now), prefs.clocks, ui.clock).map((l) => <div key={l}>{l}</div>)}</div> : null,
-    timers: timers.length ? <div key="timers" className="term-box"><h3>TIMERS</h3>{timers.map((t, i) => <div key={i}>{t.label} <span className="term-n-sm">{mmss(t.end - now)}</span></div>)}</div> : null,
+    clocks: <div key="clocks" className="term-box">{prefs.clocks.length ? clockLines(new Date(now), prefs.clocks, ui.clock).map((l) => <div key={l}>{l}</div>) : <div className="term-dim">add clocks in Settings &gt; Terminal home</div>}</div>,
+    timers: <div key="timers" className="term-box">{timers.length ? timers.map((t, i) => <div key={i}>{t.label} <span className="term-n-sm">{mmss(t.end - now)}</span></div>) : <div className="term-dim">type: timer 25</div>}</div>,
     later: <div key="later" className="term-box term-tall"><h3>READ LATER</h3>{later.length ? later.map((l, i) => <button key={i} className="term-link" onClick={() => openLink(l.url).catch((e) => onError(String(e)))}>[{l.kind}] {l.title}</button>) : <div className="term-dim">nothing saved</div>}</div>,
     apps: <div key="apps" className="term-apps">{mods.map((m) => <button key={m.id} className="term-link" onClick={() => run(`open ${m.name}`)}>{m.name.toLowerCase()}</button>)}</div>,
   };
@@ -91,8 +97,9 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
   return (
     <div className="term-home">
       <div className="term-dim term-head">{new Date(now).toLocaleDateString([], { weekday: "short", day: "numeric", month: "short" }).toLowerCase()} · {total} unread</div>
-      <TermPrompt prompt={prefs.prompt} log={log} mods={mods} aliases={prefs.aliases} onRun={run} />
-      {prefs.order.filter((b) => !prefs.hidden.includes(b)).map((b) => box[b])}
+      <div className="term-top"><TermPrompt prompt={prefs.prompt} log={log} mods={mods} aliases={prefs.aliases} onRun={run} /></div>
+      <WidgetGrid list={widgets} update={setWidgets} all={[...TERM_BOXES.map((b) => ({ id: b as string, title: BOX_TITLE[b] })), ...mods.map((m) => ({ id: `mod:${m.id}`, title: m.name }))]}
+        render={(id) => (id.startsWith("mod:") ? <ModWidget id={id.slice(4)} count={badges[id.slice(4)] ?? 0} rows={ui.terminalRows} onError={onError} /> : box[id as TermBox] ?? <div className="term-dim">nothing here yet</div>)} />
     </div>
   );
 }

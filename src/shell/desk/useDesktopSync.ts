@@ -10,21 +10,9 @@ import { getMotion } from "../motionStore";
 import { startAmbient, stopAmbient } from "./ambient";
 import { loadPolicy, onCountsChanged } from "./alerts";
 import { DESK_CHANGED, getDesk, getFlag } from "./store";
-import { isTheme, SKY_TINT, skyPhase, THEMES } from "./theme";
+import { SKY_TINT, skyPhase } from "./theme";
 
-import { getSetting } from "../../ui/appSetting";
-import { cleanCustom, customVars, DEFAULT_CUSTOM, SEASON_VARS, seasonOf } from "./look";
-
-const ALL_KEYS = [...Object.values(THEMES), customVars({ ...DEFAULT_CUSTOM, font: "x" }), ...Object.values(SEASON_VARS)].flatMap(Object.keys);
-async function applyTheme(id: string) {
-  const root = document.documentElement.style;
-  for (const k of ALL_KEYS) root.removeProperty(k);
-  let c: unknown = null;
-  try { c = JSON.parse((await getSetting("custom_theme")) ?? "null"); } catch { /* default */ }
-  THEMES.custom = customVars(cleanCustom(c));
-  const vars = (await getSetting("seasonal_theme")) === "1" ? SEASON_VARS[seasonOf(new Date())] : isTheme(id) ? THEMES[id] : {};
-  for (const [k, v] of Object.entries(vars)) root.setProperty(k, v);
-}
+import { applyTheme } from "./themeApply";
 
 /** Returns the current sky tint for the star-map overlay. */
 export function useDesktopSync(fail: (e: unknown) => void): string {
@@ -34,7 +22,7 @@ export function useDesktopSync(fail: (e: unknown) => void): string {
     let timer: ReturnType<typeof setInterval> | null = null;
     const paintSky = () => setTint(sky ? SKY_TINT[skyPhase(new Date().getHours() + new Date().getMinutes() / 60)] : "transparent");
     const load = async () => {
-      await applyTheme(await getDesk("theme"));
+      await applyTheme();
       toasts = await getFlag("notif_toasts");
       await loadPolicy();
       sky = await getFlag("sky_clock");

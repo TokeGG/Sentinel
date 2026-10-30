@@ -7,6 +7,7 @@ import { closePanel, commit, getPanel, MASTER_ID, SETTINGS_ID, toggleFullWindow,
 import { useDragPanel } from "./useDragPanel";
 import { PANEL_CUSTOMIZE, panelLabel } from "./panelEvents";
 import { sendCmd } from "./desk/shellCmd";
+import { useThemeSync } from "./desk/themeApply";
 import { SNAP_ID } from "./desk/ids";
 
 const PREFIX = "#/chrome/";
@@ -21,6 +22,7 @@ export function chromeIdFromHash(hash: string): string | null {
 }
 
 export function ChromeRoute({ id }: { id: string }) {
+  useThemeSync();
   const m = registry.find((x) => x.id === id);
   const [full, setFull] = useState(false);
   const [unread, setUnread] = useState(0); // status dot: lit when the module reports new items
