@@ -10,6 +10,9 @@ import { Row } from "../../ui/kit";
 import { loadModSettings, MOD_SETTINGS_CHANGED, saveModSettings } from "../../ui/useModSettings";
 import { loadPrefs, savePrefs } from "../notifDb";
 import { Head, Switch } from "./Switch";
+import { getSetting, setSetting } from "../../ui/appSetting";
+import { parsePins } from "../TitleExtras";
+import { DESK_CHANGED } from "../desk/store";
 import { ModuleViewFields } from "./ModuleViewFields";
 
 export function ModulesSection({ onError }: { onError(e: unknown): void }) {
@@ -19,11 +22,13 @@ export function ModulesSection({ onError }: { onError(e: unknown): void }) {
   const [ms, setMs] = useState<ModSettings>(DEFAULT_MOD_SETTINGS);
   const [notif, setNotif] = useState(true);
   const [taste, setTaste] = useState(true);
+  const [pins, setPinsState] = useState<string[]>([]);
   useEffect(() => {
     if (!id) return;
     loadModSettings(id).then(setMs, onError);
     loadPrefs().then((p) => setNotif(!p.dnd.includes(id)), onError);
     isOff(id).then((off) => setTaste(!off), () => setTaste(true));
+    getSetting("title_pins").then((s) => setPinsState(parsePins(s)), onError);
   }, [id]);
   if (!m) return null;
   const f = genericFields(m);
@@ -38,6 +43,10 @@ export function ModulesSection({ onError }: { onError(e: unknown): void }) {
       await savePrefs({ ...p, dnd }, ["dnd"]);
       setNotif(on);
     } catch (e) { onError(e); }
+  };
+  const onPin = (on: boolean) => {
+    const next = on ? [...new Set([...pins, id])].slice(0, 6) : pins.filter((x) => x !== id);
+    setSetting("title_pins", JSON.stringify(next)).then(() => { setPinsState(next); return emit(DESK_CHANGED); }).catch(onError);
   };
   const onTaste = (on: boolean) => setOff(id, !on).then(() => setTaste(on), onError);
   return (
@@ -61,6 +70,7 @@ export function ModulesSection({ onError }: { onError(e: unknown): void }) {
         Notifications <small className="ui-meta">moons and counts for this module</small></Switch></Row>}
       {f.includes("taste") && <Row><Switch checked={taste} onChange={onTaste}>
         Taste <small className="ui-meta">learn from likes/dislikes to order items</small></Switch></Row>}
+      {m.badge && <Row><Switch checked={pins.includes(id)} onChange={onPin}>Pin count to title bar <small className="ui-meta">up to 6 modules</small></Switch></Row>}
       <ModuleViewFields key={id} m={m} fields={f} onError={onError} />
     </section>
   );
