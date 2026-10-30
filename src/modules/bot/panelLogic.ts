@@ -13,6 +13,7 @@ export const botSections = [
   { id: "sites", label: "Site notebook" },
   { id: "weekly", label: "What I learned this week" },
   { id: "coach", label: "Challenge Coach" },
+  { id: "models", label: "Local models" },
 ];
 
 /** First page of every run (a plain search page; the model goes elsewhere with goto). */

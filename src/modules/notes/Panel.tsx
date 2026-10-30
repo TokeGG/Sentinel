@@ -14,6 +14,10 @@ import { NotebookTab } from "./NotebookTab";
 import { NoteTile } from "./NoteTile";
 import { SnippetsTab } from "./SnippetsTab";
 import { VaultTab } from "./VaultTab";
+import { BoardTab } from "./BoardTab";
+import { GoalsTab } from "./GoalsTab";
+import { MeetingTab } from "./MeetingTab";
+import { TotpTab } from "./TotpTab";
 import { NOTES_TABS, splitFiled } from "./panelLogic";
 import { useNotes } from "./useNotes";
 import "./notes.css";
@@ -63,6 +67,10 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         {tab === "cards" && <Section id="cards"><CardsTab /></Section>}
         {tab === "snippets" && <Section id="snippets"><SnippetsTab /></Section>}
         {tab === "vault" && <Section id="vault"><VaultTab /></Section>}
+        {tab === "board" && <Section id="board"><BoardTab /></Section>}
+        {tab === "goals" && <Section id="goals"><GoalsTab /></Section>}
+        {tab === "meeting" && <Section id="meeting"><MeetingTab onSaved={open} /></Section>}
+        {tab === "totp" && <Section id="totp"><TotpTab /></Section>}
         {tab === "clip" && <Section id="clipper"><ClipTab onSaved={open} /></Section>}
       </Sections>
     </div>

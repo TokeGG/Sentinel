@@ -2,6 +2,7 @@ mod bot;
 mod commands;
 mod desktop;
 mod migrations;
+mod db_repair;
 mod gamemode;
 mod panels;
 use commands::*;
@@ -17,6 +18,9 @@ pub fn run() {
         .manage(gamemode::GameMode::default())
         .manage(desktop::hotkeys::Hotkeys::default())
         .setup(|app| {
+            // Before any webview loads the db: align sqlx's ledger (see db_repair.rs).
+            let rep = db_repair::run_blocking(app.handle());
+            app.manage(db_repair::LastRepair(std::sync::Mutex::new(rep)));
             gamemode::start_poll(app.handle().clone());
             if let Err(e) = desktop::tray::create(app.handle()) {
                 eprintln!("tray icon unavailable: {e}");
@@ -48,9 +52,10 @@ pub fn run() {
             oauth_http,
             oauth_cancel,
             ollama_request,
+            db_repair::db_repair,
             coach_aoc::coach_aoc_fetch,
             coach_run::coach_run_code,
-            ollama_installed,
+            ollama_installed, ollama_pull, ollama_delete, ollama_unload,
             mail_list_folders,
             mail_fetch_headers,
             mail_fetch_message,

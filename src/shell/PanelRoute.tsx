@@ -25,6 +25,7 @@ import { Briefing } from "./desk/Briefing";
 import { HelpPanel } from "./desk/HelpPanel";
 import { CaptureBox } from "./desk/CaptureBox";
 import { useAppKeys } from "./desk/useAppKeys";
+import { useTimeTrack } from "./useTimeTrack";
 
 const YtPlayer = lazy(() => import("../modules/youtube/PopPlayer"));
 const PopPlayer = () => <Suspense fallback={null}><YtPlayer /></Suspense>;
@@ -55,6 +56,7 @@ function customBody(m: ModuleManifest): Body {
 
 export function PanelRoute({ id }: { id: string }) {
   useAppKeys(); // Ctrl+K etc. work inside panels too (forwarded to the main window)
+  useTimeTrack(id);
   const Special = SPECIAL[id];
   if (Special) {
     return (
