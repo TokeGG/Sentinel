@@ -14,6 +14,11 @@ export const botSections = [
   { id: "weekly", label: "What I learned this week" },
   { id: "coach", label: "Challenge Coach" },
   { id: "models", label: "Local models" },
+  { id: "routines", label: "Routines" },
+  { id: "settings", label: "Run settings" },
+  { id: "rules", label: "Site rules" },
+  { id: "stats", label: "Skill usage" },
+  { id: "memory", label: "Bot memory" },
 ];
 
 /** First page of every run (a plain search page; the model goes elsewhere with goto). */

@@ -9,6 +9,7 @@ import { InstallPane } from "./InstallPane";
 import { ItemList } from "./ItemList";
 import { MarketPane } from "./MarketPane";
 import { ModelPane } from "./ModelPane";
+import { SkillBuilder } from "./SkillBuilder";
 import type { Plan } from "./install";
 import type { Item } from "./panelLogic";
 import "./skills.css";
@@ -36,6 +37,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="install"><Tile title="Install from GitHub"><InstallPane module={module} busy={busy} run={run} onPlan={setPlan} /></Tile></Section>
         <Section id="market"><Tile title="Marketplace (suggested, verify before install)"><MarketPane busy={busy} run={run} onPlan={setPlan} /></Tile></Section>
         <Section id="model"><Tile title="Local model (used by the Browser Bot)"><ModelPane busy={busy} run={run} /></Tile></Section>
+        <Section id="build"><Tile title="Skill builder (local model drafts, you review)"><SkillBuilder busy={busy} run={run} refresh={() => void refresh()} /></Tile></Section>
       </Sections>
     </div>
   );

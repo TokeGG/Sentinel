@@ -58,6 +58,10 @@ export interface Episode {
   result?: string;
   /** Task understanding the model wrote before acting (plan.ts). */
   plan?: import("./plan.ts").TaskPlan | null;
+  /** Names of the skills the run was given (thumbs per skill, usage stats). */
+  skills?: string[];
+  /** Run cost meter (runCost.ts). */
+  cost?: import("./runCost.ts").RunCost;
 }
 
 /** Actions that should change the page when they work. */
