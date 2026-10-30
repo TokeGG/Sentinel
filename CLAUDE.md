@@ -214,7 +214,7 @@ node --test scripts/check-file-size.test.mjs
 cd src-tauri && cargo test --lib   # Rust tests
 ```
 
-1238 TS tests + 4 size-guard tests + 156 Rust tests as of this commit. Run the
+1370 TS tests + 4 size-guard tests + 156 Rust tests as of this commit. Run the
 relevant ones after any change to `src/core/module.ts`, `*/rss.ts`,
 `*/pkce.ts`, `pentest/scope.ts`, `src/shell/*.ts`, `src/ui/*.ts`, `*/panelLogic.ts`, or `src-tauri/src/panels`.
 
@@ -316,6 +316,7 @@ and publishes the installer, `.sig` and `latest.json` (`scripts/make-latest-json
   fullscreen detection and all webview code are compile-checked only, never
   run in a real window. No local-model unload yet (bot not built).
 - Desktop batch (`src/shell/desk/`, Rust `src-tauri/src/desktop/`): Ctrl+K palette (`hub.palette`, providers.ts = panels/actions/commands/settings/content), quick capture (`hub.capture`, any module's `capture_note` skill), `hub.briefing`, `hub.help` + first-run Tour, named layouts/tile/snap/focus mode/pins/back-forward/reopen (`layoutOps.ts`, all panel commands go through the `shell-cmd` event to main), tray (unread total only), opt-in global hotkeys, autostart (off), Web Notification toasts (counts only), themes/day-night tint, ambient noise, encrypted export (Settings > Encrypted export, preview before apply). Pin = re-raise after other panels focus (raise re-creates the webview), focus mode closes others without forgetting their rows. NONE run on Windows: tray, global-shortcut, autostart, Notification API in WebView2, multi-monitor move are compile-checked only.
+- Rounds 6-8 (2026-10-30, all app_settings JSON, no new tables): Terminal home extras (`term_prefs`, `desk/termPrefs.ts`); title-bar DND (`notif_all`) + pins (`title_pins`); undo window (`undo_secs`, ui/ConfirmButton); ChangedBanner (`last_seen:<id>`, `changed_banner`); weekend layout; cross-panel read later (`core/later.ts`); Lab Learn hubs (`lab_hub` progress/drills/checklists/home lab via `pentest/useHub.ts`; `lab_study` review/mock/CVE practice/recap/reminder via `learn/useHub.ts`+`studyHub.ts`); Practice CTF extras (`ctf_retry`); finance/deals plan (`fin_prefs`, `fin_plan`, `steam_profile`); shell extras (`keymap`, `smart_folders`, `panel_groups`, `panel_view_prefs`, `titlebar_style`, `notif_policy`, `custom_theme`, `seasonal_theme`, `cal_zones`, `task_templates`, `snippet_expand`); media/news/social prefs (`spoiler_words`, `news_*`, `media_*`, `cs2_matches`, `yt_clips`, `yt_skip`); bot extras (`bot_settings`, `bot_site_rules`, `skill_scores`, `skill_boost_weight`, `bot_prompts`, `bot_routines`, `assist_lang`); system/privacy (`sys_prefs`, PIN hash keychain `hub.lock`/`pin`, `game_profiles`, `disk_hist`, `update_list`, `net_nicknames`, `net_ping_targets`; Settings System|Privacy|App lock|Data map|Activity log). Not feasible yet: panel tabs/duplicates/PiP/peek (Rust panel manager), per-monitor home, Windows Hello, lyrics, Epic wishlist. All GUI unverified on Windows.
 - Sub-projects 2-4 (Discord/YouTube webviews, multi-site chat, browser bot
   with shared learning kernel and bundled skill packs) are deferred in
   `docs/superpowers/specs/2026-10-28-core-shell-design.md` (each gets its own
