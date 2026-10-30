@@ -10,7 +10,7 @@ export const coursesSections = [
 ];
 
 export const coursesOptions: OptionDef[] = [
-  { key: "sort", label: "Sort courses by", type: "select", choices: ["date", "name", "progress"], default: "date" },
+  { key: "sort", label: "Sort courses by", type: "select", choices: ["order", "date", "name", "progress"], default: "order" },
   { key: "showDone", label: "Show finished courses", type: "toggle", default: true },
   { key: "soonDays", label: "Coming up: days ahead", type: "number", default: 14, min: 1, max: 365 },
   { key: "weeks", label: "Study time: weeks shown", type: "number", default: 8, min: 1, max: 52 },

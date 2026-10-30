@@ -29,11 +29,12 @@ export function upcoming(courses: Course[], today: string, days: number): Upcomi
 }
 export const whenText = (n: number) => (n === 0 ? "today" : n === 1 ? "tomorrow" : `in ${n} days`);
 
-export type SortKey = "name" | "progress" | "date";
+export type SortKey = "order" | "name" | "progress" | "date";
 const nextDate = (c: Course, today: string) => c.dates.find((d) => d.date >= today)?.date ?? "9999";
 export function sortCourses(list: Course[], by: SortKey, showDone: boolean, today: string): Course[] {
   const keep = showDone ? list : list.filter((c) => !finished(c));
-  const cmp: Record<SortKey, (a: Course, b: Course) => number> = {
+  if (by === "order") return keep; // list order = the suggested path (free courses are numbered 1..7)
+  const cmp: Record<Exclude<SortKey, "order">, (a: Course, b: Course) => number> = {
     name: (a, b) => a.name.localeCompare(b.name),
     progress: (a, b) => a.done / a.total - b.done / b.total,
     date: (a, b) => nextDate(a, today).localeCompare(nextDate(b, today)),
@@ -60,4 +61,12 @@ export function importLab(s: CoursesState, labHubRaw: string | null, now: number
 /** Arguments for the Calendar module's add_item skill. */
 export function calendarArgs(c: Course, d: CourseDate) {
   return { title: `${d.kind === "exam" ? "Exam" : "Due"}: ${d.label} (${c.name})`, day: d.date, notes: [c.provider, c.url].filter(Boolean).join(" ") };
+}
+
+/** One-time add of the free courses with certificates, in suggested order (skips names already present). */
+export function seedFree(s: CoursesState, free: { name: string; provider: string; url: string; total: number; next: string; notes: string }[], now: number): CoursesState {
+  if (s.seeded) return s;
+  const have = new Set(s.courses.map((c) => c.name.toLowerCase()));
+  const added = free.filter((f) => !have.has(f.name.toLowerCase())).map((f, i) => ({ ...f, id: `free${now.toString(36)}${i}`, done: 0, dates: [], log: [] }));
+  return parseState(JSON.stringify({ ...s, courses: [...s.courses, ...added], seeded: true }));
 }

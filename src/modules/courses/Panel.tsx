@@ -14,7 +14,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
   const courses = rows as unknown as Course[];
   const today = new Date().toISOString().slice(0, 10);
-  const sort = useOption<string>("sort", "date") as SortKey;
+  const sort = useOption<string>("sort", "order") as SortKey;
   const showDone = useOption("showDone", true);
   const soon = upcoming(courses, today, useLimit(coursesOptions, "soonDays"));
   const goal = useLimit(coursesOptions, "goalMins");
