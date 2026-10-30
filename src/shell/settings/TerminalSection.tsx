@@ -19,8 +19,8 @@ export function TerminalSection({ onError }: { onError(e: unknown): void }) {
       <Head>Terminal home</Head>
       <Row><label className="st-switch">Prompt text<input id="term-prompt" className="st-input" defaultValue={p.prompt} onBlur={(e) => save({ ...p, prompt: e.target.value })} /></label></Row>
       <Row><label className="st-switch">Aliases (a=open mail, y=open youtube)<input id="term-aliases" className="st-input" defaultValue={aliasText(p.aliases)} onBlur={(e) => save({ ...p, aliases: parseAliases(e.target.value) })} /></label></Row>
-      <Row><label className="st-switch">World clocks (e.g. Europe/London, Asia/Tokyo)<input id="term-clocks" className="st-input" defaultValue={p.clocks.join(", ")}
-        onBlur={(e) => save({ ...p, clocks: e.target.value.split(",").map((z) => z.trim()).filter(validZone) })} /></label></Row>
+      <Row><label className="st-switch">Extra clocks (e.g. Europe/London, Asia/Tokyo)<input id="term-clocks" className="st-input" defaultValue={p.clocks.join(", ")}
+        onBlur={(e) => save({ ...p, clocks: e.target.value.split(",").map((z) => z.trim()).filter(validZone) })} /></label><small className="ui-meta">Your own time zone always shows first, read from Windows.</small></Row>
       <Row end={<button type="button" className="ui-btn" onClick={() => void setSetting("home_widgets", "").then(() => emit(DESK_CHANGED)).catch(onError)}>Reset widgets</button>}>
         Widgets: drag them on the home screen (title bar moves, corner resizes, x unpins); pin more from the tray at the bottom. Reset applies next start.</Row>
     </section>

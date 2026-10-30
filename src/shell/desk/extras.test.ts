@@ -107,7 +107,8 @@ describe("clock format and temperature", () => {
     const d = new Date(Date.UTC(2026, 0, 1, 15, 7));
     assert.equal(zoneTime(d, "UTC", "24h"), "15:07");
     assert.match(zoneTime(d, "UTC", "12h"), /^3:07\sPM$/);
-    assert.deepEqual(clockLines(d, ["UTC"]), ["utc 15:07"]);
+    assert.deepEqual(clockLines(d, ["UTC"], "24h", "UTC"), ["local · utc 15:07"]);
+    assert.deepEqual(clockLines(d, ["Asia/Tokyo"], "24h", "UTC"), ["local · utc 15:07", "tokyo 00:07"]);
   });
   it("calendar and email use it, default 24h", () => {
     const due = new Date(2026, 0, 1, 9, 4).toISOString();
