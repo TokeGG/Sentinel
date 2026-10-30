@@ -1,4 +1,5 @@
 // Pure helpers for the Email panel: sections, list formatting, sorting, search, cache diffing.
+import { hhmm, type ClockFmt } from "../../shell/desk/uiDefaults.ts";
 import type { Msg } from "./types.ts";
 
 export const emailSections = [
@@ -29,10 +30,10 @@ export const previewLine = (s: string, max = 110) => {
 };
 
 /** Today -> "14:05"; this year -> "Mar 3"; older -> "Mar 3, 2023"; unknown -> "". */
-export function dateLabel(ts: number, now: Date = new Date()): string {
+export function dateLabel(ts: number, now: Date = new Date(), clock: ClockFmt = "24h"): string {
   if (!ts) return "";
   const d = new Date(ts * 1000);
-  if (d.toDateString() === now.toDateString()) return d.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  if (d.toDateString() === now.toDateString()) return hhmm(d.getHours(), d.getMinutes(), clock);
   const md = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   return d.getFullYear() === now.getFullYear() ? md : `${md}, ${d.getFullYear()}`;
 }

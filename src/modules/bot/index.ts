@@ -3,7 +3,7 @@ import { runDueJobs } from "./jobRunner";
 import { addTextNote, addUrlNote, deleteNote, exportBrain, importBrain, rateRun, resetBrain } from "./ops";
 import { addJob, deleteJob, deleteSiteNote, deleteWorkflow, enableJob, putSiteNote, saveDemo, saveRunAsWorkflow, shareBrain, updateWorkflow } from "./opsExtras";
 import * as more from "./opsMore";
-import { botSections } from "./panelLogic";
+import { botLimits, botSections } from "./panelLogic";
 import { recentEpisodes } from "./store";
 
 // Browser bot: a local model (Ollama on this PC) drives a separate browser window to reach a goal you type.
@@ -20,7 +20,7 @@ export const botModule: ModuleManifest = {
   description: "Type a goal; a local model browses in its own window to reach it, asking before anything irreversible. Learns from your notes and thumbs.",
   panel: "custom",
   ui: () => import("./Panel"),
-  customize: { sections: botSections },
+  customize: { sections: botSections, options: botLimits },
   schedule: { skill: "run_due_jobs", intervalMinutes: 15 },
   skills: [
     { name: "add_note", run: addTextNote },

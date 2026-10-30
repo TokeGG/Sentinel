@@ -1,13 +1,14 @@
 // Pure calendar extras: side-by-side time zones (app_settings `cal_zones`),
 // countdowns to events, recurring task templates (app_settings `task_templates`).
+import { zoneTime, type ClockFmt } from "../../shell/desk/uiDefaults.ts";
 export function validZone(z: string): boolean {
   try { new Intl.DateTimeFormat("en", { timeZone: z }); return true; } catch { return false; }
 }
 export const cleanZones = (raw: unknown): string[] =>
   Array.isArray(raw) ? [...new Set(raw.filter((z): z is string => typeof z === "string" && validZone(z)))].slice(0, 8) : [];
 /** "HH:MM" plus weekday in each zone for one instant. */
-export function zoneTimes(d: Date, zones: string[]): { zone: string; time: string }[] {
-  return zones.map((zone) => ({ zone, time: new Intl.DateTimeFormat("en-GB", { timeZone: zone, weekday: "short", hour: "2-digit", minute: "2-digit" }).format(d) }));
+export function zoneTimes(d: Date, zones: string[], clock: ClockFmt = "24h"): { zone: string; time: string }[] {
+  return zones.map((zone) => ({ zone, time: zoneTime(d, zone, clock, true) }));
 }
 /** "3d 4h", "2h 05m", "12m", "now" or "passed". */
 export function countdown(targetMs: number, nowMs: number): string {

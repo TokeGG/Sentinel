@@ -1,3 +1,5 @@
+import { useLimit } from "../../../ui/useOption";
+import { pccareLimits } from "../panelLogic";
 import { invoke } from "@tauri-apps/api/core";
 import { useState } from "react";
 import { ConfirmButton } from "../../../ui/ConfirmButton";
@@ -8,12 +10,13 @@ interface Proc { pid: number; name: string; cpu: number; mem_mb: number }
 interface Sensor { label: string; temp: number | null; max: number | null; critical: number | null }
 
 export function ProcTool() {
+  const lim = useLimit(pccareLimits, "procRows");
   const t = useTask<Proc[]>();
   const s = useTask<Sensor[]>();
   const [q, setQ] = useState("");
   const load = () => t.go(() => invoke<Proc[]>("list_processes"));
   const kill = (p: Proc) => t.go(async () => { await invoke("kill_process", { pid: p.pid, name: p.name }); return invoke<Proc[]>("list_processes"); });
-  const shown = (t.data ?? []).filter((p) => p.name.toLowerCase().includes(q.toLowerCase())).slice(0, 80);
+  const shown = (t.data ?? []).filter((p) => p.name.toLowerCase().includes(q.toLowerCase())).slice(0, lim);
   return (
     <div className="pc-tool">
       <div className="ui-actions">

@@ -1,4 +1,6 @@
 // Notebook list: full-text search with highlight, folders, tags, archive, new note from a template.
+import { notesOptions } from "./panelLogic";
+import { useLimit } from "../../ui/useOption";
 import { useState, type ReactElement } from "react";
 import { Chip } from "../../ui/kit";
 import { useStore } from "../../ui/useStore";
@@ -12,6 +14,7 @@ function Marked({ text, q }: { text: string; q: string }) {
 }
 
 export function NoteList({ notes, openId, onOpen, onNew }: { notes: NoteRow[]; openId: number | null; onOpen(id: number): void; onNew(body: string, folder: string): void }) {
+  const tagMax = useLimit(notesOptions, "tagChips");
   const [q, setQ] = useState("");
   const [folder, setFolder] = useState("");
   const [tag, setTag] = useState("");
@@ -39,7 +42,7 @@ export function NoteList({ notes, openId, onOpen, onNew }: { notes: NoteRow[]; o
         <Chip on={archived} onClick={() => setArchived(!archived)}>Archived</Chip>
       </div>
       <div className="ui-chips">
-        {tagCounts(notes).slice(0, 12).map(([t, n]) => <Chip key={t} on={tag === t} onClick={() => setTag(tag === t ? "" : t)}>#{t} {n}</Chip>)}
+        {tagCounts(notes).slice(0, tagMax).map(([t, n]) => <Chip key={t} on={tag === t} onClick={() => setTag(tag === t ? "" : t)}>#{t} {n}</Chip>)}
       </div>
       <div className="nt-items">
         {(hits ? hits.map((h) => ({ n: h.note, sub: h.snippet })) : shown.map((n) => ({ n, sub: "" }))).map(({ n, sub }) => (

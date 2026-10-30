@@ -4,7 +4,7 @@ import type { ModuleManifest } from "../../core/module";
 import { FeedPanel } from "./FeedPanel";
 import type { ModuleRow } from "../../ui/useModule";
 import { TasteBar } from "../../ui/TasteBar";
-import { useOption } from "../../ui/useOption";
+import { useOption, useStartTab } from "../../ui/useOption";
 import { useTasteView } from "../../ui/useTasteView";
 import { viewRows, type NewsView } from "./extras";
 import { NewsTools, useTopics } from "./NewsTools";
@@ -26,7 +26,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const grouped = useOption("grouped", true);
   const { topics, reload } = useTopics();
   const [view, setView] = useState<NewsView>("all");
-  const [sec, setSec] = useState<SectionId>("front");
+  const [chosen, setSec] = useState<SectionId | null>(null);
+  const sec = useStartTab(SECTIONS, chosen) as SectionId;
   const spoil = useSpoilers();
   const blocked = useWordList(BLOCK_KEY);
   const alerts = useWordList(ALERT_KEY);

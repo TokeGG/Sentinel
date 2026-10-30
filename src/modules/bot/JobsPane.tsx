@@ -1,3 +1,5 @@
+import { useLimit } from "../../ui/useOption";
+import { botLimits } from "./panelLogic";
 import { useState } from "react";
 import { EmptyState, Row } from "../../ui/kit";
 import { ConfirmButton } from "../../ui/ConfirmButton";
@@ -12,6 +14,7 @@ const EVERY = [[60, "hourly"], [360, "every 6 h"], [1440, "daily"], [10080, "wee
 
 /** Scheduled jobs: each off until switched on, and only while the module's Auto-refresh toggle is on. */
 export function JobsPane({ bot, jobs, runs, workflows, run, busy, reload }: { bot: ReturnType<typeof useBotRun>; jobs: Job[]; runs: JobRun[]; workflows: Workflow[]; run: ModuleState["run"]; busy: boolean; reload(): void }) {
+  const lim = useLimit(botLimits, "jobRuns");
   const [f, setF] = useState({ name: "", goal: "", workflowId: "", every: "1440" });
   const go = async (skill: string, args: Record<string, unknown>) => { if ((await run(skill, args)) !== undefined) reload(); };
   const [previewed, setPreviewed] = useState<Set<number>>(new Set());
@@ -50,7 +53,7 @@ export function JobsPane({ bot, jobs, runs, workflows, run, busy, reload }: { bo
       ))}
       {preview && <div role="status"><ul className="bot-steps">{preview.lines.map((l, i) => <li key={i}>{l}</li>)}</ul><button type="button" className="ui-btn" onClick={() => setPreview(null)}>Close preview</button></div>}
       <h4 className="ui-meta">Run history</h4>
-      {runs.length === 0 ? <p className="ui-meta">None yet.</p> : runs.slice(0, 15).map((r) => <Row key={r.id}><span className="ui-meta">{r.at}</span> {r.name ?? `job ${r.job_id}`}: {r.summary || r.outcome}</Row>)}
+      {runs.length === 0 ? <p className="ui-meta">None yet.</p> : runs.slice(0, lim).map((r) => <Row key={r.id}><span className="ui-meta">{r.at}</span> {r.name ?? `job ${r.job_id}`}: {r.summary || r.outcome}</Row>)}
     </div>
   );
 }

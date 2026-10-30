@@ -1,4 +1,5 @@
 // Pure helpers for the Bot panel.
+import { numOption } from "../../ui/numOption.ts";
 import type { Action, Observation, Outcome } from "./actions.ts";
 import { MISTAKE_LABELS, type MistakeCounts, type MistakeKind } from "./mistakes.ts";
 import { parseTags } from "../skills/localModel.ts";
@@ -60,3 +61,4 @@ export function noteUrlOk(u: string): boolean {
 
 /** Terminal animations run unless reduced motion is requested and not overridden by the app setting. */
 export const fxOn = (reducedMotion: boolean, ignoreReduced: boolean) => !reducedMotion || ignoreReduced;
+export const botLimits = [numOption("jobRuns", "Job runs listed", 15, 5, 100), numOption("skillRows", "Skills in usage stats", 10, 3, 50)];

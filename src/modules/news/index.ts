@@ -3,6 +3,8 @@ import { registerModule, type ModuleManifest } from "../../core/module";
 import { fetchFeeds, loadItems, seedPreset, setSaved, setSourceMeta } from "./store";
 import { feedOps } from "./feedOps";
 import { feedSections } from "./panelLogic";
+import { SECTIONS } from "./front";
+import { startTabOption } from "../../ui/numOption";
 import { congressModule } from "../congress/index";
 import { fetchFeedsAuto, newsBadge } from "./prefsStore";
 
@@ -29,7 +31,7 @@ export const newsModule: ModuleManifest = {
   ui: () => import("./Panel"),
   customize: {
     sections: feedSections("headlines", "Headlines"),
-    options: [{ key: "grouped", label: "Group duplicate stories", type: "toggle", default: true }, { key: "taste", label: "For you ordering", type: "toggle", default: true },
+    options: [startTabOption(SECTIONS), { key: "grouped", label: "Group duplicate stories", type: "toggle", default: true }, { key: "taste", label: "For you ordering", type: "toggle", default: true },
       { key: "headlineOnly", label: "Headline-only mode", type: "toggle", default: false },
       { key: "fontSize", label: "Article font size (px)", type: "number", default: 15, min: 11, max: 26 },
       { key: "readWidth", label: "Reading width (characters)", type: "number", default: 70, min: 40, max: 120 }],

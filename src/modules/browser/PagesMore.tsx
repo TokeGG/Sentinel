@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { ConfirmButton } from "../../ui/ConfirmButton";
+import { useLimit } from "../../ui/useOption";
+import { browserOptions } from "./layout";
 import type { Download } from "./useBrowser";
 import { APPS_CHANGED } from "./Sidebar";
 import { addApp, getLinksOpenIn, listApps, removeApp, setEngine, setLinksOpenIn, type Bookmark, type WebApp } from "./store";
@@ -59,6 +61,7 @@ export function SettingsPage({ engine, setEngine: setLocal, onError }: { engine:
 }
 
 export function NewTabPage({ engine, marks, go }: { engine: Engine; marks: Bookmark[]; go(url: string): void }) {
+  const dial = useLimit(browserOptions, "speedDial");
   const [q, setQ] = useState("");
   return (
     <div className="br-newtab">
@@ -66,7 +69,7 @@ export function NewTabPage({ engine, marks, go }: { engine: Engine; marks: Bookm
         <input autoFocus className="br-addr" placeholder={`Search with ${ENGINES[engine].name} or enter address`} value={q} onChange={(e) => setQ(e.target.value)} aria-label="Search" />
       </form>
       <div className="br-dial">
-        {marks.slice(0, 12).map((m) => <button key={m.id} title={m.url} onClick={() => go(m.url)}><b>{(m.title || hostOf(m.url)).slice(0, 1)}</b>{m.title || hostOf(m.url)}</button>)}
+        {marks.slice(0, dial).map((m) => <button key={m.id} title={m.url} onClick={() => go(m.url)}><b>{(m.title || hostOf(m.url)).slice(0, 1)}</b>{m.title || hostOf(m.url)}</button>)}
       </div>
     </div>
   );

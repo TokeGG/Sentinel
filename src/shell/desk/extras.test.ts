@@ -1,4 +1,8 @@
-import { DEFAULT_UI, parseUi, sanitizeUi } from "./uiDefaults.ts";
+import { DEFAULT_UI, hhmm, parseUi, sanitizeUi, tempIn, zoneTime } from "./uiDefaults.ts";
+import { clampInt, limitOf, numOption, startTab, startTabOption } from "../../ui/numOption.ts";
+import { timeText } from "../../modules/calendar/panelLogic.ts";
+import { dateLabel } from "../../modules/email/panelLogic.ts";
+import { clockLines } from "./termPrefs.ts";
 import { parseBotSettings } from "../../modules/bot/botSettings.ts";
 import { socialOptions } from "../../modules/social/panelLogic.ts";
 import { describe, it } from "node:test";
@@ -67,11 +71,11 @@ describe("ui defaults", () => {
   it("falls back to the old hard-coded values", () => {
     assert.deepEqual(parseUi(null), DEFAULT_UI);
     assert.deepEqual(parseUi("nope"), DEFAULT_UI);
-    assert.deepEqual(DEFAULT_UI, { briefingRows: 5, terminalRows: 6, paletteResults: 40, terminalLog: 14 });
+    assert.deepEqual(DEFAULT_UI, { briefingRows: 5, terminalRows: 6, terminalLater: 8, paletteResults: 40, terminalLog: 14, clock: "24h", temp: "°C" });
   });
   it("clamps and rounds, ignores junk", () => {
-    const u = sanitizeUi({ briefingRows: 99, terminalRows: 0, paletteResults: "60.4", terminalLog: "x" });
-    assert.deepEqual(u, { briefingRows: 20, terminalRows: 1, paletteResults: 60, terminalLog: 14 });
+    const u = sanitizeUi({ briefingRows: 99, terminalRows: 0, paletteResults: "60.4", terminalLog: "x", terminalLater: 50, clock: "12h", temp: "K" });
+    assert.deepEqual(u, { briefingRows: 20, terminalRows: 1, terminalLater: 30, paletteResults: 60, terminalLog: 14, clock: "12h", temp: "°C" });
     assert.deepEqual(sanitizeUi([1, 2]), DEFAULT_UI);
   });
 });
@@ -89,5 +93,67 @@ describe("social page size option", () => {
   it("defaults to the old page size", () => {
     const o = socialOptions.find((x) => x.key === "pageSize");
     assert.equal(o?.default, 100);
+  });
+});
+
+describe("clock format and temperature", () => {
+  it("formats 24h and 12h", () => {
+    assert.equal(hhmm(14, 5, "24h"), "14:05");
+    assert.equal(hhmm(14, 5, "12h"), "2:05 PM");
+    assert.equal(hhmm(0, 0, "12h"), "12:00 AM");
+    assert.equal(hhmm(12, 30, "12h"), "12:30 PM");
+  });
+  it("zone times follow the format", () => {
+    const d = new Date(Date.UTC(2026, 0, 1, 15, 7));
+    assert.equal(zoneTime(d, "UTC", "24h"), "15:07");
+    assert.match(zoneTime(d, "UTC", "12h"), /^3:07\sPM$/);
+    assert.deepEqual(clockLines(d, ["UTC"]), ["utc 15:07"]);
+  });
+  it("calendar and email use it, default 24h", () => {
+    const due = new Date(2026, 0, 1, 9, 4).toISOString();
+    assert.equal(timeText({ due }), "09:04");
+    assert.equal(timeText({ due }, "12h"), "9:04 AM");
+    const now = new Date(2026, 0, 1, 20, 0);
+    assert.equal(dateLabel(new Date(2026, 0, 1, 18, 3).getTime() / 1000, now, "12h"), "6:03 PM");
+  });
+  it("temperature", () => {
+    assert.equal(tempIn(21, "°C"), "21°C");
+    assert.equal(tempIn(21, "°F"), "70°F");
+    assert.equal(tempIn(null, "°F"), "—");
+  });
+});
+
+describe("option helpers", () => {
+  it("clamps limits to the option def", () => {
+    const o = [numOption("n", "N", 12, 0, 50)];
+    assert.equal(limitOf(o, "n", undefined), 12);
+    assert.equal(limitOf(o, "n", 99), 50);
+    assert.equal(limitOf(o, "n", 3.6), 4);
+    assert.equal(clampInt("x", 7, 0, 9), 7);
+  });
+  it("start tab: session pick, then saved, then first", () => {
+    const tabs = [{ id: "a" }, { id: "b" }, { id: "c" }];
+    assert.equal(startTabOption(tabs).default, "a");
+    assert.deepEqual(startTabOption(tabs).choices, ["a", "b", "c"]);
+    assert.equal(startTab(tabs, null, "b"), "b");
+    assert.equal(startTab(tabs, "c", "b"), "c");
+    assert.equal(startTab(tabs, null, "zz"), "a");
+  });
+});
+
+describe("new customize options are valid manifests", async () => {
+  const { customizeError } = await import("../../core/customizeChecks.ts");
+  const sets = await Promise.all([
+    import("../../modules/notes/panelLogic.ts").then((m) => m.notesOptions),
+    import("../../modules/calendar/panelLogic.ts").then((m) => m.calendarLimits),
+    import("../../modules/pentest/panelLogic.ts").then((m) => m.pentestOptions),
+    import("../../modules/congress/panelLogic.ts").then((m) => m.congressOptions),
+    import("../../modules/pccare/panelLogic.ts").then((m) => m.pccareLimits),
+    import("../../modules/youtube/panelLogic.ts").then((m) => m.ytLimits),
+    import("../../modules/bot/panelLogic.ts").then((m) => m.botLimits),
+    import("../../modules/browser/layout.ts").then((m) => m.browserOptions),
+  ]);
+  it("each passes customizeError", () => {
+    for (const options of sets) assert.equal(customizeError({ options }), null);
   });
 });

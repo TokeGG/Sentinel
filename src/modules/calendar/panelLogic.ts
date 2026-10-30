@@ -1,6 +1,8 @@
 // Pure helpers for the Calendar & Tasks panel. All day math uses LOCAL date
 // parts and whole-day counts (never ms/86400000 on local times), so DST days
 // of 23/25 hours and times around midnight land on the right day.
+import { numOption } from "../../ui/numOption.ts";
+import { hhmm, type ClockFmt } from "../../shell/desk/uiDefaults.ts";
 import { ago, utcDate } from "../../ui/kit/format.ts";
 import { EXTRA_SECTIONS } from "./tabs.ts";
 
@@ -110,10 +112,10 @@ export function itemTitle(r: Row): string {
 }
 
 /** Local "HH:MM" of the row's date; "" if unknown. */
-export function timeText(r: Row): string {
+export function timeText(r: Row, clock: ClockFmt = "24h"): string {
   if (r.allDay === true) return "all day";
   const d = rowDate(r);
-  return d ? `${p2(d.getHours())}:${p2(d.getMinutes())}` : "";
+  return d ? hhmm(d.getHours(), d.getMinutes(), clock) : "";
 }
 
 /** Honest wording for an overdue (unfiled) item: when it was created, not a missed deadline. */
@@ -123,3 +125,7 @@ export function overdueText(r: Row, now: Date): string {
   const a = d ? ago(d, now) : "";
   return a ? `unfiled · created ${a === "just now" ? a : `${a} ago`}` : "unfiled";
 }
+export const calendarLimits = [
+  numOption("agendaDays", "Days in the Agenda view", 21, 1, 90), numOption("dayChips", "Entries per day in Month/Week", 4, 1, 12),
+  numOption("countdowns", "Countdowns shown", 3, 0, 10), numOption("moneyRows", "Expenses listed", 30, 5, 200),
+];

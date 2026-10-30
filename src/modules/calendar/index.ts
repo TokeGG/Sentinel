@@ -4,7 +4,10 @@ import { addItem, deleteItem, moveItem, exportIcs, importEvents, listItems, togg
 import { holidayRows } from "./holidayRows";
 import { ownRows } from "./ownRows";
 import { addSub, allHolidays, importCsv, refreshHolidays, refreshSubs, removeSub } from "./sourcesStore";
-import { calendarSections, overdueCount } from "./panelLogic";
+import { calendarLimits, calendarSections, overdueCount } from "./panelLogic";
+import { CAL_TABS } from "./tabs";
+import { VIEW_MODES } from "./views";
+import { startTabOption } from "../../ui/numOption";
 
 // Not a new data source — an aggregated view over dated rows other modules
 // already have. Each module keeps owning its own data; this just unions and
@@ -84,7 +87,7 @@ export const calendarModule: ModuleManifest = {
     "Your own events and tasks (add, repeat, complete, ICS/CSV import, subscriptions), holidays, plus dated items other modules already track.",
   panel: "custom",
   ui: () => import("./Panel"),
-  customize: { sections: calendarSections },
+  customize: { sections: calendarSections, options: [startTabOption(CAL_TABS), { key: "calView", label: "Calendar tab opens on", type: "select", choices: [...VIEW_MODES], default: "month" }, ...calendarLimits] },
   // Overdue items (unfiled notes dated before today): local rows only, no network.
   badge: async () => overdueCount(await loadAgenda(), new Date()),
   skills: [

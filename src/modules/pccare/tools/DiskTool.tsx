@@ -1,3 +1,5 @@
+import { useLimit } from "../../../ui/useOption";
+import { pccareLimits } from "../panelLogic";
 import { invoke } from "@tauri-apps/api/core";
 import { EmptyState, ErrorLine } from "../../../ui/kit";
 import { humanBytes } from "../panelLogic";
@@ -9,6 +11,7 @@ const W = 600, H = 260;
 
 // Read-only: largest files + a treemap of the folder's top-level entries.
 export function DiskTool() {
+  const lim = useLimit(pccareLimits, "largestFiles");
   const t = useTask<Scan>();
   const scan = async () => { const d = await pickFolder(); if (d) await t.go(() => invoke<Scan>("scan_folder", { path: d })); };
   const tiles = t.data ? squarify(t.data.children.slice(0, 60), { x: 0, y: 0, w: W, h: H }) : [];
@@ -32,7 +35,7 @@ export function DiskTool() {
       )}
       {t.data && (
         <ul className="pc-list">
-          {t.data.largest.slice(0, 25).map((f) => <li key={f.path}><b>{humanBytes(f.size)}</b> <span className="pc-path" title={f.path}>{f.path}</span></li>)}
+          {t.data.largest.slice(0, lim).map((f) => <li key={f.path}><b>{humanBytes(f.size)}</b> <span className="pc-path" title={f.path}>{f.path}</span></li>)}
         </ul>
       )}
     </div>
