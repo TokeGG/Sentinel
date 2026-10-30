@@ -5,7 +5,7 @@ import { ICONS, isPathData, drawIcon } from "./icons.ts";
 import { RINGS } from "../core/customizeChecks.ts";
 
 const MODULE_ICONS = ["notes", "news", "pccare", "weather", "homenet", "github", "youtube", "finance", "deals",
-  "email", "social", "calendar", "backup", "pentest", "clipboard", "filesearch", "discord", "chat", "skills", "bot", "congress", "games", "media", "browser"];
+  "email", "social", "calendar", "backup", "pentest", "clipboard", "filesearch", "discord", "chat", "skills", "bot", "congress", "games", "media", "browser", "courses"];
 const EXTRA = ["core"];
 
 test("isPathData accepts SVG path data and rejects anything else", () => {
