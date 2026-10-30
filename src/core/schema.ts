@@ -7,12 +7,14 @@ import { LATER_STATEMENTS } from "./schemaSocial.ts";
 import { BASE_STATEMENTS } from "./schemaBase.ts";
 import { MID_STATEMENTS } from "./schemaMid.ts";
 import { NEWS_MEDIA_STATEMENTS } from "./schemaNewsMedia.ts";
+import { CALENDAR_SOURCES_STATEMENTS } from "./schemaCalendarSources.ts";
 import { addColumnSql, tableOf } from "./schemaColumns.ts";
 export const SCHEMA_STATEMENTS: string[] = [
   ...BASE_STATEMENTS, // migrations 1-16
   ...MID_STATEMENTS, // migrations 17-24
   ...LATER_STATEMENTS, // migrations 25-48
   ...NEWS_MEDIA_STATEMENTS, // 49
+  ...CALENDAR_SOURCES_STATEMENTS, // 50
 ];
 
 // Never throws: one bad statement must not hide every other table. Returns

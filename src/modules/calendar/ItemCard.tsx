@@ -5,6 +5,7 @@ import { ConfirmButton } from "../../ui/ConfirmButton";
 import { openLink } from "../../ui/openLink";
 import type { ModuleRow } from "../../ui/useModule";
 import { ItemForm } from "./ItemForm";
+import { dealLinkOf } from "./dealLink";
 import { extractLinks } from "./links";
 import { itemTitle, rowDate, sourceTag } from "./panelLogic";
 import { repeatOf } from "./recur";
@@ -20,7 +21,8 @@ export function ItemCard({ s, busy, run, onClose }: { s: CardSubject; busy: bool
   const own = typeof r.itemId === "number";
   const d = rowDate(r);
   const rep = repeatOf(r.rrule as string | undefined);
-  const links = extractLinks(itemTitle(r), r.notes, r.url, r.link);
+  const deal = dealLinkOf(r);
+  const links = extractLinks(itemTitle(r), r.notes, r.url, r.link).filter((u) => u !== deal);
   const act = (skill: string) => void run(skill, { id: r.itemId }).then((v) => v !== undefined && onClose());
   useEffect(() => {
     const k = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -33,9 +35,10 @@ export function ItemCard({ s, busy, run, onClose }: { s: CardSubject; busy: bool
         <h3>{itemTitle(r)}</h3>
         <p className="ui-meta">
           {s.when ?? (d ? (r.allDay === true ? d.toLocaleDateString() : d.toLocaleString()) : "No date")}
-          {rep !== "none" ? ` · repeats ${rep}` : ""} · {r.kind === "task" ? "Task" : "Event"} · {sourceTag(r)}{r.done === true ? " · done" : ""}
+          {rep !== "none" ? ` · repeats ${rep}` : ""} · {r.kind === "task" ? "Task" : r.holiday === true ? "Holiday" : "Event"} · {sourceTag(r)}{r.done === true ? " · done" : ""}
         </p>
         {typeof r.notes === "string" && r.notes.trim() && <p className="cal-card-notes">{r.notes}</p>}
+        {deal && <button type="button" className="ui-btn primary" title={deal} onClick={() => void openLink(deal)}>Open deal</button>}
         {links.length > 0 && <ul className="cal-card-links">{links.map((u) => (
           <li key={u}><button type="button" className="ui-link" title={u} onClick={() => void openLink(u)}>{u}</button></li>))}</ul>}
         {edit && own ? (
