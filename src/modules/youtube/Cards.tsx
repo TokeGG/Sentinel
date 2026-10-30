@@ -1,3 +1,5 @@
+import { useOption } from "../../ui/useOption";
+import { isShort } from "./ytPrefs";
 import { useState } from "react";
 import { thumbUrl } from "./panelLogic";
 import { avatar, fmtDuration } from "./viewLogic";
@@ -64,9 +66,10 @@ export function VideoCard({ c, queued, act }: { c: Card; queued: boolean; act: C
 }
 
 export function CardGrid({ cards, queue, act }: { cards: Card[]; queue: Set<string>; act: CardActions }) {
+  const hideShorts = useOption("hideShorts", false);
   return (
     <div className="yt-grid">
-      {cards.map((c) => <VideoCard key={c.videoId} c={c} queued={queue.has(c.videoId)} act={act} />)}
+      {(hideShorts ? cards.filter((c) => !isShort(c.title)) : cards).map((c) => <VideoCard key={c.videoId} c={c} queued={queue.has(c.videoId)} act={act} />)}
     </div>
   );
 }

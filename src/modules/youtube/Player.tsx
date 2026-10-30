@@ -1,14 +1,17 @@
 import { useEffect, useMemo, useRef } from "react";
 import { listenMsg, parsePlayerMsg, playerUrl, rateMsg } from "./extras";
 import { isEnded } from "./queue";
+import { inOutro, pauseMsg, seekMsg, volumeMsg } from "./ytPrefs";
+
+export interface PlayerCtl { seek?: { t: number; n: number }; pause?: number; volume?: number; outro?: number; onTime?: (t: number) => void }
 
 const YT = "https://www.youtube-nocookie.com";
 
 // In-app playback via the privacy-enhanced embed with the IFrame JS API on, so the
 // remembered speed can be applied (setPlaybackRate) and progress read (infoDelivery).
 // Both depend on YouTube honouring postMessage in this webview: unverified on Windows.
-export function Player({ videoId, title, rate = 1, start = 0, onProgress, onEnded }: {
-  videoId: string; title: string; rate?: number; start?: number; onProgress?: (time: number, duration: number) => void; onEnded?: () => void;
+export function Player({ videoId, title, rate = 1, start = 0, onProgress, onEnded, ctl = {} }: {
+  ctl?: PlayerCtl; videoId: string; title: string; rate?: number; start?: number; onProgress?: (time: number, duration: number) => void; onEnded?: () => void;
 }) {
   const ref = useRef<HTMLIFrameElement>(null);
   const cb = useRef(onProgress);
@@ -19,6 +22,11 @@ export function Player({ videoId, title, rate = 1, start = 0, onProgress, onEnde
   const src = useMemo(() => playerUrl(videoId, { start, origin: location.origin }), [videoId]);
   const post = (m: string) => ref.current?.contentWindow?.postMessage(m, YT);
   useEffect(() => { post(rateMsg(rate)); }, [rate]);
+  const c = useRef(ctl);
+  c.current = ctl;
+  useEffect(() => { if (ctl.volume !== undefined) post(volumeMsg(ctl.volume)); }, [ctl.volume]);
+  useEffect(() => { if (ctl.seek) post(seekMsg(ctl.seek.t)); }, [ctl.seek]);
+  useEffect(() => { if (ctl.pause) post(pauseMsg()); }, [ctl.pause]);
   useEffect(() => {
     const last = { time: 0, duration: 0 };
     let saved = Date.now();
@@ -28,7 +36,8 @@ export function Player({ videoId, title, rate = 1, start = 0, onProgress, onEnde
       const p = parsePlayerMsg(e.data);
       if (!p) return;
       if (p.duration) last.duration = p.duration;
-      if (p.time !== undefined) last.time = p.time;
+      if (p.time !== undefined) { last.time = p.time; c.current.onTime?.(p.time); }
+      if (inOutro(last.time, last.duration, c.current.outro ?? 0)) { cb.current?.(last.time, last.duration); last.time = 0; last.duration = 0; end.current?.(); return; }
       if (Date.now() - saved > 15000) { saved = Date.now(); cb.current?.(last.time, last.duration); }
     };
     addEventListener("message", on);
@@ -37,7 +46,7 @@ export function Player({ videoId, title, rate = 1, start = 0, onProgress, onEnde
   return (
     <div className="yt-player">
       {src ? (
-        <iframe ref={ref} key={videoId} src={src} title={title} onLoad={() => { post(listenMsg()); post(rateMsg(rate)); }}
+        <iframe ref={ref} key={videoId} src={src} title={title} onLoad={() => { post(listenMsg()); post(rateMsg(rate)); if (ctl.volume !== undefined) post(volumeMsg(ctl.volume)); }}
           allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
       ) : null}
     </div>

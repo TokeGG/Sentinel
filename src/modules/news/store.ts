@@ -8,9 +8,10 @@ import { enabledNewsSources, seedNewsCatalog } from "./sourceStore";
 import { timeout } from "./sources/store";
 import { pool } from "./sources/logic";
 
-export async function fetchFeeds() {
+export const fetchFeeds = async () => fetchFrom(await enabledNewsSources()); // switched-off sources are skipped
+
+export async function fetchFrom(sources: { id: number; url: string }[]) {
   const d = await getDb();
-  const sources = await enabledNewsSources(); // switched-off sources are skipped
   let added = 0;
   let failed = 0;
   await pool(sources, 6, async (source) => {

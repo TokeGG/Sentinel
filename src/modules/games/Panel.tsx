@@ -8,6 +8,7 @@ import { Section, Sections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import { getScanStatus, type NewsRow } from "./library";
 import { filterGames, playedText, recentGames, type Game } from "./panelLogic";
+import { Cs2 } from "./Cs2";
 import "./games.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -54,6 +55,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           {list.length ? <div className="gm-grid">{list.map(card)}</div>
             : <EmptyState title="No games found" hint={busy ? "Scanning…" : "No installs found. See the launcher status above, then Rescan."} />}
         </Section>
+        <Section id="cs2"><Cs2 /></Section>
         <Section id="news">
           {news.length ? (
             <ul className="gm-news">

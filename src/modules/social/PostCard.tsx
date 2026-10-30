@@ -19,10 +19,11 @@ export type CardActions = {
   onReply: (text: string) => Promise<boolean>;
 };
 
-export function PostCard({ post: p, label, showMedia, showCounts, actions, taste, ranked }: {
-  post: FeedPost; label: string; showMedia: boolean; showCounts: boolean; actions?: CardActions; taste?: Taste; ranked?: Pick<Ranked<unknown>, "why" | "explored">;
+export function PostCard({ post: p, label, showMedia, showCounts, actions, taste, ranked, onNote }: {
+  onNote?: () => Promise<unknown>; post: FeedPost; label: string; showMedia: boolean; showCounts: boolean; actions?: CardActions; taste?: Taste; ranked?: Pick<Ranked<unknown>, "why" | "explored">;
 }) {
   const [replying, setReplying] = useState(false);
+  const [noted, setNoted] = useState(false);
   const can = actions?.can;
   const link = safeLink(p.link);
   const n = (v: number | null) => (showCounts && v !== null ? <span>{v}</span> : null);
@@ -69,6 +70,7 @@ export function PostCard({ post: p, label, showMedia, showCounts, actions, taste
           ) : stat("♡", p.likes)}
           {ranked && <WhyBadge ranked={ranked} />}
           {taste && <TasteButtons taste={taste} item={socialTaste(p)} />}
+          {onNote && <button type="button" className="ui-link soc-act" title="Save this post to Notes" onClick={() => void onNote().then(() => setNoted(true), () => {})}>{noted ? "✓ Noted" : "To Notes"}</button>}
           {link && <button type="button" className="ui-link soc-open" onClick={() => { if (taste) void taste.record(socialTaste(p), "open"); open(link); }}>Open ↗</button>}
         </footer>
         {replying && actions && <ReplyBox platform={p.platform} onSend={actions.onReply} onCancel={() => setReplying(false)} />}

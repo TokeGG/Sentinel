@@ -1,5 +1,8 @@
 // Pure helpers for the Media panel.
 export const mediaSections = [
+  { id: "new", label: "New (uploads, live, podcasts)" },
+  { id: "party", label: "Watch party countdown" },
+  { id: "schedule", label: "Streamer schedule", default: false },
   { id: "nowplaying", label: "Now playing" },
   { id: "twitch", label: "Twitch live" },
   { id: "shows", label: "Show tracker" },

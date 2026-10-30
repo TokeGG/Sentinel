@@ -14,6 +14,8 @@ export const chatOptions: OptionDef[] = [
   { key: "view", label: "Layout", type: "select", default: "tabs", choices: ["tabs", "columns"] },
   { key: "columns", label: "Columns (columns layout)", type: "number", default: 2, min: 2, max: 3 },
   { key: "timestamps", label: "Show timestamps", type: "toggle", default: false },
+  { key: "fontSize", label: "Chat font size (px)", type: "number", default: 13, min: 10, max: 24 },
+  { key: "emoteSize", label: "Emote size (px)", type: "number", default: 22, min: 14, max: 64 },
   { key: "cap", label: "Messages kept per room", type: "number", default: 500, min: 50, max: 2000 },
   { key: "players", label: "Stream multiview (Twitch/Kick players above their chats)", type: "toggle", default: false },
   { key: "logs", label: "Keep searchable chat logs on this PC", type: "toggle", default: false },

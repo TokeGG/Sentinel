@@ -8,6 +8,7 @@ export interface PostMeta {
   likeUri?: string; // Bluesky: the like record, deleted to un-like
   shared?: boolean; // boosted / reposted
   shareUri?: string; // Bluesky: the repost record
+  repost?: boolean; // this feed entry is someone's repost/boost of another post
 }
 
 export interface PostRef {

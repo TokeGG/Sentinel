@@ -15,6 +15,7 @@ import { RoomTabs } from "./RoomTabs";
 import { RoomView } from "./RoomView";
 import { FiltersTool, LogsTool } from "./ChatTools";
 import { PrefsCtx, useChatPrefs } from "./prefsContext";
+import { SpoilerWords, useSpoilers } from "../../ui/wordList";
 import "./chat.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -23,6 +24,9 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const cols = useOption("columns", 2);
   const stamp = useOption("timestamps", false);
   const cap = useOption("cap", 500);
+  const fs = useOption("fontSize", 13);
+  const em = useOption("emoteSize", 22);
+  const spoil = useSpoilers();
   const prefs = useChatPrefs(useOption("logs", false), useOption("logCap", 5000), useOption("players", false));
   const rooms = useMemo(() => toRooms(rows), [rows]);
   const [active, setActive] = useState("");
@@ -69,11 +73,11 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           {rooms.length === 0 ? (
             <EmptyState title="No rooms yet" hint="Press + and paste a Twitch, Kick or destiny.gg URL, or any chat popout URL (e.g. iCanHazChat, YouTube or Rumble chat) to embed it." />
           ) : (
-            <div className={`chat-body ${mode === "columns" ? "cols" : "tabs"}`} style={{ "--chat-cols": Math.min(cols, Math.max(1, shown.size)) } as React.CSSProperties}>
+            <div className={`chat-body ${mode === "columns" ? "cols" : "tabs"}`} style={{ "--chat-cols": Math.min(cols, Math.max(1, shown.size)), "--chat-fs": `${fs}px`, "--chat-emote": `${em}px` } as React.CSSProperties}>
               {rooms.map((r) => (
                 <div key={r.id} className="chat-room" hidden={!shown.has(r.id)}>
                   {mode === "columns" && <div className="chat-room-head"><i className="chat-dot" style={{ background: connectorOf(r.site).color }} />{r.label}</div>}
-                  <RoomView room={r} cap={cap} stamp={stamp} epoch={epoch} visible={shown.has(r.id)} fallback={fb.has(r.id)} onActivity={() => bump(r.id)}
+                  <RoomView room={r} cap={cap} stamp={stamp} spoilers={spoil.words} epoch={epoch} visible={shown.has(r.id)} fallback={fb.has(r.id)} onActivity={() => bump(r.id)}
                     onState={(s) => setStates((m) => (m[r.id]?.status === s.status && m[r.id]?.detail === s.detail ? m : { ...m, [r.id]: s }))}
                     onFallback={(on) => setFb((f) => { const n = new Set(f); if (on) n.add(r.id); else n.delete(r.id); return n; })} />
                 </div>
@@ -81,7 +85,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             </div>
           )}
         </Section>
-        <Section id="filters"><Tile title="Ignore list, word filters, highlights"><FiltersTool /></Tile></Section>
+        <Section id="filters"><Tile title="Ignore list, word filters, highlights"><FiltersTool /><SpoilerWords words={spoil.words} save={spoil.save} /></Tile></Section>
         <Section id="logs"><Tile title="Chat logs"><LogsTool /></Tile></Section>
         <Section id="login">
           <Tile title="Twitch login (to send)">

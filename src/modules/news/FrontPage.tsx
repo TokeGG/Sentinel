@@ -9,24 +9,27 @@ import { frontPage, imageSrc, type Story } from "./front";
 import { NewsCard } from "./NewsCard";
 import { rowAge, sourceLabel } from "./panelLogic";
 import { newsTaste } from "./taste";
+import { NewsSpoiler, Reader, useNewsView } from "./Reader";
 
 type R = ModuleRow & { _rk: Ranked<ModuleRow> };
 
 function Lead({ s, taste }: { s: Story<R>; taste: Taste }) {
   const r = s.lead;
   const link = safeLink(r.link);
-  const img = imageSrc(r.image);
+  const { headlineOnly } = useNewsView();
+  const img = headlineOnly ? null : imageSrc(r.image);
   const open = () => { if (!link) return; void taste.record(newsTaste(r), "open"); void openUrl(link); };
   return (
-    <article className="np-lead">
+    <NewsSpoiler title={r.title}><article className="np-lead">
       {img && <img className="np-lead-img" src={img} alt="" loading="lazy" referrerPolicy="no-referrer" />}
       <div className="np-lead-body">
         <span className="np-kicker">{s.sources > 1 ? `Trending · ${s.sources} sources` : sourceLabel(r)} · {rowAge(r)}</span>
         <h2 className="np-lead-head"><button type="button" onClick={open} disabled={!link}>{String(r.title)}</button></h2>
-        {r.summary ? <p className="np-lead-sum">{String(r.summary)}</p> : null}
+        {!headlineOnly && r.summary ? <p className="np-lead-sum">{String(r.summary)}</p> : null}
         {s.more.length > 0 && <p className="ui-meta">Also: {[...new Set(s.more.map(sourceLabel))].slice(0, 4).join(", ")}</p>}
+        {!headlineOnly && <Reader link={link} title={String(r.title)} />}
       </div>
-    </article>
+    </article></NewsSpoiler>
   );
 }
 

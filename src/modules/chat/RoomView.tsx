@@ -12,9 +12,11 @@ import { classify, playerEmbed, userKey } from "./chatExtras";
 import { usePrefs } from "./prefsContext";
 import { UserCard } from "./UserCard";
 import { useRoomLog } from "./useRoomLog";
+import { spoilerHit } from "../../core/spoiler";
+import { SpoilerGate } from "../../ui/wordList";
 
 type Props = {
-  room: Room; cap: number; stamp: boolean; epoch: number; visible: boolean; fallback: boolean;
+  room: Room; cap: number; stamp: boolean; spoilers: string[]; epoch: number; visible: boolean; fallback: boolean;
   onActivity: () => void; onFallback(on: boolean): void; onState(s: RoomState): void;
 };
 
@@ -34,7 +36,7 @@ export function RoomView(p: Props) {
   return <SocketRoom {...p} />;
 }
 
-function SocketRoom({ room, cap, stamp, epoch, visible, onActivity, onFallback, onState }: Props) {
+function SocketRoom({ room, cap, stamp, spoilers, epoch, visible, onActivity, onFallback, onState }: Props) {
   const [retry, setRetry] = useState(0);
   const live = useRoom(room, cap, epoch, onActivity, retry);
   useEffect(() => onState({ status: live.status, detail: live.detail }), [live.status, live.detail]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -67,7 +69,7 @@ function SocketRoom({ room, cap, stamp, epoch, visible, onActivity, onFallback, 
         }}
       >
         {rows.map(({ m, c }) => (
-          <MessageRow key={m.id} m={m} set={set} stamp={stamp} mention={!m.self && (c === "highlight" || isMention(m.text, nick))} pref={prefs.users.get(userKey(room.site, m.user))} onUser={setWho} />
+          <SpoilerGate key={m.id} hit={m.kind === "notice" ? null : spoilerHit(m.text, spoilers)}><MessageRow m={m} set={set} stamp={stamp} mention={!m.self && (c === "highlight" || isMention(m.text, nick))} pref={prefs.users.get(userKey(room.site, m.user))} onUser={setWho} /></SpoilerGate>
         ))}
       </div>
       {!stuck && (

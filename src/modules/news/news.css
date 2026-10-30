@@ -63,3 +63,7 @@
   .np-cols { columns: 2; }
 }
 @container (min-width: 900px) { .np-cols { columns: 3; } .np-lead-head { font-size: calc(var(--fs-xl) * 1.7); } }
+/* Reading prefs (customize: font size, reading width) + reader mode */
+.np-paper .nw-card, .np-paper .np-lead-body { font-size: var(--nw-fs, inherit); }
+.np-paper .np-lead-sum, .np-paper .np-sum { max-width: var(--nw-w, none); }
+.nw-reader { width: 100%; min-height: 360px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--base); }
