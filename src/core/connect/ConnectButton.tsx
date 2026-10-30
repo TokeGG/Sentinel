@@ -4,7 +4,7 @@ import { useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { ErrorLine } from "../../ui/kit";
 import { ClientIdStep } from "./ClientIdStep.tsx";
-import { connect, MissingClientId, cancelConnect, type AccountRow, type DevicePrompt } from "./index.ts";
+import { connect, MissingClientId, cancelConnect, listAccounts, type AccountRow, type DevicePrompt } from "./index.ts";
 import { getProvider } from "./providers.ts";
 import { clientIdFor } from "./clientStore.ts";
 import { debugInfo, type ConnectTrace } from "./diagnose.ts";
@@ -27,13 +27,17 @@ export function ConnectButton({ providerId, label, onConnected, className = "ui-
   const go = async () => {
     setBusy(true); setErr(null); setNeed(null); note("Starting…");
     const has = p.clientGroup ? await clientIdFor(p.clientGroup).then(Boolean, () => false) : true;
-    setTrace((t) => ({ ...t, hasClientId: has, error: null }));
+    setTrace((t) => ({ ...t, hasClientId: has, error: null, saved: undefined, ms: undefined }));
+    const t0 = Date.now();
+    const after = () => listAccounts(providerId).then((r) => setTrace((t) => ({ ...t, saved: r.map((x) => x.account), ms: Date.now() - t0 })), () => {});
     try {
       onConnected?.(await connect(providerId, { instance, onPrompt: setCode, onLink: setLink, onStep: note }));
       note("Connected.");
+      void after();
     } catch (e) {
       if (e instanceof MissingClientId) { setNeed(e.group); fail(e.message); }
       else fail(e instanceof Error ? e.message : String(e));
+      void after();
     } finally { setBusy(false); setCode(null); setLink(null); }
   };
   const copyDebug = () => {

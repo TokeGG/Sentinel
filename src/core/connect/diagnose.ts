@@ -57,12 +57,14 @@ export function explainError(p: Provider, raw: string): string {
 }
 
 /** Where a Connect attempt got to; shown by "Copy debug info". Never holds the client ID or a token. */
-export interface ConnectTrace { provider: string; flow: string; hasClientId: boolean; step: string | null; error: string | null; at: number }
+export interface ConnectTrace { provider: string; flow: string; hasClientId: boolean; step: string | null; error: string | null; at: number; /** accounts saved for this provider after the attempt (names only) */ saved?: string[]; ms?: number }
 
 export const debugInfo = (t: ConnectTrace): string => [
   `provider: ${t.provider} (${t.flow})`,
   `client ID stored: ${t.hasClientId ? "yes" : "no"}`,
   `last step: ${t.step ?? "(not started)"}`,
   `last error: ${t.error ?? "none"}`,
+  `saved accounts now: ${t.saved === undefined ? "?" : t.saved.length ? t.saved.join(", ") : "none"}`,
+  `took: ${t.ms === undefined ? "?" : `${(t.ms / 1000).toFixed(1)} s`}`,
   `time: ${t.at ? new Date(t.at).toISOString() : "-"}`,
 ].join("\n");
