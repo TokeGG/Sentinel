@@ -4,7 +4,7 @@
 import { getSetting, setSetting } from "../../ui/appSetting";
 import { sanitizeLayouts, type Layouts } from "./namedLayouts";
 
-export type DeskKey = "hotkey_summon" | "hotkey_capture" | "notif_toasts" | "theme" | "sky_clock" | "ambient_audio" | "launch_layout" | "tour_done" | "home_style";
+export type DeskKey = "hotkey_summon" | "hotkey_capture" | "notif_toasts" | "theme" | "sky_clock" | "ambient_audio" | "launch_layout" | "tour_done" | "home_style" | "launch_layout_weekend";
 export const getDesk = async (k: DeskKey): Promise<string> => (await getSetting(k)) ?? "";
 export const setDesk = (k: DeskKey, v: string): Promise<void> => setSetting(k, v);
 export const getFlag = async (k: DeskKey): Promise<boolean> => (await getSetting(k)) === "1";

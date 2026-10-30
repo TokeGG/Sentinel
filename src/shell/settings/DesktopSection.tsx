@@ -24,7 +24,7 @@ export function DesktopSection({ onError }: { onError(e: unknown): void }) {
       for (const [k] of FLAGS) f[k] = await getFlag(k);
       setFlags(f);
       const t: Record<string, string> = {};
-      for (const k of ["hotkey_summon", "hotkey_capture", "theme", "launch_layout", "home_style"] as DeskKey[]) t[k] = await getDesk(k);
+      for (const k of ["hotkey_summon", "hotkey_capture", "theme", "launch_layout", "home_style", "launch_layout_weekend"] as DeskKey[]) t[k] = await getDesk(k);
       setText(t);
       setLayoutNames(Object.keys(await getLayouts()));
     })().catch(onError);
@@ -58,6 +58,9 @@ export function DesktopSection({ onError }: { onError(e: unknown): void }) {
       <Row><label className="st-switch">Launch into layout
         <select value={text.launch_layout ?? ""} onChange={(e) => saveText("launch_layout", e.target.value)}>
           <option value="">Last session</option>{layouts.map((n) => <option key={n}>{n}</option>)}</select></label></Row>
+      <Row><label className="st-switch">Weekend layout (Sat/Sun)
+        <select value={text.launch_layout_weekend ?? ""} onChange={(e) => saveText("launch_layout_weekend", e.target.value)}>
+          <option value="">Same as weekdays</option>{layouts.map((n) => <option key={n}>{n}</option>)}</select></label></Row>
       <Row end={<button type="button" className="ui-btn" onClick={() => setDesk("tour_done", "").then(changed).catch(onError)}>Show tour again</button>}>First-run tour</Row>
     </section>
   );
