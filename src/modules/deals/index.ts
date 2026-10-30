@@ -2,6 +2,7 @@ import { fetch } from "@tauri-apps/plugin-http";
 import { getDb, logActivity } from "../../core/db";
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { addCoupon, addWish, markWishesSeen, onNewOffer, removeCoupon, removeWish, unseenWishHits } from "./extraStore";
+import { wishSkills } from "./wishSync";
 import { addSource, listDealSources, loadDeals, setSource } from "./store";
 import { feedOps } from "../news/feedOps";
 import { feedSections } from "../news/panelLogic";
@@ -68,6 +69,7 @@ export const dealsModule: ModuleManifest = {
     { name: "mark_wishes_seen", run: markWishesSeen },
     { name: "add_coupon", run: addCoupon },
     { name: "remove_coupon", run: removeCoupon },
+    ...wishSkills,
     ...feedOps("deals", "deal_sources", "deal_offers"),
   ],
   load: loadDeals,
