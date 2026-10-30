@@ -10,6 +10,7 @@ import { registry, type ModuleManifest } from "../core/module";
 import { EmptyState, ErrorLine, PanelShell, StatusLine } from "../ui/kit";
 import { CustomizeDrawer } from "../ui/CustomizeDrawer";
 import { AssistBar } from "../ui/AssistBar";
+import { ChangedBanner } from "../ui/ChangedBanner";
 import { useModSettings } from "../ui/useModSettings";
 import { PanelContext, useCustomize } from "../ui/useCustomize";
 import type { PanelStatus } from "../ui/Section";
@@ -113,6 +114,7 @@ function PanelBody({ m }: { m: ModuleManifest }) {
     <PanelShell className="panel-route" vars={cz.vars}>
       <PanelContext.Provider value={ctx}>
         {cz.error && <ErrorLine message={`Customize: ${cz.error}`} />}
+        <ChangedBanner m={m} />
         {!cz.ready ? (
           <EmptyState title="Loading…" />
         ) : Custom ? (
