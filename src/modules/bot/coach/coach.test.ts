@@ -169,3 +169,15 @@ describe("practice ctf", () => {
     assert.equal(JSON.parse(ctfPuzzle(e, 7).input!).flag, e.flag);
   });
 });
+
+import { addRetry, clock, dailyPick, parseRetry, points, writeupTemplate } from "./ctfExtras.ts";
+test("ctf extras: points ladder, clock, daily seed, retry queue, template", () => {
+  assert.equal(points(0), 100); assert.equal(points(3), 10); assert.equal(points(1), 70);
+  assert.equal(clock(125000), "2:05");
+  const a = dailyPick(new Date(2026, 0, 1)), b = dailyPick(new Date(2026, 0, 1, 23)), c = dailyPick(new Date(2026, 0, 2));
+  assert.deepEqual(a, b); assert.notEqual(a.category, c.category);
+  const r = addRetry(addRetry([], { category: "logs", difficulty: "easy", seed: 1, title: "x" }), { category: "logs", difficulty: "easy", seed: 1, title: "x" });
+  assert.equal(r.length, 1);
+  assert.deepEqual(parseRetry(JSON.stringify([...r, { category: "nope" }])), r);
+  assert.match(writeupTemplate("T", "logs"), /## Lesson learned/);
+});
