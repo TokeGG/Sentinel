@@ -1,4 +1,5 @@
 // Pure Terminal home prefs (app_settings `term_prefs`, JSON): prompt text, aliases, hidden boxes, world clocks.
+import { zoneTime, type ClockFmt } from "./uiDefaults.ts";
 export const TERM_BOXES = ["today", "feed", "counts", "clocks", "timers", "later", "apps"] as const;
 export type TermBox = (typeof TERM_BOXES)[number];
 export interface TermPrefs { prompt: string; aliases: Record<string, string>; hidden: TermBox[]; clocks: string[]; order: TermBox[] }
@@ -27,6 +28,6 @@ export function parseAliases(text: string): Record<string, string> {
 }
 export const aliasText = (a: Record<string, string>) => Object.entries(a).map(([k, v]) => `${k}=${v}`).join(", ");
 
-export function clockLines(now: Date, zones: string[]): string[] {
-  return zones.map((z) => `${z.split("/").pop()!.replace(/_/g, " ").toLowerCase()} ${new Intl.DateTimeFormat("en-GB", { timeZone: z, hour: "2-digit", minute: "2-digit" }).format(now)}`);
+export function clockLines(now: Date, zones: string[], clock: ClockFmt = "24h"): string[] {
+  return zones.map((z) => `${z.split("/").pop()!.replace(/_/g, " ").toLowerCase()} ${zoneTime(now, z, clock)}`);
 }

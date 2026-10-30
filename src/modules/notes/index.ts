@@ -1,5 +1,5 @@
 import { getDb, logActivity } from "../../core/db";
-import { notesSections } from "./panelLogic";
+import { notesOptions, notesSections } from "./panelLogic";
 import { registerModule, type ModuleManifest } from "../../core/module";
 
 interface Note extends Record<string, unknown> {
@@ -68,6 +68,7 @@ export const notesModule: ModuleManifest = {
   ui: () => import("./Panel"),
   customize: {
     sections: notesSections,
+    options: notesOptions,
   },
   badge: unfiledCount,
   skills: [

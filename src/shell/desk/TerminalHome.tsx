@@ -45,8 +45,8 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
   useEffect(() => {
     rows("hub.calendar").then((r) => setToday(titles(todayRows(r, new Date()), ui.terminalRows))).catch(() => {});
     rows("hub.news").then((r) => setFeed(titles(r, ui.terminalRows))).catch(() => {});
-    listLater(8).then(setLater).catch(() => {});
-  }, [ui.terminalRows]);
+    listLater(ui.terminalLater).then(setLater).catch(() => {});
+  }, [ui.terminalRows, ui.terminalLater]);
   useEffect(() => { // tick only while a timer runs, or once a minute for the clocks
     const t = setInterval(() => setNow(Date.now()), timers.length ? 1000 : 60_000);
     return () => clearInterval(t);
@@ -82,7 +82,7 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
     today: <div key="today" className="term-box term-tall"><h3>TODAY</h3>{today.length ? today.map((t, i) => <div key={i}>{t}</div>) : <div className="term-dim">nothing scheduled</div>}</div>,
     feed: <div key="feed" className="term-box term-tall"><h3>FEED</h3>{feed.length ? feed.map((t, i) => <button key={i} className="term-link" onClick={() => run("news")}>{t}</button>) : <div className="term-dim">no stories yet</div>}</div>,
     counts: <div key="counts" className="term-counts">{countBoxes(badges, mods).map((b) => <button key={b.id} className="term-box term-count" onClick={() => run(`open ${b.name}`)}><h3>{b.name.toUpperCase()}</h3><span className="term-n">{b.n}</span></button>)}</div>,
-    clocks: prefs.clocks.length ? <div key="clocks" className="term-box"><h3>CLOCKS</h3>{clockLines(new Date(now), prefs.clocks).map((l) => <div key={l}>{l}</div>)}</div> : null,
+    clocks: prefs.clocks.length ? <div key="clocks" className="term-box"><h3>CLOCKS</h3>{clockLines(new Date(now), prefs.clocks, ui.clock).map((l) => <div key={l}>{l}</div>)}</div> : null,
     timers: timers.length ? <div key="timers" className="term-box"><h3>TIMERS</h3>{timers.map((t, i) => <div key={i}>{t.label} <span className="term-n-sm">{mmss(t.end - now)}</span></div>)}</div> : null,
     later: <div key="later" className="term-box term-tall"><h3>READ LATER</h3>{later.length ? later.map((l, i) => <button key={i} className="term-link" onClick={() => openLink(l.url).catch((e) => onError(String(e)))}>[{l.kind}] {l.title}</button>) : <div className="term-dim">nothing saved</div>}</div>,
     apps: <div key="apps" className="term-apps">{mods.map((m) => <button key={m.id} className="term-link" onClick={() => run(`open ${m.name}`)}>{m.name.toLowerCase()}</button>)}</div>,

@@ -1,4 +1,5 @@
 // Reader add-ons: conversation strip, snooze menu, unsubscribe helper (confirm first).
+import { useUiDefaults } from "../../shell/desk/useUiDefaults";
 import { registry } from "../../core/module";
 import { mailTaskArgs } from "./mailTask";
 import { useState } from "react";
@@ -10,12 +11,13 @@ import { msgKey } from "./threads";
 import type { Msg } from "./types";
 
 export function ThreadStrip({ thread, selKey, onPick }: { thread: Msg[]; selKey: string | null; onPick: (m: Msg) => void }) {
+  const { clock } = useUiDefaults();
   if (thread.length < 2) return null;
   return (
     <ol className="mail-thread" aria-label="Conversation">
       {thread.map((m) => (
         <li key={msgKey(m)}><button type="button" className={msgKey(m) === selKey ? "active" : ""} onClick={() => onPick(m)}>
-          <b>{senderLabel(m)}</b> <time>{dateLabel(m.dateTs)}</time>{!m.seen && <i className="mail-dot" />}</button></li>
+          <b>{senderLabel(m)}</b> <time>{dateLabel(m.dateTs, undefined, clock)}</time>{!m.seen && <i className="mail-dot" />}</button></li>
       ))}
     </ol>
   );

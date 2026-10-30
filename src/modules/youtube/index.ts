@@ -1,5 +1,5 @@
 import { registerModule, type ModuleManifest } from "../../core/module";
-import { ytSections } from "./panelLogic";
+import { ytLimits, ytSections } from "./panelLogic";
 import { addLater, clearHidden, clearHistory, clearSignal, importHistory, markWatched, removeLater, setSignal } from "./libraryStore";
 import { addChannel, loadRows, refreshFeeds, removeChannel } from "./store";
 import { importSubscriptions } from "./subsStore";
@@ -20,6 +20,7 @@ export const youtubeModule: ModuleManifest = {
   customize: {
     sections: ytSections,
     options: [
+      ...ytLimits,
       { key: "defaultSpeed", label: "Default playback speed (channels without their own)", type: "select", choices: ["0.75", "1", "1.25", "1.5", "1.75", "2"], default: "1" },
       { key: "autoNext", label: "Auto-play the next video in Up next", type: "toggle", default: true },
       { key: "volume", label: "Player volume (0-100)", type: "number", default: 100, min: 0, max: 100 },

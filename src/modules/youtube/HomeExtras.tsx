@@ -1,8 +1,9 @@
 // Home rows: Continue watching (saved progress) and the Watch-later tray.
+import { useLimit } from "../../ui/useOption";
 import { useState } from "react";
 import type { Card, CardActions } from "./Cards";
 import { progressPct, type Progress } from "./extras";
-import { thumbUrl } from "./panelLogic";
+import { thumbUrl, ytLimits } from "./panelLogic";
 
 export function ContinueRow({ items, act, named, onDrop }: { items: Progress[]; act: CardActions; named: (id: string | null) => string; onDrop: (id: string) => void }) {
   if (!items.length) return null;
@@ -22,12 +23,13 @@ export function ContinueRow({ items, act, named, onDrop }: { items: Progress[]; 
 }
 
 export function LaterTray({ cards, act }: { cards: Card[]; act: CardActions }) {
+  const lim = useLimit(ytLimits, "trayCards");
   const [open, setOpen] = useState(false);
   if (!cards.length) return null;
   return (
     <div className={`yt-tray${open ? " open" : ""}`}>
       <button type="button" className="ui-btn ui-sm" aria-expanded={open} onClick={() => setOpen(!open)}>⏲ Watch later ({cards.length}) {open ? "▾" : "▴"}</button>
-      {open && <div className="yt-row">{cards.slice(0, 20).map((c) => (
+      {open && <div className="yt-row">{cards.slice(0, lim).map((c) => (
         <button key={c.videoId} type="button" className="yt-mini-card" title={c.title} onClick={() => act.play(c)}>
           <img className="yt-thumb" src={thumbUrl(c.videoId)} alt="" loading="lazy" /><span className="yt-ctitle">{c.title}</span>
         </button>

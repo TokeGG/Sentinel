@@ -1,3 +1,5 @@
+import { useLimit } from "../../../ui/useOption";
+import { pccareLimits } from "../panelLogic";
 import { invoke } from "@tauri-apps/api/core";
 import { ErrorLine, Spark } from "../../../ui/kit";
 import { runSpeedTest, speedHistory, type SpeedRow } from "../speedStore";
@@ -7,6 +9,7 @@ interface Listen { proto: string; addr: string; port: number; pid: number | null
 
 // Speed test (manual), own listening ports and Wi-Fi report: all read-only except the speed history row.
 export function NetTool() {
+  const lim = useLimit(pccareLimits, "speedRows");
   const sp = useTask<SpeedRow[]>();
   const po = useTask<Listen[]>();
   const wf = useTask<[[string, string][], string[]]>();
@@ -20,7 +23,7 @@ export function NetTool() {
         {hist.length > 0 && <><b>{hist[0].mbps} Mbps</b><Spark points={[...hist].reverse().map((h) => h.mbps)} /></>}
       </div>
       {sp.error && <ErrorLine message={sp.error} />}
-      <ul className="pc-list">{hist.slice(0, 8).map((h) => <li key={h.id}>{h.at} · {h.mbps} Mbps</li>)}</ul>
+      <ul className="pc-list">{hist.slice(0, lim).map((h) => <li key={h.id}>{h.at} · {h.mbps} Mbps</li>)}</ul>
       <h3 className="ui-sub">Listening ports on this PC</h3>
       <button type="button" className="ui-btn" disabled={po.busy} onClick={() => void po.go(() => invoke<Listen[]>("listening_ports"))}>Audit open ports</button>
       {po.error && <ErrorLine message={po.error} />}

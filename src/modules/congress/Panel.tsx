@@ -3,7 +3,7 @@ import type { ModuleManifest } from "../../core/module";
 import { ConfirmButton } from "../../ui/ConfirmButton";
 import { Chip, EmptyState, ErrorLine, Tabs } from "../../ui/kit";
 import { TasteBar } from "../../ui/TasteBar";
-import { useOption } from "../../ui/useOption";
+import { useOption, useStartTab } from "../../ui/useOption";
 import { useTasteView } from "../../ui/useTasteView";
 import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
@@ -18,7 +18,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const ids = visibleSections(useSections());
   const { taste, forYou, setForYou } = useTasteView(module.id, useOption("taste", true));
   const { bills, votes, members } = splitRows(rows);
-  const [chosen, setChosen] = useState<Tab>("bills");
+  const [picked, setChosen] = useState<Tab | null>(null);
+  const chosen = useStartTab(TABS, picked) as Tab;
   const [q, setQ] = useState("");
   const [followed, setFollowed] = useState(false);
   const [chamber, setChamber] = useState("");

@@ -1,3 +1,5 @@
+import { useLimit } from "../../ui/useOption";
+import { botLimits } from "./panelLogic";
 import { useState } from "react";
 import { Row } from "../../ui/kit";
 import { scoreBoost } from "../../core/skillPick";
@@ -6,6 +8,7 @@ import type { More } from "./useMore";
 
 /** Skill usage from the run log: most used, failing (>= the chosen fail rate), never used; with the thumbs score. */
 export function StatsPane({ more }: { more: More }) {
+  const lim = useLimit(botLimits, "skillRows");
   const [rate, setRate] = useState(0.5);
   const st = skillStats(more.log.map((r) => r.ep), more.skills, 2, rate);
   const score = (n: string) => { const s = more.cfg?.scores[n]; return s ? ` thumbs +${s.up}/-${s.down} (${scoreBoost(s) >= 0 ? "+" : ""}${scoreBoost(s).toFixed(2)})` : ""; };
@@ -13,7 +16,7 @@ export function StatsPane({ more }: { more: More }) {
     <div className="bot-goal">
       <p className="ui-meta">From the last {more.log.length} runs (dry runs and stopped runs not counted).</p>
       <h4 className="ui-meta">Most used</h4>
-      {st.used.length === 0 ? <p className="ui-meta">No run has used a skill yet.</p> : st.used.slice(0, 10).map((s) => (
+      {st.used.length === 0 ? <p className="ui-meta">No run has used a skill yet.</p> : st.used.slice(0, lim).map((s) => (
         <Row key={s.name}><strong>{s.name}</strong> <span className="ui-meta">{s.uses} runs, {pct(s.failRate)} not finished{score(s.name)}</span></Row>
       ))}
       <h4 className="ui-meta">Failing

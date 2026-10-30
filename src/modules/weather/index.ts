@@ -8,6 +8,8 @@ import { numericId } from "../../ui/rowId";
 // all from the same provider — this is why Weather has zero setup cost.
 const GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search";
 import { FORECAST_QUERY, parseDaily } from "./forecast";
+import { tempIn } from "../../shell/desk/uiDefaults";
+import { loadUiDefaults } from "../../shell/desk/useUiDefaults";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 
 interface Location extends Record<string, unknown> {
@@ -53,6 +55,7 @@ async function refreshWeather() {
 
   const results: Record<string, unknown>[] = [];
   let alerts = 0;
+  const unit = (await loadUiDefaults()).temp;
   for (const loc of locations) {
     const url =
       `${FORECAST_URL}?latitude=${loc.lat}&longitude=${loc.lon}` +
@@ -74,7 +77,7 @@ async function refreshWeather() {
       high_c: data.daily?.temperature_2m_max?.[0] ?? null,
       low_c: data.daily?.temperature_2m_min?.[0] ?? null,
       forecast: parseDaily(data.daily),
-      title: `${loc.label}: ${temp != null ? `${temp.toFixed(0)}°C` : "—"}${severe ? " ⚠ severe" : ""}`,
+      title: `${loc.label}: ${tempIn(temp, unit)}${severe ? " ⚠ severe" : ""}`,
     });
   }
 

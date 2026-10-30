@@ -1,3 +1,4 @@
+import { useLimit } from "../../ui/useOption";
 import { openLink as openUrl } from "../../ui/openLink";
 import type { Taste } from "../../core/taste/useTaste";
 import { TasteButtons } from "../../ui/TasteButtons";
@@ -5,7 +6,7 @@ import { WhyBadge } from "../../ui/WhyBadge";
 import { safeLink } from "../../ui/safeLink";
 import type { ModuleState } from "../../ui/useModule";
 import { memberTaste } from "./taste";
-import { seat, tallyText, type MemberRow, type VoteRow } from "./panelLogic";
+import { congressOptions, seat, tallyText, type MemberRow, type VoteRow } from "./panelLogic";
 
 export function VoteList({ votes }: { votes: VoteRow[] }) {
   return (
@@ -37,9 +38,10 @@ export function VoteList({ votes }: { votes: VoteRow[] }) {
 }
 
 export function MemberList({ members, busy, run, taste, forYou }: { members: MemberRow[]; busy: boolean; run: ModuleState["run"]; taste: Taste; forYou: boolean }) {
+  const maxRows = useLimit(congressOptions, "memberRows");
   return (
     <ul className="cg-members">
-      {taste.order(members, memberTaste, forYou).slice(0, 300).map((rk) => {
+      {taste.order(members, memberTaste, forYou).slice(0, maxRows).map((rk) => {
         const m = rk.item;
         const link = safeLink(m.link);
         return (

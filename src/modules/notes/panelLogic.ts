@@ -1,4 +1,5 @@
 // Pure helpers for the Notes panel.
+import { numOption, startTabOption } from "../../ui/numOption.ts";
 import type { TabDef } from "../../ui/sectionTabsLogic.ts";
 type Row = Record<string, unknown>;
 
@@ -48,3 +49,4 @@ export const NOTES_TABS: TabDef[] = [
 
 /** app_settings key: "1" = create today's daily note when the panel opens (opt-in). */
 export const DAILY_KEY = "notes_daily";
+export const notesOptions = [startTabOption(NOTES_TABS), numOption("tagChips", "Tag chips shown", 12, 0, 50)];

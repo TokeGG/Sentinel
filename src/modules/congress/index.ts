@@ -1,5 +1,5 @@
 import type { ModuleManifest } from "../../core/module";
-import { congressSections } from "./panelLogic";
+import { congressOptions, congressSections } from "./panelLogic";
 import { clearCache, follow, loadRows, markSeen, unfollow, unseenCount } from "./store";
 import { syncCongress } from "./sync";
 import { setSeat } from "./repStore";
@@ -24,7 +24,7 @@ export const congressModule: ModuleManifest = {
     "News > Congress tab: recent bills with a status timeline, roll-call votes and current members, from the free GovTrack API (no key). Syncs only when you press Sync; follow bills to get a moon when their status changes.",
   panel: "custom",
   ui: () => import("./Panel"),
-  customize: { sections: congressSections, options: [{ key: "taste", label: "For you ordering", type: "toggle", default: true }] },
+  customize: { sections: congressSections, options: [{ key: "taste", label: "For you ordering", type: "toggle", default: true }, ...congressOptions] },
   // Followed bills whose status changed since you last looked (counts only).
   badge: unseenCount,
   skills: [

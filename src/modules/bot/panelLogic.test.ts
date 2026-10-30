@@ -16,7 +16,7 @@ describe("bot panelLogic", () => {
     const src = read("./index.ts");
     assert.match(src, /id: "hub\.bot"/);
     assert.match(src, /panel: "custom"/);
-    assert.match(src, /customize: \{ sections: botSections \}/);
+    assert.match(src, /customize: \{ sections: botSections(, options: botLimits)? \}/);
     assert.match(src, /^\s*icon: "bot",/m);
     assert.match(src, /^\s*ring: "[a-z]+",/m);
     assert.match(src, /^\s*accent: "#[0-9a-fA-F]{6}",/m);

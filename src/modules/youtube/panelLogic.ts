@@ -1,5 +1,6 @@
 // Pure helpers for the YouTube panel: row splitting and URLs. Ranking is in
 // recommend.ts, history/signal merging in library.ts, view helpers in viewLogic.ts.
+import { numOption } from "../../ui/numOption.ts";
 import type { Sig, Watched } from "./library.ts";
 import type { Video } from "./recommend.ts";
 
@@ -48,3 +49,4 @@ export function embedUrl(id: string): string | null {
 }
 export const watchUrl = (id: string) => `https://www.youtube.com/watch?v=${id}`;
 export const thumbUrl = (id: string) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+export const ytLimits = [numOption("trayCards", "Videos in the Watch later tray", 20, 4, 60)];
