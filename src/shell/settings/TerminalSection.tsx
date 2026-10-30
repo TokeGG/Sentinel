@@ -7,7 +7,7 @@ import { aliasText, parseAliases, validZone, type TermBox, type TermPrefs } from
 import { loadTermPrefs, saveTermPrefs } from "../desk/useTermPrefs";
 import { Head, Switch } from "./Switch";
 
-const LABEL: Record<TermBox, string> = { today: "Today", feed: "Feed", counts: "Unread counts", clocks: "World clocks", timers: "Timers", apps: "App list" };
+const LABEL: Record<TermBox, string> = { today: "Today", feed: "Feed", counts: "Unread counts", clocks: "World clocks", timers: "Timers", later: "Read later", apps: "App list" };
 
 export function TerminalSection({ onError }: { onError(e: unknown): void }) {
   const [p, setP] = useState<TermPrefs | null>(null);

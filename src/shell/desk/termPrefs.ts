@@ -1,5 +1,5 @@
 // Pure Terminal home prefs (app_settings `term_prefs`, JSON): prompt text, aliases, hidden boxes, world clocks.
-export const TERM_BOXES = ["today", "feed", "counts", "clocks", "timers", "apps"] as const;
+export const TERM_BOXES = ["today", "feed", "counts", "clocks", "timers", "later", "apps"] as const;
 export type TermBox = (typeof TERM_BOXES)[number];
 export interface TermPrefs { prompt: string; aliases: Record<string, string>; hidden: TermBox[]; clocks: string[]; order: TermBox[] }
 export const DEFAULT_TERM: TermPrefs = { prompt: "sentinel@home ~ $", aliases: {}, hidden: [], clocks: [], order: [...TERM_BOXES] };

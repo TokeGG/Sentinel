@@ -13,6 +13,9 @@ import { countBoxes, expandAlias, HELP_LINES, parseCommand } from "./terminalLog
 import { clockLines, type TermBox } from "./termPrefs";
 import { TermPrompt } from "./TermPrompt";
 import { useTermPrefs } from "./useTermPrefs";
+import { listLater } from "../../core/later";
+import type { LaterItem } from "../../core/laterLogic";
+import { openLink } from "../../ui/openLink";
 import "./terminal.css";
 
 type Rows = Record<string, unknown>[];
@@ -28,6 +31,7 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
   const [today, setToday] = useState<string[]>([]);
   const [feed, setFeed] = useState<string[]>([]);
   const [log, setLog] = useState<string[]>(["type help for commands · Tab completes · Up/Down for history"]);
+  const [later, setLater] = useState<LaterItem[]>([]);
   const [timers, setTimers] = useState<Timer[]>([]);
   const [now, setNow] = useState(Date.now());
   const mods = registry.map((m) => ({ id: m.id, name: m.name }));
@@ -35,6 +39,7 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
   useEffect(() => {
     rows("hub.calendar").then((r) => setToday(titles(todayRows(r, new Date()), 6))).catch(() => {});
     rows("hub.news").then((r) => setFeed(titles(r, 6))).catch(() => {});
+    listLater(8).then(setLater).catch(() => {});
   }, []);
   useEffect(() => { // tick only while a timer runs, or once a minute for the clocks
     const t = setInterval(() => setNow(Date.now()), timers.length ? 1000 : 60_000);
@@ -71,6 +76,7 @@ export function TerminalHome({ onError }: { onError: (m: string) => void }) {
     counts: <div key="counts" className="term-counts">{countBoxes(badges, mods).map((b) => <button key={b.id} className="term-box term-count" onClick={() => run(`open ${b.name}`)}><h3>{b.name.toUpperCase()}</h3><span className="term-n">{b.n}</span></button>)}</div>,
     clocks: prefs.clocks.length ? <div key="clocks" className="term-box"><h3>CLOCKS</h3>{clockLines(new Date(now), prefs.clocks).map((l) => <div key={l}>{l}</div>)}</div> : null,
     timers: timers.length ? <div key="timers" className="term-box"><h3>TIMERS</h3>{timers.map((t, i) => <div key={i}>{t.label} <span className="term-n-sm">{mmss(t.end - now)}</span></div>)}</div> : null,
+    later: <div key="later" className="term-box term-tall"><h3>READ LATER</h3>{later.length ? later.map((l, i) => <button key={i} className="term-link" onClick={() => openLink(l.url).catch((e) => onError(String(e)))}>[{l.kind}] {l.title}</button>) : <div className="term-dim">nothing saved</div>}</div>,
     apps: <div key="apps" className="term-apps">{mods.map((m) => <button key={m.id} className="term-link" onClick={() => run(`open ${m.name}`)}>{m.name.toLowerCase()}</button>)}</div>,
   };
   const total = Object.values(badges).reduce((a, b) => a + b, 0);
