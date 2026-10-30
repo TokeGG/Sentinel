@@ -20,6 +20,9 @@ import { socialTaste } from "./taste";
 import { getLastVisit, markVisited } from "./store";
 import { useFeedFilters } from "./useFeedFilters";
 import { ListsTool } from "./ListsTool";
+import { useSocialPrefs } from "./useSocialPrefs";
+import { spoilerHit } from "../../core/spoiler";
+import { SpoilerGate, SpoilerWords } from "../../ui/wordList";
 import "./social.css";
 
 const PAGE = 100;
@@ -64,7 +67,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const acts = useActions(module, base);
   const posts = acts.view;
   const ff = useFeedFilters();
-  const shown = useMemo(() => filterPosts(ff.apply(ff.inbox ?? posts), picked, query), [ff, posts, picked, query]);
+  const sp = useSocialPrefs();
+  const shown = useMemo(() => filterPosts(sp.apply(ff.apply(ff.inbox ?? posts)), picked, query), [ff, sp, posts, picked, query]);
   const ranked = useMemo(() => taste.order(shown, socialTaste, forYou), [taste, shown, forYou]);
   const divider = (forYou && !taste.off) || ff.inbox ? -1 : dividerIndex(shown, lastVisit);
   const statusById = Object.fromEntries(status.map((s) => [s.id, s]));
@@ -112,15 +116,16 @@ export default function Panel({ module }: { module: ModuleManifest }) {
             {ff.listNames.map((n) => <Chip key={n} on={ff.list === n} onClick={() => ff.setList(ff.list === n ? null : n)}>☰ {n}</Chip>)}
           </div>
           <TasteBar taste={taste} name="Social" forYou={forYou} onForYou={setForYou} />
+          <SpoilerWords words={sp.spoil.words} save={sp.spoil.save} />
           <input className="ui-file-text soc-search" type="search" value={query} placeholder="Search posts…" onChange={(e) => setQuery(e.target.value)} />
         </Section>
         <Section id="feed">
-          {shown.length ? (
+          {sp.quiet ? <EmptyState title="Quiet hours" hint={`The feed is hidden until ${sp.quietTo}:00 (Customize > Quiet hours).`} /> : shown.length ? (
             <div className={`soc-feed ${density}`}>
               {ranked.slice(0, limit).map((rk, i) => { const p = rk.item; return (
                 <div key={`${p.platform}:${p.postId}`}>
                   {i === divider && <div className="soc-divider"><span>New since your last visit</span></div>}
-                  <PostCard post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} actions={cardProps(p)} taste={taste} ranked={forYou ? rk : undefined} />
+                  <SpoilerGate hit={spoilerHit(p.text, sp.spoil.words)}><PostCard onNote={() => sp.toNotes(p)} post={p} label={labels[p.platform] ?? p.platform} showMedia={showMedia} showCounts={showCounts} actions={cardProps(p)} taste={taste} ranked={forYou ? rk : undefined} /></SpoilerGate>
                 </div>
               ); })}
               {ranked.length > limit && <button type="button" className="ui-btn soc-more" onClick={() => setLimit(limit + PAGE)}>Show more</button>}

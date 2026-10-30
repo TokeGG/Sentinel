@@ -4,7 +4,7 @@ import { fetchFeeds, loadItems, seedPreset, setSaved, setSourceMeta } from "./st
 import { feedOps } from "./feedOps";
 import { feedSections } from "./panelLogic";
 import { congressModule } from "../congress/index";
-import { unseenCount } from "../congress/store";
+import { fetchFeedsAuto, newsBadge } from "./prefsStore";
 
 async function addSource(args?: Record<string, unknown>) {
   const url = String(args?.url ?? "").trim();
@@ -29,23 +29,27 @@ export const newsModule: ModuleManifest = {
   ui: () => import("./Panel"),
   customize: {
     sections: feedSections("headlines", "Headlines"),
-    options: [{ key: "grouped", label: "Group duplicate stories", type: "toggle", default: true }, { key: "taste", label: "For you ordering", type: "toggle", default: true }],
+    options: [{ key: "grouped", label: "Group duplicate stories", type: "toggle", default: true }, { key: "taste", label: "For you ordering", type: "toggle", default: true },
+      { key: "headlineOnly", label: "Headline-only mode", type: "toggle", default: false },
+      { key: "fontSize", label: "Article font size (px)", type: "number", default: 15, min: 11, max: 26 },
+      { key: "readWidth", label: "Reading width (characters)", type: "number", default: 70, min: 40, max: 120 }],
   },
   skills: [
     { name: "add_source", run: addSource },
     { name: "fetch_feeds", run: fetchFeeds },
+    { name: "fetch_feeds_auto", run: fetchFeedsAuto }, // per-source intervals; only via opt-in Auto-refresh
     { name: "set_saved", run: setSaved },
     { name: "set_source_meta", run: setSourceMeta },
     { name: "seed_preset", run: seedPreset },
     ...feedOps("news", "news_sources", "news_items"),
     ...congressModule.skills, // Congress tab (sync_congress, follow, set_seat, ...)
   ],
-  // Followed bills in the Congress tab whose status changed (counts only).
-  badge: unseenCount,
+  // Followed bills whose status changed + unseen keyword-alert headlines (counts only).
+  badge: newsBadge,
   load: loadItems,
   quickAdd: { skill: "add_source", argName: "url", placeholder: "Add an RSS/Atom feed URL…" },
   actions: [{ label: "Fetch now", skill: "fetch_feeds" }],
-  schedule: { skill: "fetch_feeds", intervalMinutes: 30 },
+  schedule: { skill: "fetch_feeds_auto", intervalMinutes: 15 },
 };
 
 registerModule(newsModule);

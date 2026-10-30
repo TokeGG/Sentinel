@@ -23,7 +23,7 @@ const https = (v: unknown): string | null => (typeof v === "string" && /^https:\
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function parseBluesky(data: any): SocialPost[] {
-  return (data?.feed ?? []).map(({ post }: any): SocialPost => {
+  return (data?.feed ?? []).map(({ post, reason }: any): SocialPost => {
     const emb = post.embed?.images ? post.embed : post.embed?.media;
     return {
       postId: post.uri,
@@ -45,6 +45,7 @@ export function parseBluesky(data: any): SocialPost[] {
         likeUri: post.viewer?.like,
         shared: !!post.viewer?.repost,
         shareUri: post.viewer?.repost,
+        ...(String(reason?.$type ?? "").includes("Repost") ? { repost: true } : {}),
       },
     };
   });
@@ -68,7 +69,7 @@ export function parseMastodon(data: any[]): SocialPost[] {
       likes: n(p.favourites_count),
       reposts: n(p.reblogs_count),
       replies: n(p.replies_count),
-      meta: { targetId: String(p.id), liked: !!p.favourited, shared: !!p.reblogged },
+      meta: { targetId: String(p.id), liked: !!p.favourited, shared: !!p.reblogged, ...(o.reblog ? { repost: true } : {}) },
     };
   });
 }
