@@ -5,6 +5,7 @@ import { ResizablePlayer } from "./ResizablePlayer";
 import { thumbUrl, watchUrl } from "./panelLogic";
 import { RATES } from "./extras";
 import type { YtX } from "./useYtExtras";
+import { useWatchExtras } from "./WatchExtras";
 
 interface Props {
   playing: Card;
@@ -23,14 +24,16 @@ interface Props {
 
 // Big player on the left, "Up next" on the right (stacks under it when narrow).
 export function WatchView({ playing, next, queue, rating, busy, act, onRate, onChat, onClose, onMini, onPop, x }: Props) {
-  const rate = (playing.channelId && x.speed.get(playing.channelId)) || 1;
+  const w = useWatchExtras(playing.videoId, playing.channelId, onClose);
+  const rate = w.rateFor((playing.channelId && x.speed.get(playing.channelId)) || 0);
   const link = safeLink(watchUrl(playing.videoId));
   const queued = queue.has(playing.videoId);
   return (
     <div className="yt-watch">
       <div className="yt-watch-main">
-        <ResizablePlayer videoId={playing.videoId} title={playing.title} rate={rate} start={x.resumeAt(playing.videoId)} onEnded={() => next[0] && act.play(next[0])}
+        <ResizablePlayer videoId={playing.videoId} title={playing.title} rate={rate} ctl={w.ctl} start={w.start(x.resumeAt(playing.videoId))} onEnded={() => w.autoNext && next[0] && act.play(next[0])}
           onProgress={(t, d) => x.saveProgress({ videoId: playing.videoId, channelId: playing.channelId, title: playing.title, seconds: t, duration: d })} />
+        {w.bar}
         <h3 className="yt-watch-title">{playing.title}</h3>
         <div className="yt-watch-row">
           <Avatar name={playing.channel || "?"} />

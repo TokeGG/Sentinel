@@ -22,9 +22,7 @@ import { socialTaste } from "./taste";
 import { getLastVisit, markVisited } from "./store";
 import { useFeedFilters } from "./useFeedFilters";
 import { ListsTool } from "./ListsTool";
-import { useSocialPrefs } from "./useSocialPrefs";
-import { spoilerHit } from "../../core/spoiler";
-import { SpoilerGate, SpoilerWords } from "../../ui/wordList";
+import { SpoilerGate, SpoilerWords, spoilerHit, useSocialPrefs } from "./useSocialPrefs";
 import "./social.css";
 
 const PAGE = 100;
@@ -140,10 +138,7 @@ export default function Panel({ module }: { module: ModuleManifest }) {
               {ranked.length > limit && <button type="button" className="ui-btn soc-more" onClick={() => setLimit(limit + PAGE)}>Show more</button>}
             </div>
           ) : (
-            <EmptyState
-              title={posts.length ? "No posts match" : "No posts yet"}
-              hint={posts.length ? "Clear the filters or search." : "Connect an account under Accounts, then press Refresh."}
-            />
+            <EmptyState title={posts.length ? "No posts match" : "No posts yet"} hint={posts.length ? "Clear the filters or search." : "Connect an account under Accounts, then press Refresh."} />
           )}
         </Section>
         <Section id="lists"><ListsTool f={ff} /></Section>

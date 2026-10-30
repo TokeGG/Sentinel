@@ -5,6 +5,8 @@ import { registry } from "../../core/module";
 import { findSkill } from "../../ui/moduleRun";
 import { useOption } from "../../ui/useOption";
 import { useSpoilers } from "../../ui/wordList";
+export { SpoilerGate, SpoilerWords } from "../../ui/wordList";
+export { spoilerHit } from "../../core/spoiler";
 import { applyFeedPrefs, inQuiet, noteBody } from "./feedPrefs";
 import type { FeedPost } from "./panelLogic";
 

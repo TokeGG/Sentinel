@@ -72,7 +72,7 @@ describe("social panelLogic", () => {
   });
   it("manifest customize is valid; section ids match Panel.tsx", () => {
     assert.equal(customizeError({ sections: socialSections, options: socialOptions }), null);
-    const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
+    const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8") + readFileSync(new URL("./useSocialPrefs.ts", import.meta.url), "utf8");
     const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
     assert.deepEqual(used, socialSections.map((s) => s.id).sort());
     for (const o of socialOptions) assert.ok(src.includes(`"${o.key}"`), `Panel reads option ${o.key}`);
