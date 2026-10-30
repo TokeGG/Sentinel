@@ -8,6 +8,8 @@ import { getRestorePanels, setRestorePanels } from "../settingsStore";
 import { SPEED_MAX, SPEED_MIN } from "../orbit";
 import { Head, Switch } from "./Switch";
 import { resetPlanetPos } from "../planetPosStore";
+import { getSetting, setSetting } from "../../ui/appSetting";
+import { parseUndoSecs } from "../../ui/ConfirmButton";
 
 // null = still loading. A failed read shows the default (`fallback`).
 function useSetting<T>(get: () => Promise<T>, fallback: T, onError: (e: unknown) => void) {
@@ -26,6 +28,7 @@ export function GeneralSection({ onError }: { onError(e: unknown): void }) {
   const [moons, setMoons] = useSetting(getNotifMoons, true, onError);
   const [ignoreRM, setIgnoreRM] = useSetting(getIgnoreReduced, true, onError);
   const [restore, setRestore] = useSetting(getRestorePanels, true, onError);
+  const [undo, setUndo] = useSetting(() => getSetting("undo_secs").then(parseUndoSecs), 5, onError);
   const change = <T,>(save: (n: T) => Promise<void>, set: (n: T) => void, key?: SettingKey) =>
     async (next: T) => {
       try {
@@ -58,6 +61,10 @@ export function GeneralSection({ onError }: { onError(e: unknown): void }) {
         Notification moons <small className="ui-meta">unread counts around planets</small></Switch></Row>
       <Row><Switch checked={restore ?? true} disabled={restore === null} onChange={change(setRestorePanels, setRestore)}>
         Reopen panels at startup</Switch></Row>
+      <Row><label className="st-switch">Undo window for deletes
+        <select id="undo-secs" value={undo ?? 5} onChange={(e) => { const v = Number(e.target.value); setSetting("undo_secs", String(v)).then(() => setUndo(v)).catch(onError); }}>
+          {[0, 3, 5, 10, 15].map((n) => <option key={n} value={n}>{n ? `${n} seconds` : "off"}</option>)}</select></label>
+        <small className="ui-meta">applies to panels opened after the change</small></Row>
       <Row><button className="ui-btn" onClick={() => resetPlanetPos().catch(onError)}>Reset planet positions</button>
         <small className="ui-meta">undo planets you dragged to other orbits</small></Row>
     </section>
