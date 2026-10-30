@@ -36,6 +36,7 @@ async function commandHits(): Promise<Hit[]> {
     { key: "cmd:reopen", title: "Reopen last closed panel", subtitle: "Ctrl+Shift+T", kind: "command", run: () => sendCmd({ type: "reopen" }) },
     { key: "cmd:back", title: "Back to previous panel", subtitle: "Alt+Left", kind: "command", run: () => sendCmd({ type: "back" }) },
     { key: "cmd:fwd", title: "Forward to next panel", subtitle: "Alt+Right", kind: "command", run: () => sendCmd({ type: "forward" }) },
+    { key: "cmd:home", title: "Show home", subtitle: "Ctrl+Space: hide every panel, press again to bring them back", kind: "command", run: () => sendCmd({ type: "home" }) },
     { key: "cmd:focus", title: "Toggle focus mode", subtitle: "Ctrl+Shift+F: hide all but the active panel", kind: "command", run: () => sendCmd({ type: "focusMode" }) },
     { key: "cmd:pin", title: "Pin / unpin active panel on top", kind: "command", run: () => sendCmd({ type: "pin" }) },
     { key: "cmd:game", title: "Toggle game mode", kind: "command", run: () => sendCmd({ type: "gameMode" }) },
