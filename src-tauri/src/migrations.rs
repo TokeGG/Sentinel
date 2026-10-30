@@ -51,6 +51,7 @@ pub fn all() -> Vec<Migration> {
         Migration { version: 44, description: "panel-bot knowledge base", sql: include_str!("../migrations/44_knowledge.sql"), kind: MigrationKind::Up },
         Migration { version: 45, description: "lab learning: lessons, cert trackers, flashcards", sql: include_str!("../migrations/45_lab_learn.sql"), kind: MigrationKind::Up },
         Migration { version: 46, description: "bot challenge coach", sql: include_str!("../migrations/46_coach.sql"), kind: MigrationKind::Up },
+        Migration { version: 47, description: "lab study: mistake journal, mock exams", sql: include_str!("../migrations/47_study.sql"), kind: MigrationKind::Up },
     ]
 }
 
