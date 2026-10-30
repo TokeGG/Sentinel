@@ -1,6 +1,6 @@
 import { it } from "node:test";
 import assert from "node:assert/strict";
-import { hltvRows, isMatch, liveCount, matchList } from "./cs2.ts";
+import { hltvRows, isMatch, liveCount, matchList } from "./cs2Logic.ts";
 
 const H = 3600000;
 const ms = [

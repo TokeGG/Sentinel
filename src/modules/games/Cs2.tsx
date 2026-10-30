@@ -7,7 +7,7 @@ import { safeLink } from "../../ui/safeLink";
 import { arrayOf, toCalendar, useJsonSetting } from "../../ui/useJsonSetting";
 import { useOption } from "../../ui/useOption";
 import { dayTime } from "../media/plan";
-import { hltvRows, isMatch, matchList, type Match } from "./cs2";
+import { hltvRows, isMatch, matchList, type Match } from "./cs2Logic";
 
 export function Cs2() {
   const hours = useOption("matchHours", 3);

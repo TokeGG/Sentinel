@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getSetting, setSetting } from "../../ui/appSetting";
 import { SpoilerWords, WordListInput } from "../../ui/wordList";
 import type { useWordList } from "../../ui/wordList";
-import { INTERVAL_KEY, readNumMap } from "./newsPrefs";
+import { INTERVAL_KEY, readNumMap } from "./newsPrefsLogic";
 import { alertCount, markAlertsSeen } from "./prefsStore";
 import { listNewsSources } from "./sourceStore";
 

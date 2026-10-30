@@ -16,7 +16,7 @@ import { FrontPage } from "./FrontPage";
 import { NewsViewCtx } from "./Reader";
 import { NewsPrefs } from "./NewsPrefs";
 import { useSpoilers, useWordList } from "../../ui/wordList";
-import { ALERT_KEY, BLOCK_KEY, withoutBlocked } from "./newsPrefs";
+import { ALERT_KEY, BLOCK_KEY, withoutBlocked } from "./newsPrefsLogic";
 import { SECTIONS, masthead, sectionOf, trending, type SectionId } from "./front";
 
 const EMPTY: Record<string, string> = { front: "No headlines yet", foryou: "Nothing to recommend yet", later: "Nothing saved for later" };

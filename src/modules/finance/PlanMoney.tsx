@@ -1,7 +1,7 @@
 // Plan parts: subscription tracker, "can I afford it", savings goals, dividend reminders.
 import { useState } from "react";
 import { ConfirmButton } from "../../ui/ConfirmButton";
-import { canAfford, goalProgress, monthlyTotal, upcomingDividends } from "./plan";
+import { canAfford, goalProgress, monthlyTotal, upcomingDividends } from "./planLogic";
 import { fmtMoney } from "./prefs";
 import type { PlanProps } from "./Plan";
 

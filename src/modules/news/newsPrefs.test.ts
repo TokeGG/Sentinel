@@ -1,6 +1,6 @@
 import { it } from "node:test";
 import assert from "node:assert/strict";
-import { alertHits, dueSources, hostOf, readerDoc, readNumMap, withoutBlocked } from "./newsPrefs.ts";
+import { alertHits, dueSources, hostOf, readerDoc, readNumMap, withoutBlocked } from "./newsPrefsLogic.ts";
 
 it("hostOf strips www and survives junk", () => {
   assert.equal(hostOf("https://www.BBC.co.uk/x"), "bbc.co.uk");

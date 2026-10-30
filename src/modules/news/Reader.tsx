@@ -4,7 +4,7 @@ import { createContext, useContext, useState } from "react";
 import { fetch } from "@tauri-apps/plugin-http";
 import { spoilerHit } from "../../core/spoiler";
 import { SpoilerGate } from "../../ui/wordList";
-import { readerDoc } from "./newsPrefs";
+import { readerDoc } from "./newsPrefsLogic";
 
 export interface NewsViewPrefs { headlineOnly: boolean; fontPx: number; widthCh: number; spoilers: string[] }
 export const NewsViewCtx = createContext<NewsViewPrefs>({ headlineOnly: false, fontPx: 15, widthCh: 70, spoilers: [] });

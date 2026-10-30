@@ -5,7 +5,7 @@ import { getSetting, setSetting } from "../../ui/appSetting";
 import { listSubs } from "../calendar/extraStore";
 import { listBills, listLots } from "./extraStore";
 import { parsePrefs, sanitizePrefs, setMoneyFormat, type FinPrefs } from "./prefs";
-import { newId, recurringCharges, remindersDue, type Dividend, type Goal } from "./plan";
+import { newId, recurringCharges, remindersDue, type Dividend, type Goal } from "./planLogic";
 import { addSnapshot, netWorth, type Snap } from "./report";
 import { getDb } from "../../core/db";
 
