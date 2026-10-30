@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { BILLS, ROLES, VOTES } from "./fixtures.ts";
 import { parseBills, parseMembers, parseVotes } from "./parse.ts";
-import { congressSections, filterBills, filterMembers, filterVotes, followUpdates, matchesQuery, seat, shownTab, splitRows, tallyText } from "./panelLogic.ts";
+import { congressSections, filterBills, filterMembers, filterVotes, followUpdates, matchesQuery, seat, shownTab, splitRows, tallyText, visibleSections } from "./panelLogic.ts";
 
 const bills = parseBills(BILLS).map((b) => ({ ...b, ref: b.id, followed: b.id === "101", unseen: false }));
 const members = parseMembers(ROLES).map((m) => ({ ...m, ref: m.id, followed: m.id === "400009" }));
@@ -53,6 +53,12 @@ test("shownTab falls back to the first visible list section", () => {
   assert.equal(shownTab(["bills", "votes"], "votes"), "votes");
   assert.equal(shownTab(["votes", "members"], "bills"), "votes");
   assert.equal(shownTab(["sync"], "bills"), null);
+});
+
+test("visibleSections: [] (no view, News tab) shows every section", () => {
+  assert.deepEqual(visibleSections([]), congressSections.map((s) => s.id));
+  assert.equal(shownTab(visibleSections([]), "bills"), "bills");
+  assert.deepEqual(visibleSections(["bills"]), ["bills"]);
 });
 
 test("splitRows groups by kind", () => {

@@ -12,6 +12,10 @@ export const congressSections = [
   { id: "mine", label: "My representatives" },
 ];
 
+/** Ids to honour. Outside a saved view (the News > Congress tab) useSections() is [] = show everything;
+ * treating [] as "nothing visible" hid every list, so Congress looked empty even after a sync. */
+export const visibleSections = (ids: string[]): string[] => (ids.length ? ids : congressSections.map((s) => s.id));
+
 export type Tab = "bills" | "votes" | "members" | "mine";
 export const TABS: { id: Tab; label: string }[] = [
   { id: "bills", label: "Bills" },

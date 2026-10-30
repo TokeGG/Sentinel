@@ -8,6 +8,7 @@ import { normalizeHotkey } from "../desk/desktopLogic";
 import { DESK_CHANGED, getDesk, getFlag, getLayouts, setDesk, setFlag, type DeskKey } from "../desk/store";
 import { THEMES } from "../desk/theme";
 import { Head, Switch } from "./Switch";
+import { VoiceRows } from "./VoiceRows";
 
 type Flag = "notif_toasts" | "sky_clock" | "ambient_audio";
 const FLAGS: [Flag, string][] = [["notif_toasts", "Windows toasts (counts only, never message text)"], ["sky_clock", "Day/night sky follows the clock"], ["ambient_audio", "Ambient audio (soft noise)"]];
@@ -23,7 +24,7 @@ export function DesktopSection({ onError }: { onError(e: unknown): void }) {
       for (const [k] of FLAGS) f[k] = await getFlag(k);
       setFlags(f);
       const t: Record<string, string> = {};
-      for (const k of ["hotkey_summon", "hotkey_capture", "theme", "launch_layout"] as DeskKey[]) t[k] = await getDesk(k);
+      for (const k of ["hotkey_summon", "hotkey_capture", "theme", "launch_layout", "home_style", "launch_layout_weekend"] as DeskKey[]) t[k] = await getDesk(k);
       setText(t);
       setLayoutNames(Object.keys(await getLayouts()));
     })().catch(onError);
@@ -51,9 +52,15 @@ export function DesktopSection({ onError }: { onError(e: unknown): void }) {
       {FLAGS.map(([k, label]) => <Row key={k}><Switch checked={!!flags[k]} onChange={flip(k)}>{label}</Switch></Row>)}
       <Row><label className="st-switch">Theme
         <select value={text.theme || "default"} onChange={(e) => saveText("theme", e.target.value)}>{Object.keys(THEMES).map((t) => <option key={t}>{t}</option>)}</select></label></Row>
+      <Row><label className="st-switch">Home screen
+        <select value={text.home_style || "planets"} onChange={(e) => saveText("home_style", e.target.value)}><option value="planets">Planets</option><option value="terminal">Terminal</option></select></label></Row>
+      <VoiceRows onError={onError} />
       <Row><label className="st-switch">Launch into layout
         <select value={text.launch_layout ?? ""} onChange={(e) => saveText("launch_layout", e.target.value)}>
           <option value="">Last session</option>{layouts.map((n) => <option key={n}>{n}</option>)}</select></label></Row>
+      <Row><label className="st-switch">Weekend layout (Sat/Sun)
+        <select value={text.launch_layout_weekend ?? ""} onChange={(e) => saveText("launch_layout_weekend", e.target.value)}>
+          <option value="">Same as weekdays</option>{layouts.map((n) => <option key={n}>{n}</option>)}</select></label></Row>
       <Row end={<button type="button" className="ui-btn" onClick={() => setDesk("tour_done", "").then(changed).catch(onError)}>Show tour again</button>}>First-run tour</Row>
     </section>
   );

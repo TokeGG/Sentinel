@@ -98,7 +98,7 @@ export async function loadRows(): Promise<Raw[]> {
     `SELECT m.*, f.ref IS NOT NULL AS followed FROM congress_members m
      LEFT JOIN congress_follows f ON f.kind = 'member' AND f.ref = m.id ORDER BY m.name LIMIT 700`
   );
-  const diffs = await loadDiffs();
+  const diffs = await loadDiffs().catch(() => new Map<string, { field: string; from: string; to: string }[]>());
   const hist = (s: unknown) => {
     try { return JSON.parse(String(s)); } catch { return []; }
   };

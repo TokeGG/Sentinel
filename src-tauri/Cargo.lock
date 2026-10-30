@@ -4408,6 +4408,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sha2",
+ "sqlx",
  "sysinfo",
  "tauri",
  "tauri-build",

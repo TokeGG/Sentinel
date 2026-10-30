@@ -13,6 +13,8 @@ export interface DbItem {
   notes: string;
   done: number;
   parent_id: number | null;
+  url?: string | null; // calendar_item_meta (migration 50)
+  origin?: string | null;
 }
 
 const p2 = (n: number) => String(n).padStart(2, "0");
@@ -36,7 +38,7 @@ export function ownRows(items: DbItem[], now: Date): Record<string, unknown>[] {
   for (const it of items) {
     const raw = {
       itemId: it.id, itemKind: it.kind, startsAt: it.starts_at, endsAt: it.ends_at, allDay: it.all_day === 1, rrule: it.rrule,
-      notes: it.notes, parentId: it.parent_id,
+      notes: it.notes, parentId: it.parent_id, url: it.url ?? undefined, origin: it.origin ?? undefined,
     };
     const time = it.starts_at && it.starts_at.length > 10 ? it.starts_at.slice(10) : "";
     if (it.kind === "task") {

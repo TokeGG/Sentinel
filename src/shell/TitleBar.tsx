@@ -4,6 +4,7 @@ import { openMaster, openSettings, reclampPanels } from "./panelApi";
 import { getShown, subscribeShown } from "./notifStore";
 import { totalOf } from "./notifLogic";
 import { useTitleStyle } from "./desk/useTitleStyle";
+import { DndButton, PinnedCounts } from "./TitleExtras";
 
 // The one title bar (main window is frameless, like Discord): app name left,
 // the HUD controls (children) next to it, drag region in between, window
@@ -63,6 +64,8 @@ export function TitleBar({ children, onError }: { children?: ReactNode; onError:
       </div>
       <div className="titlebar-tools">{children}</div>
       <div className="titlebar-drag" data-tauri-drag-region onDoubleClick={run((w) => w.toggleMaximize())} />
+      <PinnedCounts onError={onError} />
+      <DndButton onError={onError} />
       <UnreadPill onError={onError} />
       <button className="titlebar-gear" title="Settings" aria-label="Settings" onClick={() => openSettings().catch((e) => onError(String(e)))}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

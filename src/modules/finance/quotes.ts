@@ -1,62 +1,45 @@
-// Quote refresh: Stooq (stocks/ETFs) + CoinGecko (crypto); price alerts are checked after each refresh.
-import { fetch } from "@tauri-apps/plugin-http";
+// Quote refresh: provider chain (quoteFetch.ts) per symbol; price goes to `watchlist`,
+// change/% /quote time/source/error per symbol to app_settings `fin_quotes` (JSON,
+// no schema change). Price alerts are checked after each refresh.
 import { getDb, logActivity } from "../../core/db";
 import { checkAlerts } from "./extraStore";
+import { fetchCrypto, fetchStock } from "./quoteFetch";
 import type { WatchRow } from "./rows";
 
-// Both free, no API key, no account:
-// - Stooq: plain CSV quotes for stocks/ETFs.
-// - CoinGecko: public simple-price endpoint for crypto.
-const STOOQ_URL = "https://stooq.com/q/l/";
-const COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price";
+export interface QuoteStatus { change?: number | null; pct?: number | null; at?: string | null; source?: string; error?: string }
+const KEY = "fin_quotes";
 
-async function fetchStockQuote(symbol: string): Promise<number | null> {
-  const res = await fetch(`${STOOQ_URL}?s=${encodeURIComponent(symbol)}.us&f=sd2t2ohlcv&h&e=csv`);
-  const csv = await res.text();
-  const lines = csv.trim().split("\n");
-  if (lines.length < 2) return null;
-  const cols = lines[1].split(",");
-  const close = Number(cols[6]); // Symbol,Date,Time,Open,High,Low,Close,Volume
-  return Number.isFinite(close) ? close : null;
-}
-
-async function fetchCryptoQuote(id: string): Promise<number | null> {
-  const res = await fetch(`${COINGECKO_URL}?ids=${encodeURIComponent(id)}&vs_currencies=usd`);
-  const data = (await res.json()) as Record<string, { usd?: number }>;
-  return data[id]?.usd ?? null;
+export async function readStatus(): Promise<Record<string, QuoteStatus>> {
+  const d = await getDb();
+  const r = await d.select<{ value: string }[]>("SELECT value FROM app_settings WHERE key = $1", [KEY]);
+  try { return r[0] ? JSON.parse(r[0].value) : {}; } catch { return {}; }
 }
 
 export async function refreshQuotes() {
   const d = await getDb();
   const rows = await d.select<WatchRow[]>("SELECT * FROM watchlist");
-
+  const status: Record<string, QuoteStatus> = {};
   let updated = 0;
-  let failed = 0;
+  const errors: string[] = [];
   for (const row of rows) {
     try {
-      const price =
-        row.kind === "crypto" ? await fetchCryptoQuote(row.symbol) : await fetchStockQuote(row.symbol);
-      if (price != null) {
-        await d.execute(
-          "UPDATE watchlist SET last_price = $1, last_checked = datetime('now') WHERE id = $2",
-          [price, row.id]
-        );
-        updated++;
-      } else {
-        failed++;
-      }
-    } catch {
-      failed++;
+      const q = row.kind === "crypto" ? await fetchCrypto(row.symbol) : await fetchStock(row.symbol);
+      await d.execute("UPDATE watchlist SET last_price = $1, last_checked = datetime('now') WHERE id = $2", [q.price, row.id]);
+      status[String(row.id)] = { change: q.change, pct: q.pct, at: q.at, source: q.source };
+      updated++;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      status[String(row.id)] = { error: msg };
+      errors.push(`${row.symbol.toUpperCase()}: ${msg}`);
     }
   }
-
-  const fired = await checkAlerts();
-  await logActivity(
-    "finance",
-    "refresh_quotes",
-    `checked ${rows.length} symbol(s)`,
-    `${updated} updated${failed ? `, ${failed} failed` : ""}`
+  await d.execute(
+    "INSERT INTO app_settings (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+    [KEY, JSON.stringify(status)]
   );
-  return { ok: true, updated, failed, fired };
+  const fired = await checkAlerts();
+  await logActivity("finance", "refresh_quotes", `checked ${rows.length} symbol(s)`,
+    `${updated} updated${errors.length ? `, ${errors.length} failed` : ""}`);
+  if (rows.length > 0 && updated === 0) throw new Error(`No prices: ${errors.slice(0, 3).join(" | ")}`);
+  return { ok: true, updated, failed: errors.length, fired };
 }
-

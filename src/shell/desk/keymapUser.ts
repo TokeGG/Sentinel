@@ -9,6 +9,7 @@ export const ACTIONS: Record<string, { label: string; def: string; cmd: ShellCmd
   back: { label: "Back", def: "Alt+ArrowLeft", cmd: { type: "back" } },
   forward: { label: "Forward", def: "Alt+ArrowRight", cmd: { type: "forward" } },
   help: { label: "Help", def: "F1", cmd: { type: "help" } },
+  home: { label: "Home / hide all panels", def: "Ctrl+Space", cmd: { type: "home" } },
   snapLayouts: { label: "Snap layouts", def: "Ctrl+Alt+Z", cmd: { type: "snapLayouts" } },
   quickSwitch: { label: "Switch last two panels", def: "Alt+Q", cmd: { type: "quickSwitch" } },
 };
@@ -33,7 +34,7 @@ export function normCombo(s: string): string | null {
   return [...MODS.filter((m) => mods.has(m)), key].join("+");
 }
 export function comboOf(e: KeyLike): string {
-  const k = e.key.length === 1 ? e.key.toUpperCase() : e.key;
+  const k = e.key === " " ? "Space" : e.key.length === 1 ? e.key.toUpperCase() : e.key;
   return [e.ctrlKey || e.metaKey ? "Ctrl" : "", e.altKey ? "Alt" : "", e.shiftKey ? "Shift" : "", k].filter(Boolean).join("+");
 }
 /** Effective map: defaults overlaid with valid user entries. */

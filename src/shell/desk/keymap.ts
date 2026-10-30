@@ -1,7 +1,7 @@
 // Pure in-app shortcut map (works in the main window and in panel webviews).
 export type ShellCmd =
   | { type: "palette" } | { type: "reopen" } | { type: "back" } | { type: "forward" }
-  | { type: "focusMode" } | { type: "tile"; preset: string } | { type: "open"; id: string }
+  | { type: "focusMode" } | { type: "home" } | { type: "tile"; preset: string } | { type: "open"; id: string }
   | { type: "layout"; name: string } | { type: "saveLayout"; name: string } | { type: "pin"; id?: string }
   | { type: "gameMode" } | { type: "nextMonitor" } | { type: "capture" } | { type: "help" } | { type: "snapLayouts"; id?: string }
   | { type: "quickSwitch" } | { type: "group"; name: string } | { type: "smartFolder"; name: string };
@@ -14,6 +14,7 @@ export function keyToCmd(e: KeyLike): ShellCmd | null {
   if (mod && !e.shiftKey && !e.altKey && k === "k") return { type: "palette" };
   if (mod && e.shiftKey && k === "t") return { type: "reopen" };
   if (mod && e.shiftKey && k === "f") return { type: "focusMode" };
+  if (mod && !e.shiftKey && !e.altKey && k === " ") return { type: "home" };
   if (e.altKey && !mod && k === "arrowleft") return { type: "back" };
   if (e.altKey && !mod && k === "arrowright") return { type: "forward" };
   if (k === "f1" && !mod) return { type: "help" };

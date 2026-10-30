@@ -48,7 +48,10 @@ async function endpointFor(p: Provider, instance?: string): Promise<{ ep: TokenE
   return { ep: { ...base, clientId, clientSecret: p.clientSecret ? await getClientSecret(p.clientGroup!) : undefined }, authUrl };
 }
 
-export interface ConnectOpts { instance?: string; onPrompt?: (d: DevicePrompt | null) => void; onLink?: (url: string | null) => void }
+export interface ConnectOpts { instance?: string; onPrompt?: (d: DevicePrompt | null) => void; onLink?: (url: string | null) => void; onStep?: (step: string) => void }
+
+const within = <T,>(ms: number, what: string, p: Promise<T>): Promise<T> =>
+  Promise.race([p, new Promise<T>((_, rej) => setTimeout(() => rej(new Error(`${what} did not finish within ${ms / 1000} s (database busy?)`)), ms))]);
 
 /** Signs in; every failure is rethrown with a precise message and next step (diagnose.ts). */
 export async function connect(providerId: string, opts: ConnectOpts = {}): Promise<AccountRow> {
@@ -71,11 +74,14 @@ async function connectRaw(p: Provider, opts: ConnectOpts): Promise<AccountRow> {
     if (!instance) throw new Error("Enter your Mastodon instance first, e.g. mastodon.social");
     await registerApp(instance, redirectUri(p), p.scopes);
   }
-  const { ep, authUrl } = await endpointFor(p, instance);
+  const step = opts.onStep ?? (() => {});
+  step("Reading client ID…");
+  const { ep, authUrl } = await within(8000, "Reading the client ID", endpointFor(p, instance));
   cancelled.delete(p.id);
   const tokens = p.flow === "device-code"
-    ? await deviceSignIn(p, ep, (d) => { d ? prompts.set(p.id, d) : prompts.delete(p.id); opts.onPrompt?.(d); changed(); }, () => cancelled.has(p.id))
-    : await loopbackSignIn(p, ep, authUrl!, opts.onLink);
+    ? await deviceSignIn(p, ep, (d) => { d ? prompts.set(p.id, d) : prompts.delete(p.id); opts.onPrompt?.(d); changed(); }, () => cancelled.has(p.id), step)
+    : await loopbackSignIn(p, ep, authUrl!, opts.onLink, step);
+  step("Saving sign-in…");
   const gap = p.strictScopes && tokens.scopes.length ? missingScopes(tokens.scopes, p.scopes) : [];
   if (gap.length) throw new Error(`${p.label} did not grant: ${gap.join(", ")}. Press Connect again and accept every permission.`);
   const who = await identify(p, tokens, instance);

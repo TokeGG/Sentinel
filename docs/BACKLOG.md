@@ -62,3 +62,41 @@ Lab/Bot: engagement templates; scope CIDR calculator; CVSS fields; screenshot ev
 
 ## Style decisions (owner interview)
 Flat Pro base; each module may have its own style; balanced density; tinted surfaces per-module accent; strip shows name + status dot + hover-only controls; media panels mimic real-site layout in Sentinel colours; Lab/Pentest/Bot = full terminal with hacker-movie flair; 3D map = realistic shaded planets (later).
+
+## Ideas round 5: 100 new features (owner: "add them all")
+Bot/learning: voice + read-aloud; explain-this-panel tour; study plan from cert dates; mistake journal; weekly skill radar; pair-programming editor tab; timed mock exams; concept map; Socratic teach-me; spaced review reminders (opt-in); import course notes/PDFs to KB; learning streak moon; summarize current page; Ollama model manager/benchmark; VRAM-aware model picker + unload on game launch.
+Lab: home lab builder guide; VirtualBox/Hyper-V launcher; CTF notes templates; writeup exporter; glossary quiz; cheat-sheet library; pcap viewer (loaded files, read-only); wordlist manager; engagement calendar; CVSS calculator; scope network diagram; guided missions on own VMs; badges; report review checklist; legal/safe-practice primer.
+Desktop: map widgets; planet folders; custom planets; drag file onto planet; global file+content search; clipboard-to-panel routing; per-monitor layouts; keyboard-only mode; accessibility (large/high contrast); sound themes; wallpaper mode; crash session restore; multi-profile; stable/beta update channel; in-app changelog.
+Media: Spotify/Apple Music control; local music player; podcast queue + speed; Twitch VOD/clips; combined live list; watch party sync; local subtitles/translation; download manager; screen recorder/clipper; game clips organizer; movie/TV watchlist; book tracker; AniList anime/manga.
+Productivity: kanban; pomodoro stats; timestamped meeting notes; email→task; smart reminders; template library; personal wiki graph; journal + mood; goals; time tracking; TOTP viewer (keychain); document scanner; OCR screenshots; quick translate.
+Finance: bank CSV import + categories; net worth; subscription cancel reminders; cross-store price drops; receipt OCR; tax folder checklist; watch-only crypto; dividend calendar; shopping list ↔ deals; gift list.
+PC/network: driver info; startup boost profiles; per-app bandwidth; game-server ping graph; router links + firmware check; opt-in blocklists; SMART disk health; backup to chosen cloud folders; restore point (confirm); per-app power.
+Social/chat: Discord voice status; unified DMs (where APIs allow); scheduled posts; chat translation; opt-in go-live alerts; emote favorites; saved posts library; morning social digest.
+
+## Ideas round 6: 50 features/settings (owner: "All")
+Everyday: DND-until countdown; spoken briefing (OS voice); cross-panel read-later; undo toast on deletes; rebindable panel shortcuts; pin any number to title bar; smart folders (saved cross-module searches); "what changed since last look" banner; workday/weekend profiles; title-bar timer/stopwatch.
+Bots/skills: skill builder (local model writes SKILL.md); thumbs on skills used per run; dry-run preview for scheduled jobs; skill chains/routines; per-site bot rules; run cost meter; step replay with captures; skill usage stats; recipe export/import; voice start of workflows.
+Lab/learning: daily 5-min lesson card; glossary hover anywhere; badges + cert roadmap timeline; flashcard spaced reminders; practice-CTF write-up template; "explain like I'm new" on every run.
+Money/deals: subscription tracker; price drop -> calendar with link; net worth chart; receipt vault search; afford-it calculator; Steam/Epic wishlist sync.
+Media/social: merged new-items feed (YouTube/Twitch/podcasts); watch party countdown; HLTV match reminders + live badge; spoiler auto-mute; timestamp clip saver; streamer schedule calendar.
+PC/system: per-game game-mode profiles; disk-full forecast; manual update checker list; per-app power; speed history chart; clean-desktop sorter with preview.
+Privacy: app lock (Windows Hello/PIN); hide sensitive panels while screen sharing; data map + per-module wipe; on-demand breach check.
+Look: theme builder with live preview; opt-in seasonal themes.
+Done: auto skill choice by goal (core/skillPick.ts).
+
+## Settings audit (owner: "majority of implemented features should have settings if changeable")
+Pass over every module + shell: hard-coded limits, intervals, counts, defaults and toggles become Settings > Modules fields (generic modSettings / customize options), not per-panel UI. Next after the home style.
+
+## Ideas round 7: 100 more (owner asked; see chat list, all accepted)
+Recorded in chat 2026-10-30; build order after round 6 + settings audit.
+
+## Progress (rounds 6+7)
+Done: cross-panel read later; Lab Learn My progress (goals, streak freeze, hours chart, exam countdown, badges, reading list, courses, cert wallet, resume lines, summary), Drills (6 kinds), Checklists (10), Home lab (score, inventory, port cards), Practice CTF extras (hint points, timer, daily, retry, rating, write-up), Explain 3 ways, lesson notes, placement quiz; auto skill choice; Terminal home (+ history, Tab, aliases, note/todo/timer/clip, clocks, box order/visibility; Settings > Terminal home); global DND countdown; title-bar pinned counts; briefing read-aloud (+voice/speed); undo window on deletes; "what changed" banner; weekday/weekend launch layouts.
+Next: cross-panel read-later, smart folders, rebindable shortcuts, bots/skills batch, Lab/learning, money, media, PC, privacy, look; then round 7 remainder; then settings audit.
+
+## Ideas round 8: 50 Lab/learning (owner: "ADD THEM ALL")
+Path: skill tree; placement quiz; weekly goals; streak freeze; reading list; course tracker; lesson notes; explain 3 ways; post-lesson card; mixed review.
+Practice (offline only): CTF packs by category; hint ladder costs points; timed mode; write-up template; history/time; difficulty rating; retry queue; daily generated challenge; pair mode with bot; mistake journal by topic.
+Home lab (scope gate unchanged): inventory; setup checklists; snapshot reminder; scope wizard from own devices; run diff; port explainer cards; hardening checklist per service; fix tracker + re-check; home security score; router checklist.
+Defensive: log-reading drills; phishing quiz (made-up); password trainer (local); firewall puzzles; IR drills; threat model sheet; privacy audit; backup drill; secure-config quizzes; CVE summary practice.
+Certs: exam countdown + schedule; domain heatmap; mock review -> lessons; study hours chart; cert wallet; resume lines; badges; progress export; buddy reminders (opt-in); monthly recap (local model).
