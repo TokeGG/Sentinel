@@ -52,5 +52,5 @@ test("term prefs sanitize", () => {
   assert.deepEqual(p.clocks, ["Asia/Tokyo"]);
   assert.equal(p.order[0], "apps");
   assert.deepEqual(parseAliases("y=open youtube, q=search"), { y: "open youtube", q: "search" });
-  assert.match(clockLines(new Date(Date.UTC(2026, 0, 1, 12)), ["Asia/Tokyo"])[0], /^tokyo 21:00$/);
+  assert.match(clockLines(new Date(Date.UTC(2026, 0, 1, 12)), ["Asia/Tokyo"], "24h", "UTC")[1], /^tokyo 21:00$/);
 });

@@ -28,6 +28,10 @@ export function parseAliases(text: string): Record<string, string> {
 }
 export const aliasText = (a: Record<string, string>) => Object.entries(a).map(([k, v]) => `${k}=${v}`).join(", ");
 
-export function clockLines(now: Date, zones: string[], clock: ClockFmt = "24h"): string[] {
-  return zones.map((z) => `${z.split("/").pop()!.replace(/_/g, " ").toLowerCase()} ${zoneTime(now, z, clock)}`);
+/** This PC's own time zone (from Windows), e.g. "America/Chicago". */
+export const localZone = (): string => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC"; } catch { return "UTC"; } };
+/** Your own zone first (labelled "local · <city>"), then the extra clocks you added (duplicates of it dropped). */
+export function clockLines(now: Date, zones: string[], clock: ClockFmt = "24h", local = localZone()): string[] {
+  const city = (z: string) => z.split("/").pop()!.replace(/_/g, " ").toLowerCase();
+  return [`local · ${city(local)} ${zoneTime(now, local, clock)}`, ...zones.filter((z) => z !== local).map((z) => `${city(z)} ${zoneTime(now, z, clock)}`)];
 }
