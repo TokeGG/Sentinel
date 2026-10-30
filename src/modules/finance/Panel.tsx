@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ModuleManifest } from "../../core/module";
 import { CredentialFields } from "../../core/panel/CredentialFields";
 import { ScheduleToggle } from "../../core/panel/ScheduleToggle";
@@ -9,6 +9,9 @@ import { Section, Sections, useSections } from "../../ui/useCustomize";
 import { useModule } from "../../ui/useModule";
 import "./finance.css";
 import { Tools } from "./Tools";
+import { Plan } from "./Plan";
+import { getPrefs } from "./planStore";
+import { DEFAULT_PREFS } from "./prefs";
 import { absText, dayChange, updatedText } from "./tileInfo";
 import { changeInfo, emptyHistory, fmtPrice, pctText, shownParts, sortTrades, priceKey, trackPrices, tradeView } from "./panelLogic";
 
@@ -22,6 +25,10 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
   const ids = useSections();
   const [chosen, setChosen] = useState<Part>("watchlist");
+  const [prefs, setPrefs] = useState(DEFAULT_PREFS);
+  const [pv, setPv] = useState(0);
+  useEffect(() => { void getPrefs().then(setPrefs).catch(() => {}); }, [pv]);
+  const runP: typeof run = async (skill, args) => { const r = await run(skill, args); if (skill === "set_prefs") setPv((v) => v + 1); return r; };
   const allWatch = rows.filter((r) => r.kind === "watch");
   const [grp, setGrp] = useState<string | null>(null);
   const groups = [...new Set(allWatch.map((r) => String(r.group ?? "")).filter(Boolean))].sort();
@@ -37,11 +44,12 @@ export default function Panel({ module }: { module: ModuleManifest }) {
   const hasAdd = ids.includes("add");
   const hasActions = ids.includes("actions");
   return (
-    <div className="fin-root">
+    <div className={`fin-root${prefs.blur ? " fin-blur" : ""}`}>
       <h2 className="ui-head">
         <span className="ui-dot" />
         {module.name}
         <span className="ui-count">{allWatch.length} watched</span>
+        <button type="button" className="ui-btn ui-sm fin-eye" aria-pressed={prefs.blur} title="Privacy blur" onClick={() => void runP("set_prefs", { blur: !prefs.blur })}>{prefs.blur ? "Show amounts" : "Hide amounts"}</button>
       </h2>
       {error && <ErrorLine message={error} />}
       <Sections>
@@ -121,7 +129,10 @@ export default function Panel({ module }: { module: ModuleManifest }) {
           <details><summary>Optional API keys</summary><CredentialFields module={module} /></details>
         </Section>
         <Section id="tools">
-          <Tools watch={allWatch} busy={busy} run={run} />
+          <Tools watch={allWatch} busy={busy} run={run} prefs={prefs} />
+        </Section>
+        <Section id="plan">
+          <Plan prefs={prefs} busy={busy} run={runP} version={rows} />
         </Section>
       </Sections>
     </div>
