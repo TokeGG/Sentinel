@@ -12,7 +12,9 @@ import { PostCard, type CardActions } from "./PostCard";
 import { cardActions, postKey } from "./actionLogic";
 import { useActions } from "./useActions";
 import { dividerIndex, filterPosts, mergePosts, platformColor, rowToPost, type FeedPost } from "./panelLogic";
-import { FEED_TAB, FOLLOWS_TAB, SOCIAL_TABS, parseTab, siteOf } from "./embedSites";
+import { FEED_TAB, FOLLOWS_TAB, allTabs, parseTab, siteOf, type EmbedSite } from "./embedSites";
+import { useSiteTabs } from "./useSiteTabs";
+import { TabsEditor } from "./TabsEditor";
 import { FollowsTab } from "./FollowsTab";
 import { TasteBar } from "../../ui/TasteBar";
 import { useTasteView } from "../../ui/useTasteView";
@@ -28,22 +30,25 @@ import "./social.css";
 const PAGE = 100;
 const TAB_KEY = "soc.tab"; // per-viewer convenience: a raise re-creates this webview
 
-function useTab(panelId: string) {
-  const [tab, set] = useState(() => {
-    try { return parseTab(localStorage.getItem(TAB_KEY)); } catch { return FEED_TAB; }
+function useTab(panelId: string, sites: EmbedSite[]) {
+  const [stored, set] = useState(() => {
+    try { return localStorage.getItem(TAB_KEY) ?? FEED_TAB; } catch { return FEED_TAB; }
   });
+  const tab = parseTab(stored, sites); // a deleted tab falls back to Feed
   // Show the site's embedded view (or hide them all on Feed). Rust keeps the others alive.
   useEffect(() => {
-    const s = siteOf(tab);
+    const s = siteOf(tab, sites);
     void (s ? embedShow(panelId, s.id, s.url, s.profile, s.hosts) : embedHide(panelId)).catch(() => {});
     try { localStorage.setItem(TAB_KEY, tab); } catch { /* optional */ }
-  }, [panelId, tab]);
+  }, [panelId, tab, sites]);
   return [tab, set] as const;
 }
 
 export default function Panel({ module }: { module: ModuleManifest }) {
   const { rows, busy, error, run } = useModule(module);
-  const [tab, setTab] = useTab(module.id);
+  const siteTabs = useSiteTabs();
+  const [tab, setTab] = useTab(module.id, siteTabs.sites);
+  const [editTabs, setEditTabs] = useState(false);
   const density = useOption("density", "comfortable");
   const showMedia = useOption("showMedia", true);
   const showCounts = useOption("showCounts", true);
@@ -90,7 +95,11 @@ export default function Panel({ module }: { module: ModuleManifest }) {
 
   return (
     <div className="soc-root">
-      <Tabs className="soc-tabs" tabs={SOCIAL_TABS} active={tab} onChange={setTab} />
+      <div className="soc-tabs-row">
+        <Tabs className="soc-tabs" tabs={allTabs(siteTabs.sites)} active={tab} onChange={setTab} />
+        <button type="button" className="ui-btn" aria-expanded={editTabs} onClick={() => { setEditTabs(!editTabs); setTab(FEED_TAB); }}>{editTabs ? "Done" : "Edit tabs"}</button>
+      </div>
+      {editTabs && <TabsEditor {...siteTabs} />}
       {tab === FOLLOWS_TAB && <FollowsTab />}
       {tab === FEED_TAB && <>
       <h2 className="ui-head soc-bar">

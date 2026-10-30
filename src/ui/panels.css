@@ -95,3 +95,4 @@
 .ui-confirm { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; color: var(--bad); }
 .ui-btn.ui-danger { background: var(--bad); border-color: var(--bad); color: var(--on-accent); }
 .ui-btn.ui-sm { padding: 1px 8px; font-size: 0.8em; }
+.ui-changed { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0 0 8px; padding: 4px 10px; border: 1px solid var(--accent-line); border-radius: var(--radius-sm, 6px); background: var(--accent-soft); color: var(--accent-text); font-size: 0.85em; }

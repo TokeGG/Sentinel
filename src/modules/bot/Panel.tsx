@@ -15,6 +15,8 @@ import { useBotRun } from "./useBotRun";
 import { useFx } from "./useFx";
 import { useModelStatus } from "./useModelStatus";
 import { shortStatus } from "./ollamaStatus";
+import { CoachPane } from "./coach/CoachPane";
+import { ModelsPane } from "./ModelsPane";
 import "./bot.css";
 
 export default function Panel({ module }: { module: ModuleManifest }) {
@@ -42,6 +44,8 @@ export default function Panel({ module }: { module: ModuleManifest }) {
         <Section id="jobs"><Tile title="Scheduled jobs"><JobsPane jobs={ex.jobs} runs={ex.runs} workflows={ex.workflows} run={run} busy={busy} reload={() => void ex.reload()} /></Tile></Section>
         <Section id="sites"><Tile title="Site notebook"><SitesPane sites={ex.sites} run={run} busy={busy} reload={() => void ex.reload()} /></Tile></Section>
         <Section id="weekly"><Tile title="What I learned this week"><ul className="bot-steps">{ex.weekly.map((l, i) => <li key={i}>{l}</li>)}</ul></Tile></Section>
+        <Section id="coach"><Tile title="Challenge Coach"><CoachPane /></Tile></Section>
+        <Section id="models"><Tile title="Local models"><ModelsPane /></Tile></Section>
         <Section id="brain"><Tile title="Brain"><BrainPane state={data.state} run={run} busy={busy} reload={() => void data.reload()} /></Tile></Section>
       </Sections>
     </div>

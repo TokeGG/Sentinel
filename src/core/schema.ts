@@ -1,122 +1,39 @@
-// Pure (no Tauri imports): a TS-side safety net for the tables of migrations
-// 17-22. tauri-plugin-sql runs its migration list only inside the first
-// `Database.load` per process; if that migrate throws (e.g. a checksum
-// mismatch on an old database) later loads succeed WITHOUT migrating and the
-// newer tables never appear. db.ts therefore calls ensureSchema() after every
-// load. The statements must stay identical to the migration files (schema.test.ts
-// enforces it). Migrations 17+ use CREATE TABLE IF NOT EXISTS so a plugin run
-// after this bootstrap does not fail on "already exists".
+// Pure (no Tauri imports): TS-side bootstrap of EVERY table. tauri-plugin-sql
+// migrates only inside the first `Database.load` per process; if that throws
+// (VersionMismatch etc., see src-tauri/src/db_repair.rs) later loads skip it.
+// db.ts runs ensureSchema() after every load in every webview. Entries must
+// match the migration files (schema.test.ts creates both in node:sqlite).
 import { LATER_STATEMENTS } from "./schemaSocial.ts";
+import { BASE_STATEMENTS } from "./schemaBase.ts";
+import { MID_STATEMENTS } from "./schemaMid.ts";
+import { NEWS_MEDIA_STATEMENTS } from "./schemaNewsMedia.ts";
+import { CALENDAR_SOURCES_STATEMENTS } from "./schemaCalendarSources.ts";
+import { addColumnSql, tableOf } from "./schemaColumns.ts";
 export const SCHEMA_STATEMENTS: string[] = [
-  `CREATE TABLE IF NOT EXISTS panel_layout (
-    module_id TEXT PRIMARY KEY,
-    x REAL,
-    y REAL,
-    w REAL,
-    h REAL,
-    z INTEGER,
-    state TEXT NOT NULL
-)`,
-  `CREATE TABLE IF NOT EXISTS app_settings (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
-)`,
-  `CREATE TABLE IF NOT EXISTS panel_prefs (
-    module_id TEXT NOT NULL,
-    view TEXT NOT NULL,
-    json TEXT NOT NULL,
-    active INTEGER NOT NULL DEFAULT 0,
-    PRIMARY KEY (module_id, view)
-)`,
-  `CREATE TABLE IF NOT EXISTS youtube_channels (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    channel_id TEXT NOT NULL UNIQUE,
-    title TEXT NOT NULL,
-    handle TEXT,
-    added_at TEXT NOT NULL DEFAULT (datetime('now'))
-)`,
-  `CREATE TABLE IF NOT EXISTS youtube_watched (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    video_id TEXT NOT NULL,
-    channel_id TEXT,
-    title TEXT NOT NULL,
-    watched_at TEXT NOT NULL DEFAULT (datetime('now')),
-    secs INTEGER,
-    UNIQUE (video_id, watched_at)
-)`,
-  `CREATE TABLE IF NOT EXISTS chat_rooms (
-    id TEXT PRIMARY KEY,
-    site TEXT NOT NULL,
-    target TEXT NOT NULL,
-    label TEXT NOT NULL,
-    position INTEGER NOT NULL DEFAULT 0,
-    pinned INTEGER NOT NULL DEFAULT 0
-)`,
-  `CREATE TABLE IF NOT EXISTS social_feed (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    platform TEXT NOT NULL,
-    post_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    handle TEXT NOT NULL,
-    avatar TEXT,
-    text TEXT NOT NULL,
-    link TEXT,
-    media TEXT NOT NULL DEFAULT '[]',
-    likes INTEGER,
-    reposts INTEGER,
-    replies INTEGER,
-    posted_at TEXT,
-    fetched_at TEXT NOT NULL DEFAULT (datetime('now')),
-    UNIQUE (platform, post_id)
-)`,
-  `CREATE TABLE IF NOT EXISTS mail_accounts (
-    id TEXT PRIMARY KEY,
-    label TEXT NOT NULL,
-    email TEXT NOT NULL,
-    username TEXT NOT NULL,
-    preset TEXT NOT NULL DEFAULT 'custom',
-    imap_host TEXT NOT NULL,
-    imap_port INTEGER NOT NULL,
-    imap_tls TEXT NOT NULL,
-    smtp_host TEXT NOT NULL,
-    smtp_port INTEGER NOT NULL,
-    smtp_tls TEXT NOT NULL,
-    position INTEGER NOT NULL DEFAULT 0
-)`,
-  `CREATE TABLE IF NOT EXISTS mail_folders (
-    account_id TEXT NOT NULL,
-    name TEXT NOT NULL,
-    role TEXT NOT NULL,
-    PRIMARY KEY (account_id, name)
-)`,
-  `CREATE TABLE IF NOT EXISTS mail_messages (
-    account_id TEXT NOT NULL,
-    folder TEXT NOT NULL,
-    uid INTEGER NOT NULL,
-    from_name TEXT NOT NULL,
-    from_addr TEXT NOT NULL,
-    to_addrs TEXT NOT NULL,
-    subject TEXT NOT NULL,
-    preview TEXT NOT NULL,
-    date_ts INTEGER NOT NULL,
-    seen INTEGER NOT NULL,
-    starred INTEGER NOT NULL,
-    answered INTEGER NOT NULL,
-    has_attach INTEGER NOT NULL,
-    PRIMARY KEY (account_id, folder, uid)
-)`,
-  `CREATE TABLE IF NOT EXISTS mail_bodies (
-    account_id TEXT NOT NULL,
-    folder TEXT NOT NULL,
-    uid INTEGER NOT NULL,
-    json TEXT NOT NULL,
-    PRIMARY KEY (account_id, folder, uid)
-)`,
-  ...LATER_STATEMENTS, // migrations 25 (pentest), 26 (social), 27 (skills/mcp)
+  ...BASE_STATEMENTS, // migrations 1-16
+  ...MID_STATEMENTS, // migrations 17-24
+  ...LATER_STATEMENTS, // migrations 25-48
+  ...NEWS_MEDIA_STATEMENTS, // 49
+  ...CALENDAR_SOURCES_STATEMENTS, // 50
 ];
 
-export async function ensureSchema(exec: (sql: string) => Promise<unknown>): Promise<void> {
-  for (const sql of SCHEMA_STATEMENTS) await exec(sql);
+// Never throws: one bad statement must not hide every other table. Returns
+// "table: error" for each failure. With `columns` (pragma_table_info) it also
+// adds columns missing from tables that already existed.
+export async function ensureSchema(
+  exec: (sql: string) => Promise<unknown>, columns?: (table: string) => Promise<string[]>,
+): Promise<string[]> {
+  const failed: string[] = [];
+  const run = async (sql: string) => {
+    try { await exec(sql); } catch (e) { failed.push(`${tableOf(sql)}: ${e instanceof Error ? e.message : String(e)}`); }
+  };
+  for (const sql of SCHEMA_STATEMENTS) await run(sql);
+  if (columns) for (const sql of SCHEMA_STATEMENTS) {
+    let have: string[] = [];
+    try { have = await columns(tableOf(sql)); } catch { continue; }
+    for (const alter of addColumnSql(sql, have)) await run(alter);
+  }
+  return failed;
 }
 
 // Error text may hold a user-profile path; keep the name out of banners/reports.

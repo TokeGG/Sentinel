@@ -1,5 +1,6 @@
 // Watchlist + trade rows for the panel.
 import { getDb, logActivity } from "../../core/db";
+import { readStatus } from "./quotes";
 import { toTradeRow, toWatchRow, type TradeRow, type WatchRow } from "./rows";
 
 export async function addSymbol(args?: Record<string, unknown>) {
@@ -30,7 +31,8 @@ export async function removeSymbol(args?: Record<string, unknown>) {
 export async function loadRows(): Promise<Record<string, unknown>[]> {
   const d = await getDb();
   const watched = await d.select<WatchRow[]>("SELECT w.*, COALESCE(g.grp, '') AS grp FROM watchlist w LEFT JOIN fin_groups g ON g.watch_id = w.id ORDER BY w.symbol ASC");
-  const watchRows = watched.map(toWatchRow);
+  const status = await readStatus().catch(() => ({} as Awaited<ReturnType<typeof readStatus>>));
+  const watchRows = watched.map((w) => toWatchRow(w, status[String(w.id)]));
 
   // Trades on tickers you're watching surface first; otherwise just the
   // most recent disclosures overall, capped so the panel stays readable.

@@ -54,10 +54,16 @@ fn listen(port: u16, timeout_secs: u64, path: Option<String>, state: Option<Stri
     let path = path.unwrap_or_else(|| "/".into());
     let listener = TcpListener::bind(("127.0.0.1", port)).map_err(|e| bind_error(port, &e))?;
     listener.set_nonblocking(true).map_err(|e| e.to_string())?;
+    // `http://localhost` redirects (Microsoft) may resolve to ::1 first on Windows: listen there too (best effort).
+    let v6 = TcpListener::bind(("::1", port)).ok().filter(|l| l.set_nonblocking(true).is_ok());
     take_cancel(port); // a stale cancel from an earlier sign-in must not stop this one
     let deadline = Instant::now() + Duration::from_secs(timeout_secs);
     loop {
-        let mut stream = match listener.accept() {
+        let got = match listener.accept() {
+            Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => v6.as_ref().map_or_else(|| Err(std::io::ErrorKind::WouldBlock.into()), |l| l.accept()),
+            r => r,
+        };
+        let mut stream = match got {
             Ok((s, _)) => s,
             Err(ref e) if e.kind() == std::io::ErrorKind::WouldBlock => {
                 if take_cancel(port) {

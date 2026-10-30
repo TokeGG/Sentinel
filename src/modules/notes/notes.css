@@ -31,7 +31,7 @@
 .nt-item:hover { background: var(--hover); }
 .nt-item.on { border-color: var(--accent-line); background: var(--accent-soft); }
 .nt-panes { display: grid; gap: var(--gap); grid-template-columns: minmax(0, 1fr); }
-.nt-text { min-height: 260px; font-family: var(--font-mono, monospace); resize: vertical; }
+.nt-text { min-height: 260px; font-family: var(--font-mono); resize: vertical; }
 .nt-preview { padding: var(--pad); border: 1px solid var(--line); border-radius: var(--radius); overflow-wrap: anywhere; }
 .nt-preview .wikilink { color: var(--accent-text); text-decoration: underline dotted; cursor: pointer; }
 .nt-side { display: flex; flex-direction: column; gap: 4px; }
@@ -51,3 +51,13 @@
   .nt-book { grid-template-columns: minmax(220px, 1fr) minmax(0, 2.4fr); }
   .nt-panes.nt-split { grid-template-columns: 1fr 1fr; }
 }
+.nt-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
+.nt-col { border: 1px solid var(--line); border-radius: var(--r-sm); padding: var(--sp-1); min-width: 0; }
+.nt-kcard { display: flex; justify-content: space-between; gap: 4px; padding: 4px; border-bottom: 1px solid var(--line); overflow-wrap: anywhere; }
+.nt-goal, .nt-code, .nt-mood { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-1); padding: 4px 0; }
+.nt-goalform, .nt-meeting, .nt-totp, .nt-goals { display: flex; flex-direction: column; gap: var(--sp-1); }
+.nt-otp { font-family: var(--font-mono); font-size: 1.2em; letter-spacing: 2px; }
+.nt-moodstrip { display: inline-flex; align-items: flex-end; gap: 2px; height: 20px; }
+.nt-moodstrip > i { width: 5px; background: var(--accent); }
+@media (max-width: 520px) { .nt-cols { grid-template-columns: 1fr; } }
+.nt-meter { height: 4px; background: var(--surface-2); } .nt-meter > i { display: block; height: 100%; background: var(--accent); }

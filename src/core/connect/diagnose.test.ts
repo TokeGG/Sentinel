@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { checkProvider, explainError } from "./diagnose.ts";
+import { checkProvider, debugInfo, explainError } from "./diagnose.ts";
 import { getProvider } from "./providers.ts";
 
 const bad = (c: { ok: boolean }[]) => c.filter((x) => !x.ok).length;
@@ -26,4 +26,20 @@ test("errors map to a next step", () => {
   assert.match(explainError(getProvider("mastodon"), "invalid_client"), /reset/);
   assert.match(explainError(getProvider("github"), "device_flow_disabled"), /Enable Device Flow/);
   assert.match(explainError(g, "weird"), /sign-in failed: weird/);
+});
+
+test("an IPC permission denial is not blamed on the browser opener", () => {
+  const m = explainError(getProvider("github"), "oauth_http not allowed. Permissions associated with this command: none");
+  assert.doesNotMatch(m, /open your browser/);
+  assert.match(m, /permission/i);
+  assert.match(explainError(getProvider("reddit"), "opener: url not allowed on the configured scope"), /open your browser/);
+});
+
+test("debug info names provider, step, error, never the client id value", () => {
+  const t = debugInfo({ provider: "github", flow: "device-code", hasClientId: true, step: "polling", error: "boom", at: 0 });
+  assert.match(t, /provider: github/);
+  assert.match(t, /client ID stored: yes/);
+  assert.match(t, /last step: polling/);
+  assert.match(t, /last error: boom/);
+  assert.match(debugInfo({ provider: "x", flow: "loopback-pkce", hasClientId: false, step: null, error: null, at: 0 }), /last step: \(not started\)[\s\S]*last error: none/);
 });
