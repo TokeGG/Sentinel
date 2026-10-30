@@ -55,6 +55,7 @@ src/
                         setup steps docs/ACCOUNTS.md. Use getAccessToken(provider) instead of new OAuth code.
                         All connect HTTP goes through Rust `oauth_http` (no webview Origin); failures -> diagnose.ts
                         (message + next step), Settings "Test" = checkProvider (client ID format + endpoints).
+    skillPick.ts      — pure auto skill choice (goal words + inferred category) used by browser bot, Lab bot (lab skills only) and Ask bar
     taste/            — local taste layer (pure model/features/order + store + useTaste, migration 35); UI in ui/TasteButtons|WhyBadge|TasteBar|TasteDrawer;
                         per-module profile of decayed feature weights, `app_settings` `taste_off:<module>`; adopted by news, deals, social, congress, github, youtube
     scheduler.ts      — opt-in per-module background refresh

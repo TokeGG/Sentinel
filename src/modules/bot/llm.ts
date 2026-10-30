@@ -6,6 +6,7 @@ import { int } from "./brainSpecs.ts";
 import type { McpTool } from "../skills/mcpGate.ts";
 import { SYSTEM_RULES } from "./prompt.ts";
 import { planLines, planMessages, type TaskPlan } from "./plan.ts";
+import { pickSkillsFor, type PickOptions } from "../../core/skillPick.ts";
 
 export const OLLAMA_CHAT_URL = "http://127.0.0.1:11434/api/chat";
 
@@ -28,17 +29,10 @@ export interface ChatMessage { role: "system" | "user"; content: string }
 
 export { SYSTEM_RULES };
 
-const words = (s: string) => new Set(s.toLowerCase().match(/[a-z0-9]{3,}/g) ?? []);
 
 /** The skills whose name/description overlap the goal, best first (at most `max`, bodies clipped). */
-export function relevantSkills(goal: string, skills: PromptSkill[], max = 3, clip = 1500): PromptSkill[] {
-  const g = words(goal);
-  return skills
-    .map((s) => ({ s, n: [...words(`${s.name} ${s.description}`)].filter((w) => g.has(w)).length }))
-    .filter((x) => x.n > 0)
-    .sort((a, b) => b.n - a.n)
-    .slice(0, max)
-    .map((x) => ({ ...x.s, body: x.s.body.slice(0, clip) }));
+export function relevantSkills(goal: string, skills: PromptSkill[], max = 3, clip = 1500, o: PickOptions = {}): PromptSkill[] {
+  return pickSkillsFor(goal, skills, { ...o, max, clip });
 }
 
 export function formatObservation(obs: Observation, brain: Brain): string {
