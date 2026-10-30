@@ -14,7 +14,7 @@ describe("skills panelLogic", () => {
     assert.equal(bundleLabel(""), "General");
   });
   it("section ids are declared and match Panel.tsx", () => {
-    assert.deepEqual(skillsSections.map((s) => s.id), ["skills", "servers", "install", "market", "model"]);
+    assert.deepEqual(skillsSections.map((s) => s.id), ["skills", "servers", "install", "market", "model", "build"]);
     const src = readFileSync(new URL("./Panel.tsx", import.meta.url), "utf8");
     const used = [...src.matchAll(/<Section id="([^"]+)"/g)].map((x) => x[1]).sort();
     assert.deepEqual(used, skillsSections.map((s) => s.id).sort());

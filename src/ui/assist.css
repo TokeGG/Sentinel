@@ -6,3 +6,4 @@
 .as-muted { color: var(--text-dim); font-size: var(--fs-xs); margin: 0; }
 .as-answer p { margin: 0 0 var(--sp-1); white-space: pre-wrap; }
 .as-cites { margin: 0 0 var(--sp-1); padding-left: var(--sp-3); font-size: var(--fs-xs); color: var(--text-dim); }
+.as-lang { width: 7em; flex: none; }

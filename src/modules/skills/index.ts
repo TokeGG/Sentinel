@@ -1,5 +1,6 @@
 import { registerModule, type ModuleManifest } from "../../core/module";
 import { confirmPlan, listModels, planFromForm, removeInstalled, saveEnvSecret, saveModel, setEnabled, updatePlan } from "./actions";
+import { draftSkill, saveLocalSkill } from "./build";
 import { loadItems } from "./items";
 import { skillsSections } from "./panelLogic";
 
@@ -27,6 +28,8 @@ export const skillsModule: ModuleManifest = {
     { name: "save_secret", run: saveEnvSecret },
     { name: "list_models", run: listModels },
     { name: "save_model", run: saveModel },
+    { name: "draft_skill", run: draftSkill },
+    { name: "save_local_skill", run: saveLocalSkill },
   ],
   load: async () => (await loadItems()) as unknown as Record<string, unknown>[],
 };

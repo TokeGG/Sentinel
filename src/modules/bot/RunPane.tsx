@@ -6,11 +6,14 @@ import { detectMistakes } from "./mistakes";
 import { mistakeLines, OUTCOME_LABEL, type ModelStatus } from "./panelLogic";
 import { RunOptions, type RunFlags } from "./RunOptions";
 import { StepList } from "./StepList";
+import { PromptsBox } from "./PromptsBox";
+import { RunExtras } from "./RunExtras";
+import type { More } from "./useMore";
 import type { useBotRun } from "./useBotRun";
 
 type Bot = ReturnType<typeof useBotRun>;
 
-export function RunPane({ bot, model, recheck, run, busy }: { bot: Bot; model: ModelStatus; recheck(): void; run: ModuleState["run"]; busy: boolean }) {
+export function RunPane({ bot, model, recheck, run, busy, more }: { bot: Bot; model: ModelStatus; recheck(): void; run: ModuleState["run"]; busy: boolean; /** absent in Lab mode: no prompt library or skill thumbs */ more?: More }) {
   const [goal, setGoal] = useState("");
   const [flags, setFlags] = useState<RunFlags>({ pre: false, dry: false, step: false }); // default: irreversible actions ask first
   const [rated, setRated] = useState<string | null>(null);
@@ -25,6 +28,7 @@ export function RunPane({ bot, model, recheck, run, busy }: { bot: Bot; model: M
         {model.text} <button type="button" className="ui-btn" onClick={recheck}>Check again</button>
       </p>
       <RunOptions flags={flags} set={setFlags} disabled={bot.running} onGoal={setGoal} />
+      {more && <PromptsBox list={more.prompts} goal={goal} onInsert={(t) => setGoal((g) => (g.trim() ? `${g.trim()} ${t}` : t))} run={run} busy={busy} reload={() => void more.reload()} disabled={bot.running} />}
       <textarea className="ui-file-text" rows={2} value={goal} onChange={(e) => setGoal(e.target.value)} disabled={bot.running} aria-label="Goal"
         placeholder="What should the bot do? e.g. find the opening hours of the city library" />
       <div className="ui-controls">
@@ -39,6 +43,7 @@ export function RunPane({ bot, model, recheck, run, busy }: { bot: Bot; model: M
         <div role="status">
           <strong>{OUTCOME_LABEL[r.episode.outcome]}</strong>{r.episode.result && `: ${r.episode.result}`}
           <div className="ui-meta">{r.episode.steps.length} steps. {mistakeLines(detectMistakes(r.episode)).join("; ") || "No mistakes noticed."}</div>
+          <RunExtras key={r.episode.startedAt} ep={r.episode} run={run} busy={busy} thumbs={!!more} onRated={() => void more?.reload()} />
           <StepList ep={r.episode} />
           {r.episodeId !== undefined && r.episode.outcome !== "dry" && (
             <div className="ui-actions">

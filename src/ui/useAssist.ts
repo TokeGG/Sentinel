@@ -12,7 +12,8 @@ import { ollamaJson } from "../modules/bot/llm";
 import { ollamaFetch } from "../modules/bot/ollamaFetch";
 import { listSkills } from "../modules/skills/registry";
 import { LOCAL_MODEL_KEY } from "../modules/skills/store";
-import { getSetting } from "./appSetting";
+import { getSetting, setSetting } from "./appSetting";
+import { ASSIST_LANG_KEY, cleanLang, taskMessages, type AssistTask } from "../core/assist/assistTasks";
 import { errorText } from "./moduleRun";
 
 export interface AssistState { busy: boolean; error: string | null; answer: AssistAnswer | null; rows: string[]; question: string; rated: "up" | "down" | null }
@@ -44,6 +45,24 @@ export function useAssist(m: ModuleManifest) {
     }
   }, [m, category]);
 
+  /** "Summarize this panel" / "Translate" (the shown answer, else the rows) into `lang` (saved as `assist_lang`). */
+  const task = useCallback(async (kind: AssistTask, lang: string) => {
+    abort.current?.abort();
+    const ac = (abort.current = new AbortController());
+    const prev = st.answer?.answer;
+    const question = kind === "summarize" ? "Summarize this panel" : `Translate into ${cleanLang(lang)}`;
+    setSt({ ...IDLE, busy: true, question });
+    try {
+      if (kind === "translate") await setSetting(ASSIST_LANG_KEY, cleanLang(lang)).catch(() => {});
+      const rows = summarizeRows((m.load ? await m.load() : []) as Record<string, unknown>[]);
+      const model = (await getSetting(LOCAL_MODEL_KEY).catch(() => null)) ?? "";
+      const text = await ollamaJson({ fetch: ollamaFetch, model }, taskMessages(kind, m.name, rows, lang, prev), ac.signal);
+      setSt({ ...IDLE, question, rows, answer: { ...parseAssist(text, rows.length, []), action: null } });
+    } catch (e) {
+      setSt({ ...IDLE, question, error: ac.signal.aborted ? "Stopped." : errorText(e) });
+    }
+  }, [m, st.answer]);
+
   const stop = useCallback(() => abort.current?.abort(), []);
   const rate = useCallback(async (good: boolean) => {
     if (!st.answer || st.rated) return;
@@ -53,5 +72,5 @@ export function useAssist(m: ModuleManifest) {
     catch (err) { setSt((s) => ({ ...s, error: errorText(err) })); }
   }, [st, category]);
 
-  return { st, ask, stop, rate, category, actions };
+  return { st, ask, task, stop, rate, category, actions };
 }

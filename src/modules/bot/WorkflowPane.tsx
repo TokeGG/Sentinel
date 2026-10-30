@@ -5,10 +5,12 @@ import type { ModuleState } from "../../ui/useModule";
 import { DemoBox } from "./DemoBox";
 import type { useBotRun } from "./useBotRun";
 import { WorkflowEditor } from "./WorkflowEditor";
+import { RecipeBox } from "./RecipeBox";
+import type { SiteNote } from "./siteNotes";
 import type { Workflow } from "./workflow";
 
 /** Saved workflows: replay (same gates and confirms as a live run), edit, delete; record new ones by demo. */
-export function WorkflowPane({ list, bot, run, busy, reload }: { list: Workflow[]; bot: ReturnType<typeof useBotRun>; run: ModuleState["run"]; busy: boolean; reload(): void }) {
+export function WorkflowPane({ list, sites = [], bot, run, busy, reload }: { list: Workflow[]; sites?: SiteNote[]; bot: ReturnType<typeof useBotRun>; run: ModuleState["run"]; busy: boolean; reload(): void }) {
   const [edit, setEdit] = useState<Workflow | null>(null);
   const [step, setStep] = useState(false);
   const go = async (skill: string, args: Record<string, unknown>) => { if ((await run(skill, args)) !== undefined) { setEdit(null); reload(); } };
@@ -27,6 +29,7 @@ export function WorkflowPane({ list, bot, run, busy, reload }: { list: Workflow[
         </Row>
       ))}
       <DemoBox run={run} busy={busy || bot.running} reload={reload} />
+      <RecipeBox list={list} sites={sites} run={run} busy={busy} reload={reload} />
     </div>
   );
 }
