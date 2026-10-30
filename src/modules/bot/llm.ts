@@ -5,6 +5,7 @@ import type { Brain } from "./kernel/brain.ts";
 import { int } from "./brainSpecs.ts";
 import type { McpTool } from "../skills/mcpGate.ts";
 import { SYSTEM_RULES } from "./prompt.ts";
+import { pickSkills, type SkillScores } from "../../core/skillPick.ts";
 import { planLines, planMessages, type TaskPlan } from "./plan.ts";
 
 export const OLLAMA_CHAT_URL = "http://127.0.0.1:11434/api/chat";
@@ -28,17 +29,9 @@ export interface ChatMessage { role: "system" | "user"; content: string }
 
 export { SYSTEM_RULES };
 
-const words = (s: string) => new Set(s.toLowerCase().match(/[a-z0-9]{3,}/g) ?? []);
-
-/** The skills whose name/description overlap the goal, best first (at most `max`, bodies clipped). */
-export function relevantSkills(goal: string, skills: PromptSkill[], max = 3, clip = 1500): PromptSkill[] {
-  const g = words(goal);
-  return skills
-    .map((s) => ({ s, n: [...words(`${s.name} ${s.description}`)].filter((w) => g.has(w)).length }))
-    .filter((x) => x.n > 0)
-    .sort((a, b) => b.n - a.n)
-    .slice(0, max)
-    .map((x) => ({ ...x.s, body: x.s.body.slice(0, clip) }));
+/** The skills whose name/description overlap the goal, best first (core/skillPick.ts; `scores` = thumbs per skill). */
+export function relevantSkills(goal: string, skills: PromptSkill[], max = 3, clip = 1500, scores: SkillScores = {}, weight?: number): PromptSkill[] {
+  return pickSkills(goal, skills, scores, max, clip, weight);
 }
 
 export function formatObservation(obs: Observation, brain: Brain): string {
@@ -60,8 +53,9 @@ export function buildMessages(i: DecideInput): ChatMessage[] {
   return [{ role: "system", content: SYSTEM_RULES }, { role: "user", content: parts.join("\n\n") }];
 }
 
-export function chatBody(model: string, messages: ChatMessage[], brain: Brain) {
-  return { model, messages, stream: false, format: "json", options: { temperature: brain.temperature ?? 0.2 } };
+/** `options` (bot settings: temperature, num_ctx) override the brain's learned temperature. */
+export function chatBody(model: string, messages: ChatMessage[], brain: Brain, options?: Record<string, number>) {
+  return { model, messages, stream: false, format: "json", options: { temperature: brain.temperature ?? 0.2, ...options } };
 }
 
 export interface ParseCtx { elementIds: ReadonlySet<string>; tools: { server: string; name: string }[] }
@@ -109,14 +103,16 @@ function parseBare(text: string, ctx: ParseCtx): Parsed {
 }
 
 /** Ollama /api/chat with JSON output. `model` comes from app_settings `local_model` (read by the caller). */
-export function makeOllamaLlm(deps: { fetch: typeof fetch; model: string; url?: string }): Llm {
+export interface OllamaDeps { fetch: typeof fetch; model: string; url?: string; options?: Record<string, number>; /** Each reply's JSON (token counts, runCost.ts). */ onReply?(j: unknown): void }
+export function makeOllamaLlm(deps: OllamaDeps): Llm {
   const url = assertOllamaUrl(deps.url ?? OLLAMA_CHAT_URL);
   return {
     async decide(i, signal) {
       if (!deps.model) throw new Error("no local model selected (Skills > Local model)");
-      const res = await deps.fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(chatBody(deps.model, buildMessages(i), i.brain)), signal });
+      const res = await deps.fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(chatBody(deps.model, buildMessages(i), i.brain, deps.options)), signal });
       if (!res.ok) throw new Error(`ollama ${res.status}`);
       const j = (await res.json()) as { message?: { content?: unknown } };
+      deps.onReply?.(j);
       if (typeof j.message?.content !== "string") throw new Error("ollama: empty reply");
       return j.message.content;
     },
@@ -125,12 +121,13 @@ export function makeOllamaLlm(deps: { fetch: typeof fetch; model: string; url?: 
 }
 
 /** One JSON-format chat turn on the local model (Lab triage). Same endpoint rule: Ollama on 127.0.0.1 only. */
-export async function ollamaJson(deps: { fetch: typeof fetch; model: string; url?: string }, messages: ChatMessage[], signal?: AbortSignal): Promise<string> {
+export async function ollamaJson(deps: OllamaDeps, messages: ChatMessage[], signal?: AbortSignal): Promise<string> {
   const url = assertOllamaUrl(deps.url ?? OLLAMA_CHAT_URL);
   if (!deps.model) throw new Error("no local model selected (Skills > Local model)");
-  const res = await deps.fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ model: deps.model, messages, stream: false, format: "json", options: { temperature: 0.2 } }), signal });
+  const res = await deps.fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ model: deps.model, messages, stream: false, format: "json", options: { temperature: 0.2, ...deps.options } }), signal });
   if (!res.ok) throw new Error(`ollama ${res.status}`);
   const j = (await res.json()) as { message?: { content?: unknown } };
+  deps.onReply?.(j);
   if (typeof j.message?.content !== "string") throw new Error("ollama: empty reply");
   return j.message.content;
 }

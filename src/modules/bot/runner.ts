@@ -23,6 +23,10 @@ import { logDriver, logLlm, type LogFn } from "./logging";
 import { makeOllamaLlm, relevantSkills } from "./llm";
 import * as store from "./store";
 import { botRunTool, botToolGate } from "./tools";
+import { modelFor, ollamaOptions } from "./botSettings";
+import { addUsage, emptyCost } from "./runCost";
+import { loadRunConfig, type RunConfig } from "./runConfig";
+import { siteRuleVerdict } from "./siteRules";
 
 /** Lab mode (pentest/labBot.ts): replaces the tool list, tool execution and the action gate; the run is logged to the engagement. */
 export interface LabHooks {
@@ -51,14 +55,15 @@ export interface RunRequest {
 export interface RunResult { episode: Episode; episodeId?: number }
 
 export async function runBot(r: RunRequest): Promise<RunResult> {
-  const model = (await getSetting(LOCAL_MODEL_KEY)) ?? "";
+  const cfg = await loadRunConfig();
+  const model = modelFor(cfg.settings, (await getSetting(LOCAL_MODEL_KEY)) ?? "");
   if (!model) throw new Error("No local model selected. Choose one in the Skills & MCP panel (Local model).");
   if (busyHeld(await getSetting(BUSY_KEY), Date.now())) throw new Error("The bot is already running (another panel or a scheduled job).");
   await setSetting(BUSY_KEY, String(Date.now()));
-  try { return await runLocked(r, model); } finally { await setSetting(BUSY_KEY, "").catch(() => {}); }
+  try { return await runLocked(r, model, cfg); } finally { await setSetting(BUSY_KEY, "").catch(() => {}); }
 }
 
-async function runLocked(r: RunRequest, model: string): Promise<RunResult> {
+async function runLocked(r: RunRequest, model: string, cfg: RunConfig): Promise<RunResult> {
   const cls = r.lab ? LAB_CLASS : BROWSER_CLASS;
   if (!r.lab) await seedStarterNotes().catch(() => {});
   const st = await store.loadLearnState(cls);
@@ -67,9 +72,10 @@ async function runLocked(r: RunRequest, model: string): Promise<RunResult> {
   const lab = r.lab;
   const goal = lab ? lab.goal(r.goal) : r.goal;
   const notes = lab ? [] : noteLines(retrieve(await store.allNotes(), r.goal, int(brain, "lessonCount")));
-  const skills = lab ? [] : relevantSkills(r.goal, (await listSkills()).filter((s) => s.enabled).map(({ name, description, body }) => ({ name, description, body })));
+  const skills = lab ? [] : relevantSkills(r.goal, (await listSkills()).filter((s) => s.enabled).map(({ name, description, body }) => ({ name, description, body })), 3, 1500, cfg.scores, cfg.weight);
   const tools = lab ? [...lab.tools, ...(await listMcpTools().catch(() => [])).slice(0, 12)] : (await listMcpTools().catch(() => [])).slice(0, 20);
-  r.log("info", `variant ${variant.id}; ${notes.length} notes, ${skills.length} skills, ${tools.length} tools; caps ${int(brain, "maxStepsPerGoal")} steps / ${brain.wallClockSec} s`);
+  let cost = emptyCost(r.workflow ? "" : model);
+  r.log("info", `model ${model}; variant ${variant.id}; ${notes.length} notes, ${skills.length} skills, ${tools.length} tools; caps ${int(brain, "maxStepsPerGoal")} steps / ${brain.wallClockSec} s`);
 
   const stop = new AbortController();
   const abort = () => stop.abort();
@@ -88,12 +94,12 @@ async function runLocked(r: RunRequest, model: string): Promise<RunResult> {
   try {
     episode = await runAgent({
       driver: logDriver(lab ? lab.wrapDriver(drv.driver) : drv.driver, r.log),
-      llm: logLlm(r.workflow ? workflowLlm(r.workflow) : withSiteNotes(makeOllamaLlm({ fetch, model }), lab ? [] : await siteNotes().catch(() => [])), r.log),
+      llm: logLlm(r.workflow ? workflowLlm(r.workflow) : withSiteNotes(makeOllamaLlm({ fetch, model, options: ollamaOptions(cfg.settings, brain.temperature ?? 0.2), onReply: (j) => { cost = addUsage(cost, j); } }), lab ? [] : await siteNotes().catch(() => [])), r.log),
       clock: { now: () => Date.now(), sleep: (ms) => new Promise((res) => setTimeout(res, ms)) },
       store: { saveEpisode: async (e) => { id = await store.saveEpisode(e); } },
       confirm: (a, o) => Promise.race([r.confirm(a, o), stopped]),
       approve: r.approve && ((a, o, why) => Promise.race([r.approve!(a, o, why), stopped])),
-      toolGate: lab?.gate ?? botToolGate, actionGate: lab?.gate, brain, variantId: variant.id, notes, skills, tools,
+      toolGate: lab?.gate ?? botToolGate, actionGate: lab?.gate ?? (async (a, o) => siteRuleVerdict(cfg.rules, a, o)), stepDelayMs: cfg.settings.stepDelayMs, extra: () => ({ cost }), brain, variantId: variant.id, notes, skills, tools,
     }, { goal, preApproved: lab ? false : r.preApproved, dryRun: r.dryRun, approveEach: !!r.approve, signal: stop.signal });
   } finally {
     r.signal.removeEventListener("abort", abort);
