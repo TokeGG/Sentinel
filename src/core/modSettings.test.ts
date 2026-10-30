@@ -3,10 +3,10 @@ import assert from "node:assert/strict";
 import { genericFields, readModSettings, refreshLabel } from "./modSettings.ts";
 
 test("readModSettings sanitizes", () => {
-  assert.deepEqual(readModSettings(null), { assist: true, links: "default" });
+  assert.deepEqual(readModSettings(null), { assist: false, links: "default" });
   assert.deepEqual(readModSettings('{"assist":false,"links":"system"}'), { assist: false, links: "system" });
-  assert.deepEqual(readModSettings('{"assist":"no","links":"ftp"}'), { assist: true, links: "default" });
-  assert.deepEqual(readModSettings("nope"), { assist: true, links: "default" });
+  assert.deepEqual(readModSettings('{"assist":"no","links":"ftp"}'), { assist: false, links: "default" });
+  assert.deepEqual(readModSettings("nope"), { assist: false, links: "default" });
 });
 
 test("genericFields follow the manifest", () => {

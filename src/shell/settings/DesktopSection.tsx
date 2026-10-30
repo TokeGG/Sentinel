@@ -8,6 +8,7 @@ import { normalizeHotkey } from "../desk/desktopLogic";
 import { DESK_CHANGED, getDesk, getFlag, getLayouts, setDesk, setFlag, type DeskKey } from "../desk/store";
 import { THEMES } from "../desk/theme";
 import { Head, Switch } from "./Switch";
+import { getSetting, setSetting } from "../../ui/appSetting";
 import { VoiceRows } from "./VoiceRows";
 
 type Flag = "notif_toasts" | "sky_clock" | "ambient_audio";
@@ -18,6 +19,8 @@ export function DesktopSection({ onError }: { onError(e: unknown): void }) {
   const [text, setText] = useState<Record<string, string>>({});
   const [layouts, setLayoutNames] = useState<string[]>([]);
   const [auto, setAuto] = useState<boolean | null>(null);
+  const [dark, setDark] = useState(true);
+  useEffect(() => { getSetting("browser_dark").then((v) => setDark(v !== "0")).catch(() => {}); }, []);
   useEffect(() => {
     (async () => {
       const f: Record<string, boolean> = {};
@@ -54,6 +57,7 @@ export function DesktopSection({ onError }: { onError(e: unknown): void }) {
         <select value={text.theme || "default"} onChange={(e) => saveText("theme", e.target.value)}>{Object.keys(THEMES).map((t) => <option key={t}>{t}</option>)}</select></label></Row>
       <Row><label className="st-switch">Home screen
         <select value={text.home_style || "terminal"} onChange={(e) => saveText("home_style", e.target.value)}><option value="planets">Planets</option><option value="terminal">Terminal</option></select></label></Row>
+      <Row><Switch checked={dark} onChange={(on) => void setSetting("browser_dark", on ? "1" : "0").then(() => setDark(on)).catch(onError)}>Force dark pages in the in-app browser <small className="ui-meta">new tabs; reopen the browser to apply</small></Switch></Row>
       <VoiceRows onError={onError} />
       <Row><label className="st-switch">Launch into layout
         <select value={text.launch_layout ?? ""} onChange={(e) => saveText("launch_layout", e.target.value)}>

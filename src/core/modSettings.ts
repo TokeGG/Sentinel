@@ -6,7 +6,7 @@ import type { ModuleManifest } from "./module.ts";
 
 export type LinkMode = "default" | "app" | "system";
 export interface ModSettings { assist: boolean; links: LinkMode }
-export const DEFAULT_MOD_SETTINGS: ModSettings = { assist: true, links: "default" };
+export const DEFAULT_MOD_SETTINGS: ModSettings = { assist: false, links: "default" };
 export const modSettingsKey = (id: string) => `modset:${id}`;
 
 export function readModSettings(json: string | null | undefined): ModSettings {

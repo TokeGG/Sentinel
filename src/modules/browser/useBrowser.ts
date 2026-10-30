@@ -5,6 +5,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { BROWSER_ID, BROWSER_OPEN, BROWSER_PENDING } from "../../ui/safeLink";
 import { emptyTabs, persistable, restoreTabs, tabsReducer, type TabState } from "./tabs";
+import { getSetting } from "../../ui/appSetting";
 import { addHistory, setHistoryTitle } from "./store";
 
 const KEY = "browser_tabs";
@@ -21,6 +22,8 @@ export function useBrowser(onError: (e: unknown) => void, overlay: boolean) {
 
   // Show the active tab's webview unless a React page (manager, new-tab page) needs the area.
   const active = s.tabs.find((t) => t.id === s.active);
+  // Forced dark pages (Settings > Desktop, app_settings browser_dark, on unless "0"); applies to tabs opened after.
+  useEffect(() => { getSetting("browser_dark").then((v) => invoke("browser_set_dark", { on: v !== "0" })).catch(() => {}); }, []);
   useEffect(() => {
     if (!active || !active.url || overlay) { call("browser_hide", {}).catch(onError); return; }
     call("browser_show", { tab: active.id, url: active.url, private: active.private }).catch(onError);
